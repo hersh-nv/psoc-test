@@ -1,0 +1,139 @@
+<?xml version="1.0" encoding="utf-8"?>
+<CyXmlSerializer>
+<!--This file is machine generated and read. It is not intended to be edited by hand.-->
+<!--Due to this, there is no schema for this file.-->
+<CyGuid_843a90a4-0c4b-4e44-991d-05e7fb117a21 type_name="CyDesigner.Common.ProjMgmt.Model.CyPrjMgmtWrkspcCustomData" version="4">
+<CyGuid_fdba8dfd-b15b-4469-9bbb-9e40c3e70997 type_name="CyDesigner.Common.Base.CyCustomData" version="2">
+<userData>
+<dataGuid v="1b906a0f-a7b6-4e4d-a428-82f98b53cb35">
+<CyGuid_1b906a0f-a7b6-4e4d-a428-82f98b53cb35 type_name="CyDesigner.Common.ProjMgmt.GUI.CyExplorerWindow+CyExplorerWindowState" version="3" SelectedTab="Source">
+<TreeKeys>
+<v>Source</v>
+<v>Components</v>
+<v>Output</v>
+</TreeKeys>
+<TreeStates>
+<CyGuid_2a325b3b-c96a-4e9f-b7a0-2c44ecb5f237 type_name="CyDesigner.Common.Base.Controls.CyTreeViewState" version="1" SelectedNodeId="test2\test2\Generated_Source\PSoC5\S0">
+<ExpandedNodeIds>
+<v>test2</v>
+<v>test2\test2</v>
+<v>test2\test2\TopDesign</v>
+<v>test2\test2\test2.cydwr</v>
+<v>test2\test2\test2.cydwr\Pins</v>
+<v>test2\test2\test2.cydwr\Analog</v>
+<v>test2\test2\test2.cydwr\Clocks</v>
+<v>test2\test2\test2.cydwr\Interrupts</v>
+<v>test2\test2\test2.cydwr\DMA</v>
+<v>test2\test2\test2.cydwr\System</v>
+<v>test2\test2\test2.cydwr\Directives</v>
+<v>test2\test2\test2.cydwr\Flash Security</v>
+<v>test2\test2\test2.cydwr\EEPROM</v>
+<v>test2\test2\Header Files</v>
+<v>test2\test2\Header Files\cyapicallbacks.h</v>
+<v>test2\test2\Source Files</v>
+<v>test2\test2\Source Files\main.c</v>
+<v>test2\test2\Generated_Source</v>
+<v>test2\test2\Generated_Source\PSoC5</v>
+<v>test2\test2\Generated_Source\PSoC5\isr_1</v>
+</ExpandedNodeIds>
+<VisibleNodeIds />
+</CyGuid_2a325b3b-c96a-4e9f-b7a0-2c44ecb5f237>
+<CyGuid_2a325b3b-c96a-4e9f-b7a0-2c44ecb5f237 type_name="CyDesigner.Common.Base.Controls.CyTreeViewState" version="1" SelectedNodeId="">
+<ExpandedNodeIds>
+<v>test2</v>
+<v>test2\test2</v>
+<v>test2\test2\TopDesign</v>
+<v>test2\test2\TopDesign\TopDesign.cysch</v>
+</ExpandedNodeIds>
+<VisibleNodeIds />
+</CyGuid_2a325b3b-c96a-4e9f-b7a0-2c44ecb5f237>
+<CyGuid_2a325b3b-c96a-4e9f-b7a0-2c44ecb5f237 type_name="CyDesigner.Common.Base.Controls.CyTreeViewState" version="1" SelectedNodeId="">
+<ExpandedNodeIds>
+<v>test2</v>
+<v>test2\test2</v>
+<v>test2\test2\CortexM3</v>
+<v>test2\test2\CortexM3\ARM_GCC_541</v>
+<v>test2\test2\CortexM3\ARM_GCC_541\Debug</v>
+<v>test2\test2\CortexM3\ARM_GCC_541\Debug\Listing Files</v>
+<v>test2\test2\CortexM3\ARM_GCC_541\Debug\Listing Files\Cm3Start.lst</v>
+<v>test2\test2\CortexM3\ARM_GCC_541\Debug\Listing Files\COL_RESET.lst</v>
+<v>test2\test2\CortexM3\ARM_GCC_541\Debug\Listing Files\COL_RESET_PM.lst</v>
+<v>test2\test2\CortexM3\ARM_GCC_541\Debug\Listing Files\COLOUT.lst</v>
+<v>test2\test2\CortexM3\ARM_GCC_541\Debug\Listing Files\CyBootAsmGnu.lst</v>
+<v>test2\test2\CortexM3\ARM_GCC_541\Debug\Listing Files\CyDmac.lst</v>
+<v>test2\test2\CortexM3\ARM_GCC_541\Debug\Listing Files\cyfitter_cfg.lst</v>
+<v>test2\test2\CortexM3\ARM_GCC_541\Debug\Listing Files\CyFlash.lst</v>
+<v>test2\test2\CortexM3\ARM_GCC_541\Debug\Listing Files\CyLib.lst</v>
+<v>test2\test2\CortexM3\ARM_GCC_541\Debug\Listing Files\cymetadata.lst</v>
+<v>test2\test2\CortexM3\ARM_GCC_541\Debug\Listing Files\cyPm.lst</v>
+<v>test2\test2\CortexM3\ARM_GCC_541\Debug\Listing Files\CySpc.lst</v>
+<v>test2\test2\CortexM3\ARM_GCC_541\Debug\Listing Files\cyutils.lst</v>
+<v>test2\test2\CortexM3\ARM_GCC_541\Debug\Listing Files\isr_1.lst</v>
+<v>test2\test2\CortexM3\ARM_GCC_541\Debug\Listing Files\main.lst</v>
+<v>test2\test2\CortexM3\ARM_GCC_541\Debug\Listing Files\S0.lst</v>
+<v>test2\test2\CortexM3\ARM_GCC_541\Debug\Listing Files\S1.lst</v>
+<v>test2\test2\CortexM3\ARM_GCC_541\Debug\Listing Files\S2.lst</v>
+<v>test2\test2\CortexM3\ARM_GCC_541\Debug\Listing Files\S3.lst</v>
+<v>test2\test2\CortexM3\ARM_GCC_541\Debug\Listing Files\Timer_1.lst</v>
+<v>test2\test2\CortexM3\ARM_GCC_541\Debug\Listing Files\Timer_1_PM.lst</v>
+<v>test2\test2\CortexM3\ARM_GCC_541\Debug\Listing Files\timer_clock.lst</v>
+<v>test2\test2\CortexM3\ARM_GCC_541\Debug\Listing Files\UART_1.lst</v>
+<v>test2\test2\CortexM3\ARM_GCC_541\Debug\Listing Files\UART_1_BOOT.lst</v>
+<v>test2\test2\CortexM3\ARM_GCC_541\Debug\Listing Files\UART_1_INT.lst</v>
+<v>test2\test2\CortexM3\ARM_GCC_541\Debug\Listing Files\UART_1_IntClock.lst</v>
+<v>test2\test2\CortexM3\ARM_GCC_541\Debug\Listing Files\UART_1_PM.lst</v>
+<v>test2\test2\CortexM3\ARM_GCC_541\Debug\test2.elf</v>
+<v>test2\test2\CortexM3\ARM_GCC_541\Debug\test2.hex</v>
+<v>test2\test2\CortexM3\ARM_GCC_541\Debug\test2.map</v>
+<v>test2\test2\test2.gpdsc</v>
+<v>test2\test2\test2.rpt</v>
+<v>test2\test2\test2_timing.html</v>
+</ExpandedNodeIds>
+<VisibleNodeIds />
+</CyGuid_2a325b3b-c96a-4e9f-b7a0-2c44ecb5f237>
+</TreeStates>
+<TreeKeysV2>
+<v>Datasheet</v>
+</TreeKeysV2>
+<TreeStatesV2>
+<CyGuid_2a325b3b-c96a-4e9f-b7a0-2c44ecb5f237 type_name="CyDesigner.Common.Base.Controls.CyTreeViewState" version="1" SelectedNodeId="">
+<ExpandedNodeIds>
+<v>test2</v>
+<v>test2\test2</v>
+<v>test2\test2\PSoC 5LP Architecture TRM</v>
+<v>test2\test2\CY8C58LP Family Datasheet</v>
+<v>test2\test2\System Reference Guides</v>
+<v>test2\test2\System Reference Guides\cy_boot_v5_60</v>
+<v>test2\test2\cy_clock_v2_20.pdf</v>
+<v>test2\test2\cy_isr_v1_70.pdf</v>
+<v>test2\test2\cy_pins_v2_20</v>
+<v>test2\test2\cy_pins_v2_20\cy_pins_v2_20.pdf</v>
+<v>test2\test2\CyControlReg_v1_80.pdf</v>
+<v>test2\test2\Timer_v2_70.pdf</v>
+<v>test2\test2\UART_v2_50.pdf</v>
+</ExpandedNodeIds>
+<VisibleNodeIds />
+</CyGuid_2a325b3b-c96a-4e9f-b7a0-2c44ecb5f237>
+</TreeStatesV2>
+</CyGuid_1b906a0f-a7b6-4e4d-a428-82f98b53cb35>
+</dataGuid>
+</userData>
+</CyGuid_fdba8dfd-b15b-4469-9bbb-9e40c3e70997>
+<Unloaded />
+<OpenDocs>
+<name v=".\test2.cydsn\main.c" />
+<name v=".\test2.cydsn\Generated_Source\PSoC5\isr_1.c" />
+<name v=".\test2.cydsn\TopDesign\TopDesign.cysch" />
+<name v=".\test2.cydsn\test2.cydwr" />
+</OpenDocs>
+<OpenDocsLayout><![CDATA[<?xml version="1.0"?><!--
+
+  Actipro Docking/MDI for WinForms
+  Copyright (c) 2001-2016 Actipro Software LLC.  All rights reserved.
+  http://www.actiprosoftware.com
+
+--><DocumentLayout Version="1.0"><LayoutData><TabbedMdiRootContainer Orientation="Horizontal"><TabbedMdiContainer Size="1082, 673" SelectedTabbedMdiWindow="e685dfcb-e282-44fa-bff9-1c339f306f3a"><DocumentWindow Key="C:\Users\hnevg\OneDrive\monash\ece3091\psoc\test2\test2.cydsn\main.c" Guid="7c2faf8f-3ae5-49ab-91a7-5ca7a30e9dbd" /><DocumentWindow Key="C:\Users\hnevg\OneDrive\monash\ece3091\psoc\test2\test2.cydsn\Generated_Source\PSoC5\isr_1.c" Guid="d6d05019-8b99-4b7f-9f87-cedbb8a19da2" /><DocumentWindow Key="C:\Users\hnevg\OneDrive\monash\ece3091\psoc\test2\test2.cydsn\TopDesign\TopDesign.cysch" Guid="e685dfcb-e282-44fa-bff9-1c339f306f3a" /><DocumentWindow Key="C:\Users\hnevg\OneDrive\monash\ece3091\psoc\test2\test2.cydsn\test2.cydwr" Guid="c5be6fe2-3662-4a1c-82d3-b3528d9ebd54" /></TabbedMdiContainer></TabbedMdiRootContainer><FloatingContainers /></LayoutData></DocumentLayout>]]></OpenDocsLayout>
+<config v="" />
+<AutoUpdate v="true" />
+</CyGuid_843a90a4-0c4b-4e44-991d-05e7fb117a21>
+</CyXmlSerializer>
