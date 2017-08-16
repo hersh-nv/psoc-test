@@ -21,9 +21,9 @@
 #endif
 
 /* Defines for puck readings */
-int RED[3] = {180, 350, 275};
-int GRE[3] = {245, 215, 220};
-int BLU[3] = {260, 260, 170};
+uint16 RED[3] = {180, 300, 250};
+uint16 GRE[3] = {245, 215, 220};
+uint16 BLU[3] = {260, 260, 170};
 
 
 uint16 capturedCount = 0u; // counter value when capture occurs
@@ -78,49 +78,90 @@ uint32 Hex2Dec_Str(char8 str[], uint32 hex) {
     return len;
 }
 
-int getColour(uint16 periodLen) {
+void printNumUART(uint32 num) {
+    uint16 distLen;
+    char8 strHex[10u];
+    int i;
+    
+    distLen = Hex2Dec_Str(strHex, num);
+    for (i=distLen; i>0; i--) {
+        UART_1_PutChar(strHex[i-1]);
+    }
+}
+
+
+void getColour(uint16* periodLen, int* col, uint16* dist) {
     // initialise
+    uint16 distLen;
+    char8 strHex[10u];
     uint16 rCount, gCount, bCount;
     uint16 rDist, gDist, bDist;
-    int temp, min;
+    int temp, min, i;
     
     // cycle through colours
     S2_Write(0); S3_Write(0); // RED
-            CyDelay(50);
-            rCount = (overflowCount * periodLen) + capturedCount;
-            overflowCount = 0u;
-            
-    S2_Write(1); S3_Write(1); // GREEN
-            CyDelay(50);
-            gCount = (overflowCount * periodLen) + capturedCount;
-            overflowCount = 0u;
+        capflag = FALSE; while (capflag == FALSE) {
+            CyDelay(10);
+        }
+        rCount = (overflowCount * *periodLen) + capturedCount;
+        overflowCount = 0u;
     
+    S2_Write(1); S3_Write(1); // GREEN
+        capflag = FALSE; while (capflag == FALSE) {
+            CyDelay(10);
+        }
+        gCount = (overflowCount * *periodLen) + capturedCount;
+        overflowCount = 0u;
+        
     S2_Write(0); S3_Write(1); // BLUE
-            CyDelay(50);
-            bCount = (overflowCount * periodLen) + capturedCount;
-            overflowCount = 0u;
+        capflag = FALSE; while (capflag == FALSE) {
+            CyDelay(10);
+        }
+        bCount = (overflowCount * *periodLen) + capturedCount;
+        overflowCount = 0u;
+    
+    // print measures
+    UART_1_PutString("\nSens: R");
+    printNumUART(rCount);
+    UART_1_PutString(" G");
+    printNumUART(gCount);
+    UART_1_PutString(" B");
+    printNumUART(bCount);
+    
     
     // find L1 distance to each puck location
     rDist = abs(RED[0]-rCount) + abs(RED[1]-gCount) + abs(RED[2]-bCount);
+        UART_1_PutString("\nDist: R");
+        printNumUART(rDist);
     gDist = abs(GRE[0]-rCount) + abs(GRE[1]-gCount) + abs(GRE[2]-bCount);
+        UART_1_PutString(" G");
+        printNumUART(gDist);
     bDist = abs(BLU[0]-rCount) + abs(BLU[1]-gCount) + abs(BLU[2]-bCount);
+        UART_1_PutString(" B");
+        printNumUART(bDist);
     
     // which is lowest i guess?
     temp = (rDist < gDist) ? rDist : gDist;
+    *dist = (bDist < temp) ? bDist : temp;
     min = (bDist < temp) ? 2 : 1;
     if (min==1) {
         min = (rDist < gDist) ? 0 : 1;
     }
-    return min;
+    *col = min;
 }
+
+
 
 int main(void)
 {
     CyGlobalIntEnable; /* Enable global interrupts. */
 
     // initialise variables
+    uint16 distLen;
+    char8 strHex[10u];
     uint16 periodLen = 0u;   // length of counter period
-    int8 col;
+    uint16 dist;
+    int col, i;
     
     
     // initialise components
@@ -136,39 +177,20 @@ int main(void)
     for(;;)
     {
         /* Place your application code here. */
-        //UART_1_WriteTxData('s'); // idk
-        
-//        if (capflag == TRUE) {
-//            // if capture has occurred
-//            // calculate period count
-//            capCount = capturedCount; // i suppose this is being duplicated so its not interrupted by isr? 
-//            measuredCount = (overflowCount * periodLen) + capCount;
-//            overflowCount = 0u;
-//            
-//            // convert to period time i guess? may not be necessary
-//            
-//            // send to UART
-//            UART_1_PutString("\nR: ");
-//            lenDec = Hex2Dec_Str(strHex, measuredCount);
-//            for (i=lenDec; i>0; i--) {
-//                UART_1_PutChar(strHex[i-1]);
-//            }
-//    
-//            capflag = FALSE; // clear flag
-//        }
-        
-        col = getColour(periodLen);
+
+        getColour(&periodLen, &col, &dist);
         
         UART_1_PutString("\nColour: ");
         if (col==0) {
-            UART_1_PutString("R");
+            UART_1_PutString("R ");
         } else if (col==1) {
-            UART_1_PutString("G");
+            UART_1_PutString("G ");
         } else {
-            UART_1_PutString("B");
+            UART_1_PutString("B ");
         }
+
           
-        CyDelay(500); // this may be unnecessary idk
+        CyDelay(500);
         
     }
 }
