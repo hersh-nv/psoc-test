@@ -10,6 +10,7 @@
  * ========================================
 */
 #include "project.h"
+#include "stdlib.h"
 
 /* Defines for TRUE and FALSE */
 #ifndef TRUE
@@ -18,6 +19,11 @@
 #ifndef FALSE
     #define FALSE 0
 #endif
+
+/* Defines for puck readings */
+int RED[3] = {180, 350, 275};
+int GRE[3] = {245, 215, 220};
+int BLU[3] = {260, 260, 170};
 
 
 uint16 capturedCount = 0u; // counter value when capture occurs
@@ -74,7 +80,9 @@ uint32 Hex2Dec_Str(char8 str[], uint32 hex) {
 
 int getColour(uint16 periodLen) {
     // initialise
-    uint32 rCount, gCount, bCount;
+    uint16 rCount, gCount, bCount;
+    uint16 rDist, gDist, bDist;
+    int temp, min;
     
     // cycle through colours
     S2_Write(0); S3_Write(0); // RED
@@ -82,7 +90,28 @@ int getColour(uint16 periodLen) {
             rCount = (overflowCount * periodLen) + capturedCount;
             overflowCount = 0u;
             
-    return 0;
+    S2_Write(1); S3_Write(1); // GREEN
+            CyDelay(50);
+            gCount = (overflowCount * periodLen) + capturedCount;
+            overflowCount = 0u;
+    
+    S2_Write(0); S3_Write(1); // BLUE
+            CyDelay(50);
+            bCount = (overflowCount * periodLen) + capturedCount;
+            overflowCount = 0u;
+    
+    // find L1 distance to each puck location
+    rDist = abs(RED[0]-rCount) + abs(RED[1]-gCount) + abs(RED[2]-bCount);
+    gDist = abs(GRE[0]-rCount) + abs(GRE[1]-gCount) + abs(GRE[2]-bCount);
+    bDist = abs(BLU[0]-rCount) + abs(BLU[1]-gCount) + abs(BLU[2]-bCount);
+    
+    // which is lowest i guess?
+    temp = (rDist < gDist) ? rDist : gDist;
+    min = (bDist < temp) ? 2 : 1;
+    if (min==1) {
+        min = (rDist < gDist) ? 0 : 1;
+    }
+    return min;
 }
 
 int main(void)
@@ -90,11 +119,8 @@ int main(void)
     CyGlobalIntEnable; /* Enable global interrupts. */
 
     // initialise variables
-    //uint16 capCount = 0u; // unused
     uint16 periodLen = 0u;   // length of counter period
-    uint32 measuredCount = 0u; // counts between capture rising edges
-    char8 strHex[10u]; // to store the decimal count as a string
-    uint32 lenDec, i;
+    int8 col;
     
     
     // initialise components
@@ -131,50 +157,17 @@ int main(void)
 //            capflag = FALSE; // clear flag
 //        }
         
-        S2_Write(0); S3_Write(0); // RED
-            CyDelay(100);
-            measuredCount = (overflowCount * periodLen) + capturedCount;
-            overflowCount = 0u;
-            // send to UART            
-            UART_1_PutString("\nR: ");
-            lenDec = Hex2Dec_Str(strHex, measuredCount);
-            for (i=lenDec; i>0; i--) {
-                UART_1_PutChar(strHex[i-1]);
-            }
+        col = getColour(periodLen);
         
-        S2_Write(1); S3_Write(1); // GREEN
-            CyDelay(100);
-            measuredCount = (overflowCount * periodLen) + capturedCount;
-            overflowCount = 0u;
-            // send to UART
-            UART_1_PutString("  G: ");
-            lenDec = Hex2Dec_Str(strHex, measuredCount);
-            for (i=lenDec; i>0; i--) {
-                UART_1_PutChar(strHex[i-1]);
-            }
-        
-        S2_Write(0); S3_Write(1); // BLUE
-            CyDelay(100);
-            measuredCount = (overflowCount * periodLen) + capturedCount;
-            overflowCount = 0u;
-            // send to UART
-            UART_1_PutString("  B: ");
-            lenDec = Hex2Dec_Str(strHex, measuredCount);
-            for (i=lenDec; i>0; i--) {
-                UART_1_PutChar(strHex[i-1]);
-            }
-        
-        S2_Write(1); S3_Write(0); // CLEAR
-            CyDelay(100);
-            measuredCount = (overflowCount * periodLen) + capturedCount;
-            overflowCount = 0u;
-            // send to UART
-            UART_1_PutString("  C: ");
-            lenDec = Hex2Dec_Str(strHex, measuredCount);
-            for (i=lenDec; i>0; i--) {
-                UART_1_PutChar(strHex[i-1]);
-            }
-        
+        UART_1_PutString("\nColour: ");
+        if (col==0) {
+            UART_1_PutString("R");
+        } else if (col==1) {
+            UART_1_PutString("G");
+        } else {
+            UART_1_PutString("B");
+        }
+          
         CyDelay(500); // this may be unnecessary idk
         
     }
