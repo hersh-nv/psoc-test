@@ -30,6 +30,11 @@ uint16 capturedCount = 0u; // counter value when capture occurs
 uint16 overflowCount = 0u; // counter overflows between captures
 uint8 capflag = FALSE;     // set by ISR to tell main when capture occurs
 
+uint8 echoitr = FALSE;
+uint8 echoflag = FALSE;
+uint16 echolength = 0u;
+uint16 distance = 0u;
+
 
 /* ISR code : unsure if compiler will use this correctly */
 CY_ISR_PROTO(counter_isr) {
@@ -54,6 +59,33 @@ CY_ISR_PROTO(counter_isr) {
     }
 }
 
+CY_ISR_PROTO(echo_isr) {
+    // IMPORTANT: this code assumes there's no overflows / tc
+    uint8 echo_of; //overflow
+    
+    // check whether rising or falling edge
+    // if falling then read capture value
+    // and set flag for main
+    
+    
+    uint32 counter_status = 0u;
+    counter_status = Counter_2_GetInterruptSource(); // clear interrupt
+    
+    if ((counter_status & Counter_1_STATUS_OVERFLOW) == Counter_1_STATUS_OVERFLOW) {
+        echoflag = TRUE;
+    }
+    if (!echoitr) {
+        // if first capture interrupt
+        // don't really do anything i guess
+        echoitr = !echoitr;
+    } else {
+        // must be a falling edge?
+        echolength = Counter_2_ReadCapture();
+        echoitr = !echoitr;
+        echoflag = TRUE; // tell main that capture's been made
+    }
+
+}
 
 
 /* this is ripped char for char from TimeStamp_Measurement example from cypress */
@@ -92,11 +124,9 @@ void printNumUART(uint32 num) {
 
 void getColour(uint16* periodLen, int* col, uint16* dist) {
     // initialise
-    uint16 distLen;
-    char8 strHex[10u];
     uint16 rCount, gCount, bCount;
     uint16 rDist, gDist, bDist;
-    int temp, min, i;
+    int temp, min;
     
     // cycle through colours
     S2_Write(0); S3_Write(0); // RED
@@ -143,25 +173,47 @@ void getColour(uint16* periodLen, int* col, uint16* dist) {
     // which is lowest i guess?
     temp = (rDist < gDist) ? rDist : gDist;
     *dist = (bDist < temp) ? bDist : temp;
-    min = (bDist < temp) ? 2 : 1;
-    if (min==1) {
-        min = (rDist < gDist) ? 0 : 1;
+    min = (bDist < temp) ? 3 : 2;
+    if (min==2) {
+        min = (rDist < gDist) ? 1 : 2;
     }
     *col = min;
 }
 
-
+void getDist(uint16* echolength, uint16* distance) {
+    uint16 counter = 0u;
+    
+    // send trigger; register is set to PULSE mode so will automatically reset after one clock period
+    // clock freq = 100kHz so trigger should be set for 10us
+    TRIG_CTRL_Write(1);
+    // wait for echo complete flag
+    while (echoflag==FALSE) {
+        CyDelay(1);
+        counter++;
+        
+        if (counter % 0xfff == 0) {
+            UART_1_PutString("\nWaiting...");
+        }
+        
+        if (counter == 0xffff) {
+            UART_1_PutString("\nTimed out.");
+            echoflag = TRUE;
+        }
+    }
+    // convert to dist
+    echoflag = FALSE;
+    
+    *distance = *echolength / 58;
+}
 
 int main(void)
 {
     CyGlobalIntEnable; /* Enable global interrupts. */
 
     // initialise variables
-    uint16 distLen;
-    char8 strHex[10u];
     uint16 periodLen = 0u;   // length of counter period
     uint16 dist;
-    int col, i;
+    int col;
     
     
     // initialise components
@@ -178,16 +230,22 @@ int main(void)
     {
         /* Place your application code here. */
 
-        getColour(&periodLen, &col, &dist);
+        //getColour(&periodLen, &col, &dist);
+        getDist(&echolength, &distance);
+        
         
         UART_1_PutString("\nColour: ");
-        if (col==0) {
+        if (col==1) {
             UART_1_PutString("R ");
-        } else if (col==1) {
+        } else if (col==2) {
             UART_1_PutString("G ");
-        } else {
+        } else if (col==3) {
             UART_1_PutString("B ");
         }
+        
+        UART_1_PutString("\nDistance: ");
+        printNumUART(distance);
+        
 
           
         CyDelay(500);
