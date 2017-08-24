@@ -18,8 +18,10 @@ int main(void)
     /* DRIVE IN TWO DIRECTIONS */
     /* ======================= */
     
-    //enable
-    H_EN_Write(1);
+    PWM_1_Start();
+    
+    // enable
+    PWM_1_Enable();
     
     // direction A
     A1_Write(1);
