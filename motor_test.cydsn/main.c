@@ -11,11 +11,15 @@
 */
 #include "project.h"
 
+CY_ISR_PROTO(SE_ISR) {
+    // isr every time rising edge of (A XOR B) occurs
+    
+
 int main(void)
 {
     CyGlobalIntEnable; /* Enable global interrupts. */
 
-    /* DRIVE AT VARIOUS SPEEDS */
+    /* DRIVE FOR 10s WHILE MEASURING DISTANCE */
     /* ======================= */
     
     PWM_1_Start();
@@ -23,29 +27,15 @@ int main(void)
     // enable
     PWM_1_Enable();
     
-    // 25% speed
-    PWM_1_WriteCompare(63);
+    // 50% speed
+    PWM_1_WriteCompare(127);
     
     // direction A
     A1_Write(1);
     A2_Write(0);
-    CyDelay(2000);
-        
-    // 50% speed
-    PWM_1_WriteCompare(127);
-    CyDelay(2000);
+    CyDelay(10000); // drive for 10 seconds
     
-    // 75% speed
-    PWM_1_WriteCompare(191);
-    CyDelay(2000);
     
-    // 100% speed
-    PWM_1_WriteCompare(255);
-    CyDelay(3000);
-    
-    // stop
-    A1_Write(0);
-    A2_Write(0);
     
     for(;;)
     {
