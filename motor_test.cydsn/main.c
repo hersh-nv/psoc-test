@@ -1,14 +1,13 @@
 /* ========================================
- *
- * Copyright YOUR COMPANY, THE YEAR
- * All Rights Reserved
- * UNPUBLISHED, LICENSED SOFTWARE.
- *
- * CONFIDENTIAL AND PROPRIETARY INFORMATION
- * WHICH IS THE PROPERTY OF your company.
- *
+DRIVING TESTS
+
+todo:
+    - driveXdist(dist); drive forward a variable distance by monitoring the shaft encoders and adjusting individual wheel speeds accordingly
+    - convert getDistance() units to real units (mm); once power supply is done we can run tests for a QuadDec_Counter -- mm conversion
+    
  * ========================================
 */
+
 #include "project.h"
 #include "stdlib.h"
 
@@ -117,11 +116,9 @@ int32 getDistance(int side, int32 startdist) {
     if (side==1) {
         SE_COUNT = SEL_QUAD_GetCounter();
         distance = overflowCountL * 0x7fff + SE_COUNT;
-        //SEL_RST_Write(0);
     } else {
         SE_COUNT = SER_QUAD_GetCounter();
         distance = overflowCountR * 0x7fff + SE_COUNT;
-        //SER_RST_Write(0);
     }
     
     distance = distance-startdist;
@@ -131,13 +128,61 @@ int32 getDistance(int side, int32 startdist) {
     return distance;
 }
 
+/* Drives X distance forward, using getDistance to monitor the shaft encoders as it drives */
+void driveXdist(int32 Xdist) {
+    
+    uint8 lspeed, rspeed;
+    int32 ldist = 0u;
+    int32 rdist = 0u;
+    int32 lsdist,rsdist;
+    int32 deltDist;
+    
+    int done;
+    
+    // start shaft encoders
+    lsdist = getDistance(1,0); // left starting dist
+    rsdist = getDistance(0,0); // right starting dist
+    
+    // start motors forward
+    // 25% speed
+    lspeed = 63;
+    rspeed = 63;
+    PWM_1_WriteCompare1(lspeed);
+    PWM_1_WriteCompare2(rspeed);
+    A1_Write(0); // L
+    A2_Write(1);
+    A3_Write(0); // R
+    A4_Write(1);
+    
+    // after brief period, get distance; this is going to be some kind of closed loop system until shaft encoders read same dist? idk
+    // when both shaft encoders read X distance, stop
+    while (!done) {
+        
+        CyDelay(100);
+        
+        // get relative distance from both wheels
+        ldist = getDistance(1,lsdist); //left
+        rdist = getDistance(0,rsdist); //right
+        
+        // difference
+        deltDist = ldist-rdist;
+        
+        // some kind of closed feedback here
+        
+        if (ldist>=Xdist & rdist>=Xdist) {
+            // distance reached; stop
+            A1_Write(0);
+            A2_Write(0);
+            A3_Write(0);
+            A4_Write(0);
+            done=1;
+        }
+    }
+}
 
 int main(void)
 {
     CyGlobalIntEnable; /* Enable global interrupts. */
-
-    /* DRIVE FOR 10s WHILE MEASURING DISTANCE */
-    /* ======================= */
     
     // start components and ISRs
     UART_1_Start();
@@ -146,51 +191,17 @@ int main(void)
     SER_QUAD_Start();
     ISR_QUAD1_StartEx(QUAD1_ISR);
     ISR_QUAD2_StartEx(QUAD2_ISR);
-
-    // initialise main variables
-    uint32 ldist = 0u;
-    uint32 rdist = 0u;
-    uint32 lsdist,rsdist;
     
     // enable
     PWM_1_Enable();
     
-    // 25% speed
-    PWM_1_WriteCompare1(63);
-    PWM_1_WriteCompare2(63);
-            
-
     
+    // driveXdist();
+    driveXdist(40000); // units = QuadDec counter
     
-    for(int i=0; i<10; i++)
+    for(;;)
     {   
-        // start measuring distance
-        lsdist = getDistance(1,0); //left
-        rsdist = getDistance(0,0); //right
-        
-        // forward direction
-        A1_Write(0);
-        A2_Write(1);
-        A3_Write(0);
-        A4_Write(1);
-        CyDelay(2000); // drive for X seconds
 
-        // stop
-        A1_Write(0);
-        A2_Write(0);
-        A3_Write(0);
-        A4_Write(0); 
-        CyDelay(500); // pause for X seconds
-        
-        // get distance from both wheels
-        ldist = getDistance(1,lsdist); //left
-        rdist = getDistance(0,rsdist); //right
-        
-        // print to UART
-        UART_1_PutString("\nLdist ");
-        printNumUART(ldist);
-        UART_1_PutString("  Rdist ");
-        printNumUART(rdist);
     }
     
     
