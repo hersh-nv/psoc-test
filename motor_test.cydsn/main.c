@@ -12,8 +12,9 @@
 #include "project.h"
 #include "stdlib.h"
 
-// initialise variables
-uint16 overflowCount = 0u;
+// initialise global variables
+int16 overflowCountL = 0u;
+int16 overflowCountR = 0u;
 
 
 /* ========== FUNCTIONS START HERE ===================== */
@@ -51,28 +52,79 @@ void printNumUART(uint32 num) {
     }
 }
 
-/* ISR for shaft encoder */
-CY_ISR_PROTO(QUAD_ISR) {
-    /* isr every time quad encoder overflow occurs */
+/* ISR for shaft encoder 1 -- identical to next ISR */
+CY_ISR_PROTO(QUAD1_ISR) {
+    
     uint32 counter_status = 0u;
-    UART_1_PutString("\nInterrupt occurred!");
-    // double check that the counter is from overflow
+    UART_1_PutString("\nQuadDec interrupt occurred");
+    
+    counter_status = SEL_QUAD_GetEvents();
+    // check that the counter is from overflow
     // if so, increment global overflow counter
-    if ((counter_status & SE_QUAD_COUNTER_OVERFLOW) == SE_QUAD_COUNTER_OVERFLOW) {
-        // interrupt is due to overflow
-        UART_1_PutString("\n...because of overflow");
-        overflowCount++;
+    if ((counter_status & SEL_QUAD_COUNTER_OVERFLOW) == SEL_QUAD_COUNTER_OVERFLOW) {
+        UART_1_PutString("...because of overflow");
+        overflowCountL++;
+    }
+    
+    // check other interrupt causes
+    if ((counter_status & SEL_QUAD_COUNTER_UNDERFLOW) == SEL_QUAD_COUNTER_UNDERFLOW) {
+        UART_1_PutString("...because of underflow");
+        overflowCountL--;
+    }
+    
+    if ((counter_status & SEL_QUAD_COUNTER_RESET) == SEL_QUAD_COUNTER_RESET) {
+        UART_1_PutString("...because of reset");
+    }
+    
+    if ((counter_status & SEL_QUAD_INVALID_IN) == SEL_QUAD_INVALID_IN) {
+        UART_1_PutString("...because of invalid input transition");
+    }
+}
+CY_ISR_PROTO(QUAD2_ISR) {
+    
+    uint32 counter_status = 0u;
+    UART_1_PutString("\nQuadDec interrupt occurred");
+    
+    counter_status = SER_QUAD_GetEvents();
+    // check that the counter is from overflow
+    // if so, increment global overflow counter
+    if ((counter_status & SER_QUAD_COUNTER_OVERFLOW) == SER_QUAD_COUNTER_OVERFLOW) {
+        UART_1_PutString("...because of overflow");
+        overflowCountR++;
+    }
+    
+    // check other interrupt causes
+    if ((counter_status & SER_QUAD_COUNTER_UNDERFLOW) == SER_QUAD_COUNTER_UNDERFLOW) {
+        UART_1_PutString("...because of underflow");
+    }
+    
+    if ((counter_status & SER_QUAD_COUNTER_RESET) == SER_QUAD_COUNTER_RESET) {
+        UART_1_PutString("...because of reset");
+    }
+    
+    if ((counter_status & SER_QUAD_INVALID_IN) == SER_QUAD_INVALID_IN) {
+        UART_1_PutString("...because of invalid input transition");
     }
 }
 
-/* Reads the quadrature decoder connected to the shaft encoder and returns the distance as a uint32 */
-uint32 getDistanceSE(void) {
+
+/* Reads the quadrature decoder connected to the shaft encoder and returns the distance as a int32 */
+/* TODO: reset distance after reading ? */
+int32 getDistance(int side, int32 startdist) {
     
-    uint32 distance;
-    uint16 SE_COUNT = 0u;
-    SE_COUNT = SE_QUAD_GetCounter();
+    int32 distance;
+    int16 SE_COUNT = 0u;
+    if (side==1) {
+        SE_COUNT = SEL_QUAD_GetCounter();
+        distance = overflowCountL * 0x7fff + SE_COUNT;
+        //SEL_RST_Write(0);
+    } else {
+        SE_COUNT = SER_QUAD_GetCounter();
+        distance = overflowCountR * 0x7fff + SE_COUNT;
+        //SER_RST_Write(0);
+    }
     
-    distance = overflowCount * 0xffff + SE_COUNT;
+    distance = distance-startdist;
     
     // TODO: convert to real life distance units instead of arbitrary count value
     
@@ -87,44 +139,61 @@ int main(void)
     /* DRIVE FOR 10s WHILE MEASURING DISTANCE */
     /* ======================= */
     
+    // start components and ISRs
     UART_1_Start();
     PWM_1_Start();
-    SE_QUAD_Start();
-    ISR_QUAD_StartEx(QUAD_ISR);
+    SEL_QUAD_Start();
+    SER_QUAD_Start();
+    ISR_QUAD1_StartEx(QUAD1_ISR);
+    ISR_QUAD2_StartEx(QUAD2_ISR);
 
-    
-    uint32 dist = 0u;
+    // initialise main variables
+    uint32 ldist = 0u;
+    uint32 rdist = 0u;
+    uint32 lsdist,rsdist;
     
     // enable
     PWM_1_Enable();
     
-    // 50% speed
-    PWM_1_WriteCompare(127);
-    
-    // direction A
-    A1_Write(1);
-    A2_Write(0);
-    CyDelay(5000); // drive for 10 seconds
-    
-    // stop
-    A1_Write(0);
-    A2_Write(0);
-    
-    // get SE reading
-    dist = getDistanceSE();
-    
-    // print to UART
-    UART_1_PutString("\nShaft encoder decoded output: ");
-    printNumUART(dist);
-    
-    UART_1_PutString("\nOverflow count: ");
-    printNumUART(overflowCount);
-    
-    
-    for(;;)
-    {
+    // 25% speed
+    PWM_1_WriteCompare1(63);
+    PWM_1_WriteCompare2(63);
+            
 
+    
+    
+    for(int i=0; i<10; i++)
+    {   
+        // start measuring distance
+        lsdist = getDistance(1,0); //left
+        rsdist = getDistance(0,0); //right
+        
+        // forward direction
+        A1_Write(0);
+        A2_Write(1);
+        A3_Write(0);
+        A4_Write(1);
+        CyDelay(2000); // drive for X seconds
+
+        // stop
+        A1_Write(0);
+        A2_Write(0);
+        A3_Write(0);
+        A4_Write(0); 
+        CyDelay(500); // pause for X seconds
+        
+        // get distance from both wheels
+        ldist = getDistance(1,lsdist); //left
+        rdist = getDistance(0,rsdist); //right
+        
+        // print to UART
+        UART_1_PutString("\nLdist ");
+        printNumUART(ldist);
+        UART_1_PutString("  Rdist ");
+        printNumUART(rdist);
     }
+    
+    
 }
 
 /* [] END OF FILE */
