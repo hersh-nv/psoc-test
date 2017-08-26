@@ -137,7 +137,7 @@ void driveXdist(int32 Xdist) {
     int32 lsdist,rsdist;
     int32 deltDist;
     
-    int done;
+    int done=0;
     
     // start shaft encoders
     lsdist = getDistance(1,0); // left starting dist
@@ -156,9 +156,9 @@ void driveXdist(int32 Xdist) {
     
     // after brief period, get distance; this is going to be some kind of closed loop system until shaft encoders read same dist? idk
     // when both shaft encoders read X distance, stop
-    while (!done) {
-        
-        CyDelay(100);
+    //while (!done) {
+    for (int i=0; i<10; i++) {
+        CyDelay(500);
         
         // get relative distance from both wheels
         ldist = getDistance(1,lsdist); //left
@@ -167,17 +167,32 @@ void driveXdist(int32 Xdist) {
         // difference
         deltDist = ldist-rdist;
         
-        // some kind of closed feedback here
+        UART_1_PutString("\nLdist = ");
+        printNumUART(ldist);
+        UART_1_PutString("  Rdist = ");
+        printNumUART(rdist);
         
-        if (ldist>=Xdist & rdist>=Xdist) {
-            // distance reached; stop
-            A1_Write(0);
-            A2_Write(0);
-            A3_Write(0);
-            A4_Write(0);
-            done=1;
-        }
+        // some kind of closed feedback here
+        lspeed = lspeed - 0.2*deltDist;
+        rspeed = rspeed + 0.2*deltDist;
+        PWM_1_WriteCompare1(lspeed);
+        PWM_1_WriteCompare2(rspeed);
+        
+//        if (ldist>=Xdist & rdist>=Xdist) {
+//            // distance reached; stop
+//            A1_Write(0);
+//            A2_Write(0);
+//            A3_Write(0);
+//            A4_Write(0);
+//            done=1;
+        //}
     }
+    
+    A1_Write(0);
+    A2_Write(0);
+    A3_Write(0);
+    A4_Write(0);
+            
 }
 
 int main(void)
