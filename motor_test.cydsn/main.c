@@ -45,12 +45,15 @@ uint32 Hex2Dec_Str(char8 str[], uint32 hex) {
     }
     return len;
 }
-void printNumUART(uint32 num) {
+void printNumUART(int32 num) {
     uint16 distLen;
     char8 strHex[10u];
     int i;
     
-    distLen = Hex2Dec_Str(strHex, num);
+    if (num<0) {
+        UART_1_PutString("-");
+    }
+    distLen = Hex2Dec_Str(strHex, abs(num));
     for (i=distLen; i>0; i--) {
         UART_1_PutChar(strHex[i-1]);
     }
@@ -127,14 +130,16 @@ int32 getDistance(int side, int32 startdist) {
     }
     
     distance = distance-startdist;
-    
-    // TODO: convert to real life distance units instead of arbitrary count value
-    
+
     return distance;
 }
 
-/* Drives X distance (cm) forward, using getDistance to poll the shaft encoders every 100ms as it drives */
-void driveXdist(int32 Xdist) {
+/* Drives X distance (cm) forward/backward, using getDistance to poll the shaft encoders every 100ms as it drives
+    INPUTS
+    Xdist = distance to move forward (cm)
+    dir = binary direction; 1 = forward, 0 = backward
+*/
+void driveXdist(int32 Xdist, int dir) {
     
     uint8 lspeed, rspeed;
     int32 ldist = 0u;
@@ -152,19 +157,20 @@ void driveXdist(int32 Xdist) {
     int done=0;
     
     // start shaft encoders
-    lsdist = getDistance(1,0); // get left starting dist
-    rsdist = getDistance(0,0); // get right starting dist
+    lsdist = (getDistance(1,0)); // get left starting dist
+    rsdist = (getDistance(0,0)); // get right starting dist
     
-    // start motors forward
     // 25% speed
     lspeed = 63;
     rspeed = 63;
     PWM_1_WriteCompare1(lspeed);
     PWM_1_WriteCompare2(rspeed);
-    A1_Write(0); // L
-    A2_Write(1);
-    A3_Write(0); // R
-    A4_Write(1);
+    
+    // start motors
+    A1_Write(!dir); // L
+    A2_Write(dir);
+    A3_Write(!dir); // R
+    A4_Write(dir);
     
     // after 100ms get distance; this is going to be some kind of closed loop system until shaft encoders read same dist? idk
     // when both shaft encoders read X distance, stop
@@ -175,8 +181,8 @@ void driveXdist(int32 Xdist) {
                       // 100ms seems sufficient for now
         
         // get relative distance from both wheels
-        ldist = getDistance(1,lsdist); //left
-        rdist = getDistance(0,rsdist); //right
+        ldist = (getDistance(1,lsdist)); //left
+        rdist = (getDistance(0,rsdist)); //right
         
         UART_1_PutString("\nLdist = ");
         printNumUART(ldist);
@@ -192,7 +198,7 @@ void driveXdist(int32 Xdist) {
         
         /* When either wheel reaches target distance, stop both */
         // todo?: turn off each motor individually when it reaches Xdist. for now it travels straight so maybe it doesn't matter
-        if ((ldist>=XdistSE) || (rdist>=XdistSE)) {
+        if ((abs(ldist)>=XdistSE) || (abs(rdist)>=XdistSE)) {
             A1_Write(0);
             A2_Write(0);
             A3_Write(0);
@@ -220,7 +226,9 @@ int main(void)
     
     
     // driveXdist();
-    driveXdist(20); // units = cm
+    driveXdist(20,1); // units = cm
+    CyDelay(100);
+    //driveXdist(20,0);
     
     
     for(;;)
