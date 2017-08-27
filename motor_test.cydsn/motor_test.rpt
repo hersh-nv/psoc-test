@@ -1,13 +1,13 @@
-Loading plugins phase: Elapsed time ==> 0s.222ms
+Loading plugins phase: Elapsed time ==> 0s.507ms
 <CYPRESSTAG name="CyDsfit arguments...">
 cydsfit arguments: -.fdsnotice -.fdswarpdepfile=warp_dependencies.txt -.fdselabdepfile=elab_dependencies.txt -.fdsbldfile=generated_files.txt -.fdsreffile=referenced_files.txt -p C:\psoc\psoc-test\motor_test.cydsn\motor_test.cyprj -d CY8C5888LTI-LP097 -s C:\psoc\psoc-test\motor_test.cydsn\Generated_Source\PSoC5 -- -yv2 -q10 -ygs -o2 -v3 -.fftcfgtype=LE
 </CYPRESSTAG>
 <CYPRESSTAG name="Design elaboration results...">
 </CYPRESSTAG>
-Elaboration phase: Elapsed time ==> 3s.109ms
+Elaboration phase: Elapsed time ==> 5s.003ms
 <CYPRESSTAG name="HDL generation results...">
 </CYPRESSTAG>
-HDL generation phase: Elapsed time ==> 0s.136ms
+HDL generation phase: Elapsed time ==> 0s.140ms
 <CYPRESSTAG name="Synthesis results...">
 
      | | | | | | |
@@ -41,7 +41,7 @@ Options  :    -yv2 -q10 -ygs -o2 -v3 -.fftcfgtype=LE -ya -.fftprj=C:\psoc\psoc-t
 ======================================================================
 
 vlogfe V6.3 IR 41:  Verilog parser
-Sat Aug 26 17:51:22 2017
+Sun Aug 27 09:19:43 2017
 
 
 ======================================================================
@@ -51,7 +51,7 @@ Options  :    -yv2 -q10 motor_test.v
 ======================================================================
 
 vpp V6.3 IR 41:  Verilog Pre-Processor
-Sat Aug 26 17:51:22 2017
+Sun Aug 27 09:19:43 2017
 
 Flattening file 'C:\Program Files (x86)\Cypress\PSoC Creator\4.1\PSoC Creator\psoc\content\CyComponentLibrary\CyComponentLibrary.cylib\B_PWM_v3_30\B_PWM_v3_30.v'
 Flattening file 'C:\Program Files (x86)\Cypress\PSoC Creator\4.1\PSoC Creator\warp\lib\common\cypress.v'
@@ -106,7 +106,7 @@ Options  :    -yv2 -q10 -ygs -o2 -v3 -.fftcfgtype=LE -ya -.fftprj=C:\psoc\psoc-t
 ======================================================================
 
 tovif V6.3 IR 41:  High-level synthesis
-Sat Aug 26 17:51:22 2017
+Sun Aug 27 09:19:45 2017
 
 Linking 'C:\Program Files (x86)\Cypress\PSoC Creator\4.1\PSoC Creator\warp\lib\common\std.vhd'.
 Linking 'C:\Program Files (x86)\Cypress\PSoC Creator\4.1\PSoC Creator\warp\lib\common\cypress.vhd'.
@@ -145,7 +145,7 @@ Options  :    -yv2 -q10 -ygs -o2 -v3 -.fftcfgtype=LE -ya -.fftprj=C:\psoc\psoc-t
 ======================================================================
 
 topld V6.3 IR 41:  Synthesis and optimization
-Sat Aug 26 17:51:24 2017
+Sun Aug 27 09:19:48 2017
 
 Linking 'C:\Program Files (x86)\Cypress\PSoC Creator\4.1\PSoC Creator\warp\lib\common\std.vhd'.
 Linking 'C:\Program Files (x86)\Cypress\PSoC Creator\4.1\PSoC Creator\warp\lib\common\cypress.vhd'.
@@ -1160,14 +1160,14 @@ CYPRESS_DIR    : C:\Program Files (x86)\Cypress\PSoC Creator\4.1\PSoC Creator\wa
 Warp Program   : C:\Program Files (x86)\Cypress\PSoC Creator\4.1\PSoC Creator\warp\bin\warp.exe
 Warp Arguments : -yv2 -q10 -ygs -o2 -v3 -.fftcfgtype=LE -ya -.fftprj=C:\psoc\psoc-test\motor_test.cydsn\motor_test.cyprj -dcpsoc3 motor_test.v -verilog
 </CYPRESSTAG>
-Warp synthesis phase: Elapsed time ==> 3s.558ms
+Warp synthesis phase: Elapsed time ==> 5s.731ms
 <CYPRESSTAG name="Fitter results...">
 <CYPRESSTAG name="Fitter startup details...">
-cyp3fit: V4.1.0.3210, Family: PSoC3, Started at: Saturday, 26 August 2017 17:51:25
+cyp3fit: V4.1.0.3210, Family: PSoC3, Started at: Sunday, 27 August 2017 09:19:48
 Options: -yv2 -q10 -ygs -o2 -v3 -.fftcfgtype=LE -ya -.fftprj=C:\psoc\psoc-test\motor_test.cydsn\motor_test.cyprj -d CY8C5888LTI-LP097 motor_test.v -verilog
 </CYPRESSTAG>
 <CYPRESSTAG name="Design parsing">
-Design parsing phase: Elapsed time ==> 0s.056ms
+Design parsing phase: Elapsed time ==> 0s.049ms
 </CYPRESSTAG>
 <CYPRESSTAG name="Tech Mapping">
 <CYPRESSTAG name="Initial Mapping" icon="FILE_RPT_TECHM">
@@ -1186,8 +1186,8 @@ Design parsing phase: Elapsed time ==> 0s.056ms
     Converted constant MacroCell: \SEL_QUAD:Cnt16:CounterUDB:prevCapture\ from registered to combinatorial
     Converted constant MacroCell: \SER_QUAD:Cnt16:CounterUDB:prevCapture\ from registered to combinatorial
 <CYPRESSTAG name="Global Clock Selection" icon="FILE_RPT_TECHM">
-    Digital Clock 0: Automatic-assigning  clock 'CLK_CNT_1'. Fanout=3, Signal=Net_159
-    Digital Clock 1: Automatic-assigning  clock 'CLK_CNT_2'. Fanout=3, Signal=Net_190
+    Digital Clock 0: Automatic-assigning  clock 'CLK_CNT_1'. Fanout=3, Signal=Net_235
+    Digital Clock 1: Automatic-assigning  clock 'CLK_CNT_2'. Fanout=3, Signal=Net_229
     Digital Clock 2: Automatic-assigning  clock 'UART_1_IntClock'. Fanout=1, Signal=\UART_1:Net_9\
     Digital Clock 3: Automatic-assigning  clock 'Clock_1'. Fanout=1, Signal=Net_19
 </CYPRESSTAG>
@@ -1239,7 +1239,7 @@ Removing duplicate macrocells
         Total # of inputs        : 1
         Total # of product terms : 1
         List of special equations: 
-            Clock  = (Net_190) => Global
+            Clock  = (Net_229) => Global
             Clock Enable: True
         Main Equation            : 1 pterm
         (
@@ -1252,7 +1252,7 @@ Removing duplicate macrocells
         Total # of inputs        : 1
         Total # of product terms : 1
         List of special equations: 
-            Clock  = (Net_159) => Global
+            Clock  = (Net_235) => Global
             Clock Enable: True
         Main Equation            : 1 pterm
         (
@@ -1525,7 +1525,7 @@ Design Equations
             IO Voltage: 0
         PORT MAP (
             pa_out => SE_L_B(0)__PA ,
-            fb => Net_157 ,
+            fb => Net_234 ,
             pad => SE_L_B(0)_PAD );
         Properties:
         {
@@ -1565,7 +1565,7 @@ Design Equations
             IO Voltage: 0
         PORT MAP (
             pa_out => SE_L_A(0)__PA ,
-            fb => Net_156 ,
+            fb => Net_233 ,
             pad => SE_L_A(0)_PAD );
         Properties:
         {
@@ -1803,7 +1803,7 @@ Design Equations
             IO Voltage: 0
         PORT MAP (
             pa_out => SE_R_B(0)__PA ,
-            fb => Net_188 ,
+            fb => Net_228 ,
             pad => SE_R_B(0)_PAD );
         Properties:
         {
@@ -1843,7 +1843,7 @@ Design Equations
             IO Voltage: 0
         PORT MAP (
             pa_out => SE_R_A(0)__PA ,
-            fb => Net_187 ,
+            fb => Net_227 ,
             pad => SE_R_A(0)_PAD );
         Properties:
         {
@@ -2113,11 +2113,11 @@ Design Equations
         Total # of inputs        : 1
         Total # of product terms : 1
         List of special equations: 
-            Clock  = (Net_159) => Global
+            Clock  = (Net_235) => Global
             Clock Enable: True
         Main Equation            : 1 pterm
         (
-              Net_156
+              Net_233
         );
         Output = \SEL_QUAD:bQuadDec:quad_A_delayed_0\ (fanout=2)
 
@@ -2125,7 +2125,7 @@ Design Equations
         Total # of inputs        : 1
         Total # of product terms : 1
         List of special equations: 
-            Clock  = (Net_159) => Global
+            Clock  = (Net_235) => Global
             Clock Enable: True
         Main Equation            : 1 pterm
         (
@@ -2137,7 +2137,7 @@ Design Equations
         Total # of inputs        : 1
         Total # of product terms : 1
         List of special equations: 
-            Clock  = (Net_159) => Global
+            Clock  = (Net_235) => Global
             Clock Enable: True
         Main Equation            : 1 pterm
         (
@@ -2149,11 +2149,11 @@ Design Equations
         Total # of inputs        : 1
         Total # of product terms : 1
         List of special equations: 
-            Clock  = (Net_159) => Global
+            Clock  = (Net_235) => Global
             Clock Enable: True
         Main Equation            : 1 pterm
         (
-              Net_157
+              Net_234
         );
         Output = \SEL_QUAD:bQuadDec:quad_B_delayed_0\ (fanout=2)
 
@@ -2161,7 +2161,7 @@ Design Equations
         Total # of inputs        : 1
         Total # of product terms : 1
         List of special equations: 
-            Clock  = (Net_159) => Global
+            Clock  = (Net_235) => Global
             Clock Enable: True
         Main Equation            : 1 pterm
         (
@@ -2173,7 +2173,7 @@ Design Equations
         Total # of inputs        : 1
         Total # of product terms : 1
         List of special equations: 
-            Clock  = (Net_159) => Global
+            Clock  = (Net_235) => Global
             Clock Enable: True
         Main Equation            : 1 pterm
         (
@@ -2185,11 +2185,11 @@ Design Equations
         Total # of inputs        : 1
         Total # of product terms : 1
         List of special equations: 
-            Clock  = (Net_190) => Global
+            Clock  = (Net_229) => Global
             Clock Enable: True
         Main Equation            : 1 pterm
         (
-              Net_187
+              Net_227
         );
         Output = \SER_QUAD:bQuadDec:quad_A_delayed_0\ (fanout=2)
 
@@ -2197,7 +2197,7 @@ Design Equations
         Total # of inputs        : 1
         Total # of product terms : 1
         List of special equations: 
-            Clock  = (Net_190) => Global
+            Clock  = (Net_229) => Global
             Clock Enable: True
         Main Equation            : 1 pterm
         (
@@ -2209,7 +2209,7 @@ Design Equations
         Total # of inputs        : 1
         Total # of product terms : 1
         List of special equations: 
-            Clock  = (Net_190) => Global
+            Clock  = (Net_229) => Global
             Clock Enable: True
         Main Equation            : 1 pterm
         (
@@ -2221,11 +2221,11 @@ Design Equations
         Total # of inputs        : 1
         Total # of product terms : 1
         List of special equations: 
-            Clock  = (Net_190) => Global
+            Clock  = (Net_229) => Global
             Clock Enable: True
         Main Equation            : 1 pterm
         (
-              Net_188
+              Net_228
         );
         Output = \SER_QUAD:bQuadDec:quad_B_delayed_0\ (fanout=2)
 
@@ -2233,7 +2233,7 @@ Design Equations
         Total # of inputs        : 1
         Total # of product terms : 1
         List of special equations: 
-            Clock  = (Net_190) => Global
+            Clock  = (Net_229) => Global
             Clock Enable: True
         Main Equation            : 1 pterm
         (
@@ -2245,7 +2245,7 @@ Design Equations
         Total # of inputs        : 1
         Total # of product terms : 1
         List of special equations: 
-            Clock  = (Net_190) => Global
+            Clock  = (Net_229) => Global
             Clock Enable: True
         Main Equation            : 1 pterm
         (
@@ -2628,7 +2628,7 @@ Design Equations
         Total # of inputs        : 8
         Total # of product terms : 4
         List of special equations: 
-            Clock  = (Net_159) => Global
+            Clock  = (Net_235) => Global
             Clock Enable: True
         Main Equation            : 4 pterms
         (
@@ -2649,7 +2649,7 @@ Design Equations
         Total # of inputs        : 1
         Total # of product terms : 1
         List of special equations: 
-            Clock  = (Net_159) => Global
+            Clock  = (Net_235) => Global
             Clock Enable: True
         Main Equation            : 1 pterm
         (
@@ -2661,7 +2661,7 @@ Design Equations
         Total # of inputs        : 1
         Total # of product terms : 1
         List of special equations: 
-            Clock  = (Net_159) => Global
+            Clock  = (Net_235) => Global
             Clock Enable: True
         Main Equation            : 1 pterm
         (
@@ -2673,7 +2673,7 @@ Design Equations
         Total # of inputs        : 2
         Total # of product terms : 1
         List of special equations: 
-            Clock  = (Net_159) => Global
+            Clock  = (Net_235) => Global
             Clock Enable: True
         Main Equation            : 1 pterm
         !(
@@ -2686,7 +2686,7 @@ Design Equations
         Total # of inputs        : 1
         Total # of product terms : 1
         List of special equations: 
-            Clock  = (Net_159) => Global
+            Clock  = (Net_235) => Global
             Clock Enable: True
         Main Equation            : 1 pterm
         (
@@ -2731,7 +2731,7 @@ Design Equations
         Total # of inputs        : 1
         Total # of product terms : 1
         List of special equations: 
-            Clock  = (Net_159) => Global
+            Clock  = (Net_235) => Global
             Clock Enable: True
         Main Equation            : 1 pterm
         (
@@ -2743,7 +2743,7 @@ Design Equations
         Total # of inputs        : 7
         Total # of product terms : 3
         List of special equations: 
-            Clock  = (Net_159) => Global
+            Clock  = (Net_235) => Global
             Clock Enable: True
         Main Equation            : 3 pterms
         (
@@ -2763,7 +2763,7 @@ Design Equations
         Total # of inputs        : 4
         Total # of product terms : 2
         List of special equations: 
-            Clock  = (Net_159) => Global
+            Clock  = (Net_235) => Global
             Clock Enable: True
         Main Equation            : 2 pterms
         (
@@ -2782,7 +2782,7 @@ Design Equations
         Total # of inputs        : 4
         Total # of product terms : 2
         List of special equations: 
-            Clock  = (Net_159) => Global
+            Clock  = (Net_235) => Global
             Clock Enable: True
         Main Equation            : 2 pterms
         (
@@ -2801,7 +2801,7 @@ Design Equations
         Total # of inputs        : 4
         Total # of product terms : 3
         List of special equations: 
-            Clock  = (Net_159) => Global
+            Clock  = (Net_235) => Global
             Clock Enable: True
         Main Equation            : 3 pterms
         !(
@@ -2817,7 +2817,7 @@ Design Equations
         Total # of inputs        : 6
         Total # of product terms : 4
         List of special equations: 
-            Clock  = (Net_159) => Global
+            Clock  = (Net_235) => Global
             Clock Enable: True
         Main Equation            : 4 pterms
         (
@@ -2840,7 +2840,7 @@ Design Equations
         Total # of inputs        : 6
         Total # of product terms : 4
         List of special equations: 
-            Clock  = (Net_159) => Global
+            Clock  = (Net_235) => Global
             Clock Enable: True
         Main Equation            : 4 pterms
         (
@@ -2862,7 +2862,7 @@ Design Equations
         Total # of inputs        : 6
         Total # of product terms : 4
         List of special equations: 
-            Clock  = (Net_159) => Global
+            Clock  = (Net_235) => Global
             Clock Enable: True
         Main Equation            : 4 pterms
         (
@@ -2884,7 +2884,7 @@ Design Equations
         Total # of inputs        : 8
         Total # of product terms : 4
         List of special equations: 
-            Clock  = (Net_190) => Global
+            Clock  = (Net_229) => Global
             Clock Enable: True
         Main Equation            : 4 pterms
         (
@@ -2905,7 +2905,7 @@ Design Equations
         Total # of inputs        : 1
         Total # of product terms : 1
         List of special equations: 
-            Clock  = (Net_190) => Global
+            Clock  = (Net_229) => Global
             Clock Enable: True
         Main Equation            : 1 pterm
         (
@@ -2917,7 +2917,7 @@ Design Equations
         Total # of inputs        : 1
         Total # of product terms : 1
         List of special equations: 
-            Clock  = (Net_190) => Global
+            Clock  = (Net_229) => Global
             Clock Enable: True
         Main Equation            : 1 pterm
         (
@@ -2929,7 +2929,7 @@ Design Equations
         Total # of inputs        : 2
         Total # of product terms : 1
         List of special equations: 
-            Clock  = (Net_190) => Global
+            Clock  = (Net_229) => Global
             Clock Enable: True
         Main Equation            : 1 pterm
         !(
@@ -2942,7 +2942,7 @@ Design Equations
         Total # of inputs        : 1
         Total # of product terms : 1
         List of special equations: 
-            Clock  = (Net_190) => Global
+            Clock  = (Net_229) => Global
             Clock Enable: True
         Main Equation            : 1 pterm
         (
@@ -2987,7 +2987,7 @@ Design Equations
         Total # of inputs        : 1
         Total # of product terms : 1
         List of special equations: 
-            Clock  = (Net_190) => Global
+            Clock  = (Net_229) => Global
             Clock Enable: True
         Main Equation            : 1 pterm
         (
@@ -2999,7 +2999,7 @@ Design Equations
         Total # of inputs        : 7
         Total # of product terms : 3
         List of special equations: 
-            Clock  = (Net_190) => Global
+            Clock  = (Net_229) => Global
             Clock Enable: True
         Main Equation            : 3 pterms
         (
@@ -3019,7 +3019,7 @@ Design Equations
         Total # of inputs        : 4
         Total # of product terms : 2
         List of special equations: 
-            Clock  = (Net_190) => Global
+            Clock  = (Net_229) => Global
             Clock Enable: True
         Main Equation            : 2 pterms
         (
@@ -3038,7 +3038,7 @@ Design Equations
         Total # of inputs        : 4
         Total # of product terms : 2
         List of special equations: 
-            Clock  = (Net_190) => Global
+            Clock  = (Net_229) => Global
             Clock Enable: True
         Main Equation            : 2 pterms
         (
@@ -3057,7 +3057,7 @@ Design Equations
         Total # of inputs        : 4
         Total # of product terms : 3
         List of special equations: 
-            Clock  = (Net_190) => Global
+            Clock  = (Net_229) => Global
             Clock Enable: True
         Main Equation            : 3 pterms
         !(
@@ -3073,7 +3073,7 @@ Design Equations
         Total # of inputs        : 6
         Total # of product terms : 4
         List of special equations: 
-            Clock  = (Net_190) => Global
+            Clock  = (Net_229) => Global
             Clock Enable: True
         Main Equation            : 4 pterms
         (
@@ -3096,7 +3096,7 @@ Design Equations
         Total # of inputs        : 6
         Total # of product terms : 4
         List of special equations: 
-            Clock  = (Net_190) => Global
+            Clock  = (Net_229) => Global
             Clock Enable: True
         Main Equation            : 4 pterms
         (
@@ -3118,7 +3118,7 @@ Design Equations
         Total # of inputs        : 6
         Total # of product terms : 4
         List of special equations: 
-            Clock  = (Net_190) => Global
+            Clock  = (Net_229) => Global
             Clock Enable: True
         Main Equation            : 4 pterms
         (
@@ -3288,7 +3288,7 @@ Design Equations
 
     datapathcell: Name =\SEL_QUAD:Cnt16:CounterUDB:sC16:counterdp:u0\
         PORT MAP (
-            clock => Net_159 ,
+            clock => Net_235 ,
             cs_addr_2 => \SEL_QUAD:Net_1251\ ,
             cs_addr_1 => \SEL_QUAD:Cnt16:CounterUDB:count_enable\ ,
             cs_addr_0 => \SEL_QUAD:Cnt16:CounterUDB:reload\ ,
@@ -3323,7 +3323,7 @@ Design Equations
 
     datapathcell: Name =\SEL_QUAD:Cnt16:CounterUDB:sC16:counterdp:u1\
         PORT MAP (
-            clock => Net_159 ,
+            clock => Net_235 ,
             cs_addr_2 => \SEL_QUAD:Net_1251\ ,
             cs_addr_1 => \SEL_QUAD:Cnt16:CounterUDB:count_enable\ ,
             cs_addr_0 => \SEL_QUAD:Cnt16:CounterUDB:reload\ ,
@@ -3363,7 +3363,7 @@ Design Equations
 
     datapathcell: Name =\SER_QUAD:Cnt16:CounterUDB:sC16:counterdp:u0\
         PORT MAP (
-            clock => Net_190 ,
+            clock => Net_229 ,
             cs_addr_2 => \SER_QUAD:Net_1251\ ,
             cs_addr_1 => \SER_QUAD:Cnt16:CounterUDB:count_enable\ ,
             cs_addr_0 => \SER_QUAD:Cnt16:CounterUDB:reload\ ,
@@ -3398,7 +3398,7 @@ Design Equations
 
     datapathcell: Name =\SER_QUAD:Cnt16:CounterUDB:sC16:counterdp:u1\
         PORT MAP (
-            clock => Net_190 ,
+            clock => Net_229 ,
             cs_addr_2 => \SER_QUAD:Net_1251\ ,
             cs_addr_1 => \SER_QUAD:Cnt16:CounterUDB:count_enable\ ,
             cs_addr_0 => \SER_QUAD:Cnt16:CounterUDB:reload\ ,
@@ -3494,7 +3494,7 @@ Design Equations
     statusicell: Name =\SEL_QUAD:Cnt16:CounterUDB:sSTSReg:stsreg\
         PORT MAP (
             reset => \SEL_QUAD:Net_1260\ ,
-            clock => Net_159 ,
+            clock => Net_235 ,
             status_6 => \SEL_QUAD:Cnt16:CounterUDB:status_6\ ,
             status_5 => \SEL_QUAD:Cnt16:CounterUDB:status_5\ ,
             status_3 => \SEL_QUAD:Cnt16:CounterUDB:status_3\ ,
@@ -3512,12 +3512,12 @@ Design Equations
 
     statusicell: Name =\SEL_QUAD:bQuadDec:Stsreg\
         PORT MAP (
-            clock => Net_159 ,
+            clock => Net_235 ,
             status_3 => \SEL_QUAD:bQuadDec:error\ ,
             status_2 => \SEL_QUAD:Net_1260\ ,
             status_1 => \SEL_QUAD:Net_611\ ,
             status_0 => \SEL_QUAD:Net_530\ ,
-            interrupt => Net_160 );
+            interrupt => Net_232 );
         Properties:
         {
             cy_force_order = 1
@@ -3530,7 +3530,7 @@ Design Equations
     statusicell: Name =\SER_QUAD:Cnt16:CounterUDB:sSTSReg:stsreg\
         PORT MAP (
             reset => \SER_QUAD:Net_1260\ ,
-            clock => Net_190 ,
+            clock => Net_229 ,
             status_6 => \SER_QUAD:Cnt16:CounterUDB:status_6\ ,
             status_5 => \SER_QUAD:Cnt16:CounterUDB:status_5\ ,
             status_3 => \SER_QUAD:Cnt16:CounterUDB:status_3\ ,
@@ -3548,12 +3548,12 @@ Design Equations
 
     statusicell: Name =\SER_QUAD:bQuadDec:Stsreg\
         PORT MAP (
-            clock => Net_190 ,
+            clock => Net_229 ,
             status_3 => \SER_QUAD:bQuadDec:error\ ,
             status_2 => \SER_QUAD:Net_1260\ ,
             status_1 => \SER_QUAD:Net_611\ ,
             status_0 => \SER_QUAD:Net_530\ ,
-            interrupt => Net_191 );
+            interrupt => Net_226 );
         Properties:
         {
             cy_force_order = 1
@@ -3595,7 +3595,7 @@ Design Equations
 
     controlcell: Name =\SEL_QUAD:Cnt16:CounterUDB:sCTRLReg:ctrlreg\
         PORT MAP (
-            clock => Net_159 ,
+            clock => Net_235 ,
             control_7 => \SEL_QUAD:Cnt16:CounterUDB:control_7\ ,
             control_6 => \SEL_QUAD:Cnt16:CounterUDB:control_6\ ,
             control_5 => \SEL_QUAD:Cnt16:CounterUDB:control_5\ ,
@@ -3617,7 +3617,7 @@ Design Equations
 
     controlcell: Name =\SER_QUAD:Cnt16:CounterUDB:sCTRLReg:ctrlreg\
         PORT MAP (
-            clock => Net_190 ,
+            clock => Net_229 ,
             control_7 => \SER_QUAD:Cnt16:CounterUDB:control_7\ ,
             control_6 => \SER_QUAD:Cnt16:CounterUDB:control_6\ ,
             control_5 => \SER_QUAD:Cnt16:CounterUDB:control_5\ ,
@@ -3676,7 +3676,7 @@ Design Equations
 
     interrupt: Name =ISR_QUAD1
         PORT MAP (
-            interrupt => Net_160 );
+            interrupt => Net_232 );
         Properties:
         {
             int_type = "10"
@@ -3685,7 +3685,7 @@ Design Equations
 
     interrupt: Name =ISR_QUAD2
         PORT MAP (
-            interrupt => Net_191 );
+            interrupt => Net_226 );
         Properties:
         {
             int_type = "10"
@@ -3733,8 +3733,8 @@ Analog (SC/CT) Blocks         :    0 :    4 :    4 :  0.00 %
 DAC                           :      :      :      :        
   VIDAC                       :    0 :    4 :    4 :  0.00 %
 </CYPRESSTAG>
-Technology Mapping: Elapsed time ==> 0s.311ms
-Tech Mapping phase: Elapsed time ==> 0s.445ms
+Technology Mapping: Elapsed time ==> 0s.283ms
+Tech Mapping phase: Elapsed time ==> 0s.405ms
 </CYPRESSTAG>
 <CYPRESSTAG name="Analog Placement">
 Initial Analog Placement Results:
@@ -3750,7 +3750,7 @@ IO_0@[IOP=(2)][IoId=(0)] : SE_L_B(0) (fixed)
 IO_3@[IOP=(2)][IoId=(3)] : SE_R_A(0) (fixed)
 IO_2@[IOP=(2)][IoId=(2)] : SE_R_B(0) (fixed)
 IO_7@[IOP=(12)][IoId=(7)] : Tx_1(0) (fixed)
-Analog Placement phase: Elapsed time ==> 0s.061ms
+Analog Placement phase: Elapsed time ==> 0s.060ms
 </CYPRESSTAG>
 <CYPRESSTAG name="Analog Routing">
 Analog Routing phase: Elapsed time ==> 0s.000ms
@@ -3768,11 +3768,11 @@ Dump of CyP35AnalogRoutingResultsDB
 IsVddaHalfUsedForComp = False
 IsVddaHalfUsedForSar0 = False
 IsVddaHalfUsedForSar1 = False
-Analog Code Generation phase: Elapsed time ==> 0s.581ms
+Analog Code Generation phase: Elapsed time ==> 0s.523ms
 </CYPRESSTAG>
 <CYPRESSTAG name="Digital Placement">
 <CYPRESSTAG name="Detailed placement messages">
-I2076: Total run-time: 3.7 sec.
+I2076: Total run-time: 3.6 sec.
 
 </CYPRESSTAG>
 <CYPRESSTAG name="PLD Packing">
@@ -3796,14 +3796,14 @@ PLD Packing Summary
 <CYPRESSTAG name="Packed PLD Contents">
 Packed PLD Contents not displayed at this verbose level.</CYPRESSTAG>
 </CYPRESSTAG>
-PLD Packing: Elapsed time ==> 0s.004ms
+PLD Packing: Elapsed time ==> 0s.006ms
 </CYPRESSTAG>
 <CYPRESSTAG name="Partitioning">
 <CYPRESSTAG name="Initial Partitioning Summary">
 Initial Partitioning Summary not displayed at this verbose level.</CYPRESSTAG>
 <CYPRESSTAG name="Final Partitioning Summary">
 Final Partitioning Summary not displayed at this verbose level.</CYPRESSTAG>
-Partitioning: Elapsed time ==> 0s.127ms
+Partitioning: Elapsed time ==> 0s.124ms
 </CYPRESSTAG>
 <CYPRESSTAG name="Final Placement Summary">
 
@@ -3827,7 +3827,7 @@ LAB@[UDB=(0,0)][LB=0] #macrocells=3, #inputs=7, #pterms=8
         Total # of inputs        : 6
         Total # of product terms : 4
         List of special equations: 
-            Clock  = (Net_190) => Global
+            Clock  = (Net_229) => Global
             Clock Enable: True
         Main Equation            : 4 pterms
         (
@@ -3853,7 +3853,7 @@ LAB@[UDB=(0,0)][LB=0] #macrocells=3, #inputs=7, #pterms=8
         Total # of inputs        : 4
         Total # of product terms : 3
         List of special equations: 
-            Clock  = (Net_190) => Global
+            Clock  = (Net_229) => Global
             Clock Enable: True
         Main Equation            : 3 pterms
         !(
@@ -3872,7 +3872,7 @@ LAB@[UDB=(0,0)][LB=0] #macrocells=3, #inputs=7, #pterms=8
         Total # of inputs        : 1
         Total # of product terms : 1
         List of special equations: 
-            Clock  = (Net_190) => Global
+            Clock  = (Net_229) => Global
             Clock Enable: True
         Main Equation            : 1 pterm
         (
@@ -3892,7 +3892,7 @@ LAB@[UDB=(0,0)][LB=1] #macrocells=3, #inputs=5, #pterms=4
         Total # of inputs        : 1
         Total # of product terms : 1
         List of special equations: 
-            Clock  = (Net_190) => Global
+            Clock  = (Net_229) => Global
             Clock Enable: True
         Main Equation            : 1 pterm
         (
@@ -3907,7 +3907,7 @@ LAB@[UDB=(0,0)][LB=1] #macrocells=3, #inputs=5, #pterms=4
         Total # of inputs        : 4
         Total # of product terms : 2
         List of special equations: 
-            Clock  = (Net_190) => Global
+            Clock  = (Net_229) => Global
             Clock Enable: True
         Main Equation            : 2 pterms
         (
@@ -3929,7 +3929,7 @@ LAB@[UDB=(0,0)][LB=1] #macrocells=3, #inputs=5, #pterms=4
         Total # of inputs        : 1
         Total # of product terms : 1
         List of special equations: 
-            Clock  = (Net_190) => Global
+            Clock  = (Net_229) => Global
             Clock Enable: True
         Main Equation            : 1 pterm
         (
@@ -3946,7 +3946,7 @@ LAB@[UDB=(0,0)][LB=1] #macrocells=3, #inputs=5, #pterms=4
 statusicell: Name =\SER_QUAD:Cnt16:CounterUDB:sSTSReg:stsreg\
     PORT MAP (
         reset => \SER_QUAD:Net_1260\ ,
-        clock => Net_190 ,
+        clock => Net_229 ,
         status_6 => \SER_QUAD:Cnt16:CounterUDB:status_6\ ,
         status_5 => \SER_QUAD:Cnt16:CounterUDB:status_5\ ,
         status_3 => \SER_QUAD:Cnt16:CounterUDB:status_3\ ,
@@ -3983,7 +3983,7 @@ LAB@[UDB=(0,1)][LB=0] #macrocells=4, #inputs=5, #pterms=4
         Total # of inputs        : 2
         Total # of product terms : 1
         List of special equations: 
-            Clock  = (Net_190) => Global
+            Clock  = (Net_229) => Global
             Clock Enable: True
         Main Equation            : 1 pterm
         !(
@@ -4013,7 +4013,7 @@ LAB@[UDB=(0,1)][LB=0] #macrocells=4, #inputs=5, #pterms=4
         Total # of inputs        : 1
         Total # of product terms : 1
         List of special equations: 
-            Clock  = (Net_190) => Global
+            Clock  = (Net_229) => Global
             Clock Enable: True
         Main Equation            : 1 pterm
         (
@@ -4031,7 +4031,7 @@ LAB@[UDB=(0,1)][LB=1] #macrocells=3, #inputs=10, #pterms=5
         Total # of inputs        : 7
         Total # of product terms : 3
         List of special equations: 
-            Clock  = (Net_190) => Global
+            Clock  = (Net_229) => Global
             Clock Enable: True
         Main Equation            : 3 pterms
         (
@@ -4070,7 +4070,7 @@ LAB@[UDB=(0,1)][LB=1] #macrocells=3, #inputs=10, #pterms=5
         Total # of inputs        : 1
         Total # of product terms : 1
         List of special equations: 
-            Clock  = (Net_190) => Global
+            Clock  = (Net_229) => Global
             Clock Enable: True
         Main Equation            : 1 pterm
         (
@@ -4084,7 +4084,7 @@ LAB@[UDB=(0,1)][LB=1] #macrocells=3, #inputs=10, #pterms=5
 
 datapathcell: Name =\SER_QUAD:Cnt16:CounterUDB:sC16:counterdp:u1\
     PORT MAP (
-        clock => Net_190 ,
+        clock => Net_229 ,
         cs_addr_2 => \SER_QUAD:Net_1251\ ,
         cs_addr_1 => \SER_QUAD:Cnt16:CounterUDB:count_enable\ ,
         cs_addr_0 => \SER_QUAD:Cnt16:CounterUDB:reload\ ,
@@ -4124,7 +4124,7 @@ datapathcell: Name =\SER_QUAD:Cnt16:CounterUDB:sC16:counterdp:u1\
 
 controlcell: Name =\SER_QUAD:Cnt16:CounterUDB:sCTRLReg:ctrlreg\
     PORT MAP (
-        clock => Net_190 ,
+        clock => Net_229 ,
         control_7 => \SER_QUAD:Cnt16:CounterUDB:control_7\ ,
         control_6 => \SER_QUAD:Cnt16:CounterUDB:control_6\ ,
         control_5 => \SER_QUAD:Cnt16:CounterUDB:control_5\ ,
@@ -4151,11 +4151,11 @@ LAB@[UDB=(0,2)][LB=0] #macrocells=3, #inputs=11, #pterms=6
         Total # of inputs        : 1
         Total # of product terms : 1
         List of special equations: 
-            Clock  = (Net_190) => Global
+            Clock  = (Net_229) => Global
             Clock Enable: True
         Main Equation            : 1 pterm
         (
-              Net_187
+              Net_227
         );
         Output = \SER_QUAD:bQuadDec:quad_A_delayed_0\ (fanout=2)
         Properties               : 
@@ -4180,7 +4180,7 @@ LAB@[UDB=(0,2)][LB=0] #macrocells=3, #inputs=11, #pterms=6
         Total # of inputs        : 8
         Total # of product terms : 4
         List of special equations: 
-            Clock  = (Net_190) => Global
+            Clock  = (Net_229) => Global
             Clock Enable: True
         Main Equation            : 4 pterms
         (
@@ -4224,7 +4224,7 @@ LAB@[UDB=(0,2)][LB=1] #macrocells=2, #inputs=4, #pterms=2
         Total # of inputs        : 1
         Total # of product terms : 1
         List of special equations: 
-            Clock  = (Net_190) => Global
+            Clock  = (Net_229) => Global
             Clock Enable: True
         Main Equation            : 1 pterm
         (
@@ -4240,12 +4240,12 @@ LAB@[UDB=(0,2)][LB=1] #macrocells=2, #inputs=4, #pterms=2
 
 statusicell: Name =\SER_QUAD:bQuadDec:Stsreg\
     PORT MAP (
-        clock => Net_190 ,
+        clock => Net_229 ,
         status_3 => \SER_QUAD:bQuadDec:error\ ,
         status_2 => \SER_QUAD:Net_1260\ ,
         status_1 => \SER_QUAD:Net_611\ ,
         status_0 => \SER_QUAD:Net_530\ ,
-        interrupt => Net_191 );
+        interrupt => Net_226 );
     Properties:
     {
         cy_force_order = 1
@@ -4262,7 +4262,7 @@ LAB@[UDB=(0,3)][LB=0] #macrocells=2, #inputs=6, #pterms=8
         Total # of inputs        : 6
         Total # of product terms : 4
         List of special equations: 
-            Clock  = (Net_159) => Global
+            Clock  = (Net_235) => Global
             Clock Enable: True
         Main Equation            : 4 pterms
         (
@@ -4287,7 +4287,7 @@ LAB@[UDB=(0,3)][LB=0] #macrocells=2, #inputs=6, #pterms=8
         Total # of inputs        : 6
         Total # of product terms : 4
         List of special equations: 
-            Clock  = (Net_159) => Global
+            Clock  = (Net_235) => Global
             Clock Enable: True
         Main Equation            : 4 pterms
         (
@@ -4319,7 +4319,7 @@ LAB@[UDB=(0,3)][LB=1] #macrocells=2, #inputs=3, #pterms=2
         Total # of inputs        : 1
         Total # of product terms : 1
         List of special equations: 
-            Clock  = (Net_159) => Global
+            Clock  = (Net_235) => Global
             Clock Enable: True
         Main Equation            : 1 pterm
         (
@@ -4334,7 +4334,7 @@ LAB@[UDB=(0,3)][LB=1] #macrocells=2, #inputs=3, #pterms=2
         Total # of inputs        : 2
         Total # of product terms : 1
         List of special equations: 
-            Clock  = (Net_159) => Global
+            Clock  = (Net_235) => Global
             Clock Enable: True
         Main Equation            : 1 pterm
         !(
@@ -4351,7 +4351,7 @@ LAB@[UDB=(0,3)][LB=1] #macrocells=2, #inputs=3, #pterms=2
 
 datapathcell: Name =\SEL_QUAD:Cnt16:CounterUDB:sC16:counterdp:u0\
     PORT MAP (
-        clock => Net_159 ,
+        clock => Net_235 ,
         cs_addr_2 => \SEL_QUAD:Net_1251\ ,
         cs_addr_1 => \SEL_QUAD:Cnt16:CounterUDB:count_enable\ ,
         cs_addr_0 => \SEL_QUAD:Cnt16:CounterUDB:reload\ ,
@@ -4393,11 +4393,11 @@ LAB@[UDB=(0,4)][LB=0] #macrocells=2, #inputs=2, #pterms=2
         Total # of inputs        : 1
         Total # of product terms : 1
         List of special equations: 
-            Clock  = (Net_159) => Global
+            Clock  = (Net_235) => Global
             Clock Enable: True
         Main Equation            : 1 pterm
         (
-              Net_156
+              Net_233
         );
         Output = \SEL_QUAD:bQuadDec:quad_A_delayed_0\ (fanout=2)
         Properties               : 
@@ -4408,11 +4408,11 @@ LAB@[UDB=(0,4)][LB=0] #macrocells=2, #inputs=2, #pterms=2
         Total # of inputs        : 1
         Total # of product terms : 1
         List of special equations: 
-            Clock  = (Net_159) => Global
+            Clock  = (Net_235) => Global
             Clock Enable: True
         Main Equation            : 1 pterm
         (
-              Net_157
+              Net_234
         );
         Output = \SEL_QUAD:bQuadDec:quad_B_delayed_0\ (fanout=2)
         Properties               : 
@@ -4514,7 +4514,7 @@ LAB@[UDB=(0,5)][LB=0] #macrocells=2, #inputs=6, #pterms=4
         Total # of inputs        : 4
         Total # of product terms : 3
         List of special equations: 
-            Clock  = (Net_159) => Global
+            Clock  = (Net_235) => Global
             Clock Enable: True
         Main Equation            : 3 pterms
         !(
@@ -4551,7 +4551,7 @@ LAB@[UDB=(0,5)][LB=1] #macrocells=2, #inputs=7, #pterms=5
         Total # of inputs        : 6
         Total # of product terms : 4
         List of special equations: 
-            Clock  = (Net_159) => Global
+            Clock  = (Net_235) => Global
             Clock Enable: True
         Main Equation            : 4 pterms
         (
@@ -4578,7 +4578,7 @@ LAB@[UDB=(0,5)][LB=1] #macrocells=2, #inputs=7, #pterms=5
         Total # of inputs        : 1
         Total # of product terms : 1
         List of special equations: 
-            Clock  = (Net_159) => Global
+            Clock  = (Net_235) => Global
             Clock Enable: True
         Main Equation            : 1 pterm
         (
@@ -4599,7 +4599,7 @@ LAB@[UDB=(1,0)][LB=0] #macrocells=2, #inputs=6, #pterms=8
         Total # of inputs        : 6
         Total # of product terms : 4
         List of special equations: 
-            Clock  = (Net_190) => Global
+            Clock  = (Net_229) => Global
             Clock Enable: True
         Main Equation            : 4 pterms
         (
@@ -4624,7 +4624,7 @@ LAB@[UDB=(1,0)][LB=0] #macrocells=2, #inputs=6, #pterms=8
         Total # of inputs        : 6
         Total # of product terms : 4
         List of special equations: 
-            Clock  = (Net_190) => Global
+            Clock  = (Net_229) => Global
             Clock Enable: True
         Main Equation            : 4 pterms
         (
@@ -4771,7 +4771,7 @@ LAB@[UDB=(1,1)][LB=1] #macrocells=3, #inputs=4, #pterms=4
         Total # of inputs        : 4
         Total # of product terms : 2
         List of special equations: 
-            Clock  = (Net_190) => Global
+            Clock  = (Net_229) => Global
             Clock Enable: True
         Main Equation            : 2 pterms
         (
@@ -4793,7 +4793,7 @@ LAB@[UDB=(1,1)][LB=1] #macrocells=3, #inputs=4, #pterms=4
         Total # of inputs        : 1
         Total # of product terms : 1
         List of special equations: 
-            Clock  = (Net_190) => Global
+            Clock  = (Net_229) => Global
             Clock Enable: True
         Main Equation            : 1 pterm
         (
@@ -4808,7 +4808,7 @@ LAB@[UDB=(1,1)][LB=1] #macrocells=3, #inputs=4, #pterms=4
         Total # of inputs        : 1
         Total # of product terms : 1
         List of special equations: 
-            Clock  = (Net_190) => Global
+            Clock  = (Net_229) => Global
             Clock Enable: True
         Main Equation            : 1 pterm
         (
@@ -4822,7 +4822,7 @@ LAB@[UDB=(1,1)][LB=1] #macrocells=3, #inputs=4, #pterms=4
 
 datapathcell: Name =\SER_QUAD:Cnt16:CounterUDB:sC16:counterdp:u0\
     PORT MAP (
-        clock => Net_190 ,
+        clock => Net_229 ,
         cs_addr_2 => \SER_QUAD:Net_1251\ ,
         cs_addr_1 => \SER_QUAD:Cnt16:CounterUDB:count_enable\ ,
         cs_addr_0 => \SER_QUAD:Cnt16:CounterUDB:reload\ ,
@@ -5106,7 +5106,7 @@ LAB@[UDB=(1,3)][LB=1] #macrocells=3, #inputs=5, #pterms=5
 
 datapathcell: Name =\SEL_QUAD:Cnt16:CounterUDB:sC16:counterdp:u1\
     PORT MAP (
-        clock => Net_159 ,
+        clock => Net_235 ,
         cs_addr_2 => \SEL_QUAD:Net_1251\ ,
         cs_addr_1 => \SEL_QUAD:Cnt16:CounterUDB:count_enable\ ,
         cs_addr_0 => \SEL_QUAD:Cnt16:CounterUDB:reload\ ,
@@ -5261,7 +5261,7 @@ LAB@[UDB=(1,4)][LB=1] #macrocells=4, #inputs=8, #pterms=5
         Total # of inputs        : 4
         Total # of product terms : 2
         List of special equations: 
-            Clock  = (Net_159) => Global
+            Clock  = (Net_235) => Global
             Clock Enable: True
         Main Equation            : 2 pterms
         (
@@ -5283,7 +5283,7 @@ LAB@[UDB=(1,4)][LB=1] #macrocells=4, #inputs=8, #pterms=5
         Total # of inputs        : 1
         Total # of product terms : 1
         List of special equations: 
-            Clock  = (Net_159) => Global
+            Clock  = (Net_235) => Global
             Clock Enable: True
         Main Equation            : 1 pterm
         (
@@ -5356,7 +5356,7 @@ LAB@[UDB=(1,5)][LB=0] #macrocells=4, #inputs=6, #pterms=4
         Total # of inputs        : 1
         Total # of product terms : 1
         List of special equations: 
-            Clock  = (Net_159) => Global
+            Clock  = (Net_235) => Global
             Clock Enable: True
         Main Equation            : 1 pterm
         (
@@ -5371,7 +5371,7 @@ LAB@[UDB=(1,5)][LB=0] #macrocells=4, #inputs=6, #pterms=4
         Total # of inputs        : 1
         Total # of product terms : 1
         List of special equations: 
-            Clock  = (Net_159) => Global
+            Clock  = (Net_235) => Global
             Clock Enable: True
         Main Equation            : 1 pterm
         (
@@ -5401,7 +5401,7 @@ LAB@[UDB=(1,5)][LB=0] #macrocells=4, #inputs=6, #pterms=4
         Total # of inputs        : 1
         Total # of product terms : 1
         List of special equations: 
-            Clock  = (Net_159) => Global
+            Clock  = (Net_235) => Global
             Clock Enable: True
         Main Equation            : 1 pterm
         (
@@ -5419,7 +5419,7 @@ LAB@[UDB=(1,5)][LB=1] #macrocells=4, #inputs=10, #pterms=7
         Total # of inputs        : 4
         Total # of product terms : 2
         List of special equations: 
-            Clock  = (Net_159) => Global
+            Clock  = (Net_235) => Global
             Clock Enable: True
         Main Equation            : 2 pterms
         (
@@ -5441,7 +5441,7 @@ LAB@[UDB=(1,5)][LB=1] #macrocells=4, #inputs=10, #pterms=7
         Total # of inputs        : 7
         Total # of product terms : 3
         List of special equations: 
-            Clock  = (Net_159) => Global
+            Clock  = (Net_235) => Global
             Clock Enable: True
         Main Equation            : 3 pterms
         (
@@ -5464,7 +5464,7 @@ LAB@[UDB=(1,5)][LB=1] #macrocells=4, #inputs=10, #pterms=7
         Total # of inputs        : 1
         Total # of product terms : 1
         List of special equations: 
-            Clock  = (Net_159) => Global
+            Clock  = (Net_235) => Global
             Clock Enable: True
         Main Equation            : 1 pterm
         (
@@ -5479,7 +5479,7 @@ LAB@[UDB=(1,5)][LB=1] #macrocells=4, #inputs=10, #pterms=7
         Total # of inputs        : 1
         Total # of product terms : 1
         List of special equations: 
-            Clock  = (Net_159) => Global
+            Clock  = (Net_235) => Global
             Clock Enable: True
         Main Equation            : 1 pterm
         (
@@ -5494,7 +5494,7 @@ LAB@[UDB=(1,5)][LB=1] #macrocells=4, #inputs=10, #pterms=7
 statusicell: Name =\SEL_QUAD:Cnt16:CounterUDB:sSTSReg:stsreg\
     PORT MAP (
         reset => \SEL_QUAD:Net_1260\ ,
-        clock => Net_159 ,
+        clock => Net_235 ,
         status_6 => \SEL_QUAD:Cnt16:CounterUDB:status_6\ ,
         status_5 => \SEL_QUAD:Cnt16:CounterUDB:status_5\ ,
         status_3 => \SEL_QUAD:Cnt16:CounterUDB:status_3\ ,
@@ -5512,7 +5512,7 @@ statusicell: Name =\SEL_QUAD:Cnt16:CounterUDB:sSTSReg:stsreg\
 
 controlcell: Name =\SEL_QUAD:Cnt16:CounterUDB:sCTRLReg:ctrlreg\
     PORT MAP (
-        clock => Net_159 ,
+        clock => Net_235 ,
         control_7 => \SEL_QUAD:Cnt16:CounterUDB:control_7\ ,
         control_6 => \SEL_QUAD:Cnt16:CounterUDB:control_6\ ,
         control_5 => \SEL_QUAD:Cnt16:CounterUDB:control_5\ ,
@@ -5543,11 +5543,11 @@ LAB@[UDB=(2,1)][LB=0] #macrocells=1, #inputs=1, #pterms=1
         Total # of inputs        : 1
         Total # of product terms : 1
         List of special equations: 
-            Clock  = (Net_190) => Global
+            Clock  = (Net_229) => Global
             Clock Enable: True
         Main Equation            : 1 pterm
         (
-              Net_188
+              Net_228
         );
         Output = \SER_QUAD:bQuadDec:quad_B_delayed_0\ (fanout=2)
         Properties               : 
@@ -5633,12 +5633,12 @@ LAB@[UDB=(2,1)][LB=1] #macrocells=4, #inputs=11, #pterms=8
 
 statusicell: Name =\SEL_QUAD:bQuadDec:Stsreg\
     PORT MAP (
-        clock => Net_159 ,
+        clock => Net_235 ,
         status_3 => \SEL_QUAD:bQuadDec:error\ ,
         status_2 => \SEL_QUAD:Net_1260\ ,
         status_1 => \SEL_QUAD:Net_611\ ,
         status_0 => \SEL_QUAD:Net_530\ ,
-        interrupt => Net_160 );
+        interrupt => Net_232 );
     Properties:
     {
         cy_force_order = 1
@@ -5683,7 +5683,7 @@ LAB@[UDB=(2,2)][LB=0] #macrocells=3, #inputs=10, #pterms=6
         Total # of inputs        : 8
         Total # of product terms : 4
         List of special equations: 
-            Clock  = (Net_159) => Global
+            Clock  = (Net_235) => Global
             Clock Enable: True
         Main Equation            : 4 pterms
         (
@@ -6032,7 +6032,7 @@ Intr container @ [IntrContainer=(0)]:
   Intr@ [IntrContainer=(0)][IntrId=(0)] 
     interrupt: Name =ISR_QUAD1
         PORT MAP (
-            interrupt => Net_160 );
+            interrupt => Net_232 );
         Properties:
         {
             int_type = "10"
@@ -6041,7 +6041,7 @@ Intr container @ [IntrContainer=(0)]:
   Intr@ [IntrContainer=(0)][IntrId=(1)] 
     interrupt: Name =ISR_QUAD2
         PORT MAP (
-            interrupt => Net_191 );
+            interrupt => Net_226 );
         Properties:
         {
             int_type = "10"
@@ -6328,7 +6328,7 @@ Pin : Name = SE_L_B(0)
         IO Voltage: 0
     PORT MAP (
         pa_out => SE_L_B(0)__PA ,
-        fb => Net_157 ,
+        fb => Net_234 ,
         pad => SE_L_B(0)_PAD );
     Properties:
     {
@@ -6369,7 +6369,7 @@ Pin : Name = SE_L_A(0)
         IO Voltage: 0
     PORT MAP (
         pa_out => SE_L_A(0)__PA ,
-        fb => Net_156 ,
+        fb => Net_233 ,
         pad => SE_L_A(0)_PAD );
     Properties:
     {
@@ -6410,7 +6410,7 @@ Pin : Name = SE_R_B(0)
         IO Voltage: 0
     PORT MAP (
         pa_out => SE_R_B(0)__PA ,
-        fb => Net_188 ,
+        fb => Net_228 ,
         pad => SE_R_B(0)_PAD );
     Properties:
     {
@@ -6451,7 +6451,7 @@ Pin : Name = SE_R_A(0)
         IO Voltage: 0
     PORT MAP (
         pa_out => SE_R_A(0)__PA ,
-        fb => Net_187 ,
+        fb => Net_227 ,
         pad => SE_R_A(0)_PAD );
     Properties:
     {
@@ -6561,10 +6561,10 @@ Clock group 0:
             clk_sync => ClockBlock_MASTER_CLK ,
             clk_bus_glb => ClockBlock_BUS_CLK ,
             clk_bus => ClockBlock_BUS_CLK_local ,
-            dclk_glb_0 => Net_159 ,
-            dclk_0 => Net_159_local ,
-            dclk_glb_1 => Net_190 ,
-            dclk_1 => Net_190_local ,
+            dclk_glb_0 => Net_235 ,
+            dclk_0 => Net_235_local ,
+            dclk_glb_1 => Net_229 ,
+            dclk_1 => Net_229_local ,
             dclk_glb_2 => \UART_1:Net_9\ ,
             dclk_2 => \UART_1:Net_9_local\ ,
             dclk_glb_3 => Net_19 ,
@@ -6610,10 +6610,10 @@ Port | Pin | Fixed |      Type |       Drive Mode |      Name | Connections
      |   6 |     * |      NONE |         CMOS_OUT |  MR_EN(0) | In(Net_22)
      |   7 |     * |      NONE |         CMOS_OUT |  ML_EN(0) | In(Net_21)
 -----+-----+-------+-----------+------------------+-----------+------------
-   2 |   0 |     * |      NONE |     HI_Z_DIGITAL | SE_L_B(0) | FB(Net_157)
-     |   1 |     * |      NONE |     HI_Z_DIGITAL | SE_L_A(0) | FB(Net_156)
-     |   2 |     * |      NONE |     HI_Z_DIGITAL | SE_R_B(0) | FB(Net_188)
-     |   3 |     * |      NONE |     HI_Z_DIGITAL | SE_R_A(0) | FB(Net_187)
+   2 |   0 |     * |      NONE |     HI_Z_DIGITAL | SE_L_B(0) | FB(Net_234)
+     |   1 |     * |      NONE |     HI_Z_DIGITAL | SE_L_A(0) | FB(Net_233)
+     |   2 |     * |      NONE |     HI_Z_DIGITAL | SE_R_B(0) | FB(Net_228)
+     |   3 |     * |      NONE |     HI_Z_DIGITAL | SE_R_A(0) | FB(Net_227)
 -----+-----+-------+-----------+------------------+-----------+------------
   12 |   6 |     * |      NONE |     HI_Z_DIGITAL |   Rx_1(0) | FB(Net_169)
      |   7 |     * |      NONE |         CMOS_OUT |   Tx_1(0) | In(Net_164)
@@ -6621,33 +6621,33 @@ Port | Pin | Fixed |      Type |       Drive Mode |      Name | Connections
 </CYPRESSTAG>
 </CYPRESSTAG>
 </CYPRESSTAG>
-Digital component placer commit/Report: Elapsed time ==> 0s.151ms
-Digital Placement phase: Elapsed time ==> 4s.466ms
+Digital component placer commit/Report: Elapsed time ==> 0s.101ms
+Digital Placement phase: Elapsed time ==> 4s.529ms
 </CYPRESSTAG>
 <CYPRESSTAG name="Digital Routing">
 "C:\Program Files (x86)\Cypress\PSoC Creator\4.1\PSoC Creator\bin/sjrouter.exe" --xml-path "C:\Program Files (x86)\Cypress\PSoC Creator\4.1\PSoC Creator\dev\psoc5/psoc5lp/route_arch-rrg.cydata" --vh2-path "motor_test_r.vh2" --pcf-path "motor_test.pco" --des-name "motor_test" --dsf-path "motor_test.dsf" --sdc-path "motor_test.sdc" --lib-path "motor_test_r.lib"
 Routing successful.
-Digital Routing phase: Elapsed time ==> 5s.297ms
+Digital Routing phase: Elapsed time ==> 4s.952ms
 </CYPRESSTAG>
 <CYPRESSTAG name="Bitstream Generation">
-Bitstream Generation phase: Elapsed time ==> 0s.437ms
+Bitstream Generation phase: Elapsed time ==> 0s.328ms
 </CYPRESSTAG>
 <CYPRESSTAG name="Bitstream Verification">
-Bitstream Verification phase: Elapsed time ==> 0s.074ms
+Bitstream Verification phase: Elapsed time ==> 0s.094ms
 </CYPRESSTAG>
 <CYPRESSTAG name="Static timing analysis">
 Timing report is in motor_test_timing.html.
-Static timing analysis phase: Elapsed time ==> 1s.019ms
+Static timing analysis phase: Elapsed time ==> 1s.035ms
 </CYPRESSTAG>
 <CYPRESSTAG name="Data reporting">
 Data reporting phase: Elapsed time ==> 0s.000ms
 </CYPRESSTAG>
 <CYPRESSTAG name="Database update...">
-Design database save phase: Elapsed time ==> 0s.472ms
+Design database save phase: Elapsed time ==> 0s.368ms
 </CYPRESSTAG>
-cydsfit: Elapsed time ==> 12s.976ms
+cydsfit: Elapsed time ==> 12s.413ms
 </CYPRESSTAG>
-Fitter phase: Elapsed time ==> 12s.978ms
-API generation phase: Elapsed time ==> 2s.740ms
-Dependency generation phase: Elapsed time ==> 0s.056ms
+Fitter phase: Elapsed time ==> 12s.418ms
+API generation phase: Elapsed time ==> 2s.958ms
+Dependency generation phase: Elapsed time ==> 0s.048ms
 Cleanup phase: Elapsed time ==> 0s.002ms

@@ -2,23 +2,29 @@
 DRIVING TESTS
 
 todo:
-    - driveXdist(dist); drive forward a variable distance by monitoring the shaft encoders and adjusting individual wheel speeds accordingly
-    - convert getDistance() units to real units (mm); once power supply is done we can run tests for a QuadDec_Counter -- mm conversion
-    
+    - 
  * ========================================
 */
 
 #include "project.h"
 #include "stdlib.h"
 
+// defines
+#define QUAD_COEFF 200  
+/*
+conversion coefficient from distance in cm to quadrature encoder counter
+i.e. dist*QUAD_COEFF = value that QuadDec should count up to to travel dist in cm.
+200 is a roughly correct value i just measured; can be adjusted for preciseness later
+*/
+
 // initialise global variables
-int16 overflowCountL = 0u;
+int16 overflowCountL = 0u; // NB can go negative for underflow (when moving backward)
 int16 overflowCountR = 0u;
 
 
 /* ========== FUNCTIONS START HERE ===================== */
 
-/* this is ripped char for char from TimeStamp_Measurement example from cypress */
+/* these are ripped from TimeStamp_Measurement example from cypress */
 uint32 Hex2Dec_Str(char8 str[], uint32 hex) {
     uint32 i, hex_tmp;
     uint32 res;
@@ -39,7 +45,6 @@ uint32 Hex2Dec_Str(char8 str[], uint32 hex) {
     }
     return len;
 }
-
 void printNumUART(uint32 num) {
     uint16 distLen;
     char8 strHex[10u];
@@ -51,7 +56,7 @@ void printNumUART(uint32 num) {
     }
 }
 
-/* ISR for shaft encoder 1 -- identical to next ISR */
+/* ISR for shaft encoders -- identical, only differ in wheel value */
 CY_ISR_PROTO(QUAD1_ISR) {
     
     uint32 counter_status = 0u;
@@ -128,7 +133,7 @@ int32 getDistance(int side, int32 startdist) {
     return distance;
 }
 
-/* Drives X distance forward, using getDistance to monitor the shaft encoders as it drives */
+/* Drives X distance (cm) forward, using getDistance to poll the shaft encoders every 100ms as it drives */
 void driveXdist(int32 Xdist) {
     
     uint8 lspeed, rspeed;
@@ -137,11 +142,18 @@ void driveXdist(int32 Xdist) {
     int32 lsdist,rsdist;
     int32 deltDist;
     
+    int32 XdistSE = Xdist*QUAD_COEFF; // Xdist converted to QuadDec counter value
+    UART_1_PutString("\nMoving ");
+    printNumUART(Xdist);
+    UART_1_PutString(" cm = ");
+    printNumUART(XdistSE);
+    UART_1_PutString(" QuadDec count");
+    
     int done=0;
     
     // start shaft encoders
-    lsdist = getDistance(1,0); // left starting dist
-    rsdist = getDistance(0,0); // right starting dist
+    lsdist = getDistance(1,0); // get left starting dist
+    rsdist = getDistance(0,0); // get right starting dist
     
     // start motors forward
     // 25% speed
@@ -154,45 +166,40 @@ void driveXdist(int32 Xdist) {
     A3_Write(0); // R
     A4_Write(1);
     
-    // after brief period, get distance; this is going to be some kind of closed loop system until shaft encoders read same dist? idk
+    // after 100ms get distance; this is going to be some kind of closed loop system until shaft encoders read same dist? idk
     // when both shaft encoders read X distance, stop
-    //while (!done) {
-    for (int i=0; i<10; i++) {
-        CyDelay(500);
+    // update: it drives pretty straight as is, i don't think i need any closed loop feedback
+    while (!done) {
+    //for (int i=0; i<10; i++) {
+        CyDelay(100); // the smaller this value, the more often the SEs are polled and hence the more accurate the distance
+                      // 100ms seems sufficient for now
         
         // get relative distance from both wheels
         ldist = getDistance(1,lsdist); //left
         rdist = getDistance(0,rsdist); //right
-        
-        // difference
-        deltDist = ldist-rdist;
         
         UART_1_PutString("\nLdist = ");
         printNumUART(ldist);
         UART_1_PutString("  Rdist = ");
         printNumUART(rdist);
         
-        // some kind of closed feedback here
-        lspeed = lspeed - 0.2*deltDist;
-        rspeed = rspeed + 0.2*deltDist;
-        PWM_1_WriteCompare1(lspeed);
-        PWM_1_WriteCompare2(rspeed);
+                // some kind of closed feedback here
+                deltDist = ldist-rdist;
+                lspeed = lspeed - (deltDist>>2); // adjust speed by difference/4, but...
+                rspeed = rspeed + (deltDist>>2);
+                //PWM_1_WriteCompare1(lspeed); // ..turned this feature off because it seems to drive straight anyway
+                //PWM_1_WriteCompare2(rspeed);
         
-//        if (ldist>=Xdist & rdist>=Xdist) {
-//            // distance reached; stop
-//            A1_Write(0);
-//            A2_Write(0);
-//            A3_Write(0);
-//            A4_Write(0);
-//            done=1;
-        //}
-    }
-    
-    A1_Write(0);
-    A2_Write(0);
-    A3_Write(0);
-    A4_Write(0);
-            
+        /* When either wheel reaches target distance, stop both */
+        // todo?: turn off each motor individually when it reaches Xdist. for now it travels straight so maybe it doesn't matter
+        if ((ldist>=XdistSE) || (rdist>=XdistSE)) {
+            A1_Write(0);
+            A2_Write(0);
+            A3_Write(0);
+            A4_Write(0);
+            done=1;
+        }
+    }            
 }
 
 int main(void)
@@ -201,6 +208,7 @@ int main(void)
     
     // start components and ISRs
     UART_1_Start();
+    UART_1_PutString("\nUART started");
     PWM_1_Start();
     SEL_QUAD_Start();
     SER_QUAD_Start();
@@ -212,7 +220,8 @@ int main(void)
     
     
     // driveXdist();
-    driveXdist(40000); // units = QuadDec counter
+    driveXdist(20); // units = cm
+    
     
     for(;;)
     {   
