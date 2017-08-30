@@ -207,72 +207,72 @@ void driveXdist(int32 Xdist, int dir) {
 
 /* Turns X degrees CW/CCW, polls shaft encoders every 50 ms until X degrees is reached.
 very similar to driveXdist() */
-void turnXdegrees(int16 Xdeg, int dir) {
-    /*
-    INPUTS
-    Xdeg = desired angle to rotate robot (degrees)
-    dir = direction to rotate (1=clockwise, 0=anticlockwise)
-    */
-
-    uint lspeed, rspeed;
-    int32 ldist, rdist, lsdist, rsdist;
-    int32 XdegSE = Xdef * ROTATE_COEFF;
-    UART_1_PutString("\nTurning ");
-    printNumUART(Xdeg);
-    UART_1_PutString(" degrees = ");
-    printNumUART(XdegSE);
-    UART_1_PutString(" QuadDec count");
-
-    int Ldone=0;
-    int Rdone=0;
-    
-    // start shaft encoders
-    lsdist = (getDistance(1,0)); // get left starting dist
-    rsdist = (getDistance(0,0)); // get right starting dist
-    
-    // 25% speed
-    lspeed = 63;
-    rspeed = 63;
-    PWM_1_WriteCompare1(lspeed);
-    PWM_1_WriteCompare2(rspeed);
-    
-    // start motors
-    A1_Write(!dir); // L
-    A2_Write(dir);
-    A3_Write(dir); // R
-    A4_Write(!dir);
-
-    // poll SEs every 50ms, stop when both wheels have rotated enough
-    while (!Ldone && !Rdone) {
-
-        CyDelay(50);
-
-        // get relative distance from both wheels
-        if (!Ldone) {
-            ldist = (getDistance(1,lsdist)); //left
-        }
-        if (!Rdone) {
-            rdist = (getDistance(0,rsdist)); //right
-        }
-        UART_1_PutString("\nLdist = ");
-        printNumUART(ldist);
-        UART_1_PutString("  Rdist = ");
-        printNumUART(rdist);
-
-        /* When either wheel reaches target distance, stop that wheel */
-        if (abs(ldist)>=XdistSE) {
-            A1_Write(0);
-            A2_Write(0);
-            Ldone=1;
-        }
-        if (abs(rdist)>=XdistSE) {
-            A1_Write(0);
-            A2_Write(0);
-            Rdone=1;
-        }
-    }
-}
-
+//void turnXdegrees(int16 Xdeg, int dir) {
+//    /*
+//    INPUTS
+//    Xdeg = desired angle to rotate robot (degrees)
+//    dir = direction to rotate (1=clockwise, 0=anticlockwise)
+//    */
+//
+//    uint8 lspeed, rspeed;
+//    int32 ldist, rdist, lsdist, rsdist;
+//    int32 XdegSE = Xdef * ROTATE_COEFF;
+//    UART_1_PutString("\nTurning ");
+//    printNumUART(Xdeg);
+//    UART_1_PutString(" degrees = ");
+//    printNumUART(XdegSE);
+//    UART_1_PutString(" QuadDec count");
+//
+//    int Ldone=0;
+//    int Rdone=0;
+//    
+//    // start shaft encoders
+//    lsdist = (getDistance(1,0)); // get left starting dist
+//    rsdist = (getDistance(0,0)); // get right starting dist
+//    
+//    // 25% speed
+//    lspeed = 63;
+//    rspeed = 63;
+//    PWM_1_WriteCompare1(lspeed);
+//    PWM_1_WriteCompare2(rspeed);
+//    
+//    // start motors
+//    A1_Write(!dir); // L
+//    A2_Write(dir);
+//    A3_Write(dir); // R
+//    A4_Write(!dir);
+//
+//    // poll SEs every 50ms, stop when both wheels have rotated enough
+//    while (!Ldone && !Rdone) {
+//
+//        CyDelay(50);
+//
+//        // get relative distance from both wheels
+//        if (!Ldone) {
+//            ldist = (getDistance(1,lsdist)); //left
+//        }
+//        if (!Rdone) {
+//            rdist = (getDistance(0,rsdist)); //right
+//        }
+//        UART_1_PutString("\nLdist = ");
+//        printNumUART(ldist);
+//        UART_1_PutString("  Rdist = ");
+//        printNumUART(rdist);
+//
+//        /* When either wheel reaches target distance, stop that wheel */
+//        if (abs(ldist)>=XdistSE) {
+//            A1_Write(0);
+//            A2_Write(0);
+//            Ldone=1;
+//        }
+//        if (abs(rdist)>=XdistSE) {
+//            A1_Write(0);
+//            A2_Write(0);
+//            Rdone=1;
+//        }
+//    }
+//}
+//
 int main(void)
 {
     CyGlobalIntEnable; /* Enable global interrupts. */

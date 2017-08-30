@@ -1,0 +1,388 @@
+<?xml version="1.0" encoding="utf-8"?>
+<CyXmlSerializer>
+<!--This file is machine generated and read. It is not intended to be edited by hand.-->
+<!--Due to this, there is no schema for this file.-->
+<CyGuid_843a90a4-0c4b-4e44-991d-05e7fb117a21 type_name="CyDesigner.Common.ProjMgmt.Model.CyPrjMgmtWrkspcCustomData" version="4">
+<CyGuid_fdba8dfd-b15b-4469-9bbb-9e40c3e70997 type_name="CyDesigner.Common.Base.CyCustomData" version="2">
+<userData>
+<dataGuid v="1b906a0f-a7b6-4e4d-a428-82f98b53cb35">
+<CyGuid_1b906a0f-a7b6-4e4d-a428-82f98b53cb35 type_name="CyDesigner.Common.ProjMgmt.GUI.CyExplorerWindow+CyExplorerWindowState" version="3" SelectedTab="Source">
+<TreeKeys>
+<v>Source</v>
+<v>Components</v>
+<v>Output</v>
+</TreeKeys>
+<TreeStates>
+<CyGuid_2a325b3b-c96a-4e9f-b7a0-2c44ecb5f237 type_name="CyDesigner.Common.Base.Controls.CyTreeViewState" version="1" SelectedNodeId="test2\motor_test\Source Files\main.c">
+<ExpandedNodeIds>
+<v>test2</v>
+<v>test2\hello-world</v>
+<v>test2\hello-world\TopDesign</v>
+<v>test2\hello-world\hello-world.cydwr</v>
+<v>test2\hello-world\hello-world.cydwr\Pins</v>
+<v>test2\hello-world\hello-world.cydwr\Analog</v>
+<v>test2\hello-world\hello-world.cydwr\Clocks</v>
+<v>test2\hello-world\hello-world.cydwr\Interrupts</v>
+<v>test2\hello-world\hello-world.cydwr\DMA</v>
+<v>test2\hello-world\hello-world.cydwr\System</v>
+<v>test2\hello-world\hello-world.cydwr\Directives</v>
+<v>test2\hello-world\hello-world.cydwr\Flash Security</v>
+<v>test2\hello-world\hello-world.cydwr\EEPROM</v>
+<v>test2\hello-world\Header Files</v>
+<v>test2\hello-world\Header Files\cyapicallbacks.h</v>
+<v>test2\hello-world\Source Files</v>
+<v>test2\hello-world\Source Files\main.c</v>
+<v>test2\hello-world\Generated_Source</v>
+<v>test2\hello-world\Generated_Source\PSoC5</v>
+<v>test2\motor_test</v>
+<v>test2\motor_test\TopDesign</v>
+<v>test2\motor_test\motor_test.cydwr</v>
+<v>test2\motor_test\motor_test.cydwr\Pins</v>
+<v>test2\motor_test\motor_test.cydwr\Analog</v>
+<v>test2\motor_test\motor_test.cydwr\Clocks</v>
+<v>test2\motor_test\motor_test.cydwr\Interrupts</v>
+<v>test2\motor_test\motor_test.cydwr\DMA</v>
+<v>test2\motor_test\motor_test.cydwr\System</v>
+<v>test2\motor_test\motor_test.cydwr\Directives</v>
+<v>test2\motor_test\motor_test.cydwr\Flash Security</v>
+<v>test2\motor_test\motor_test.cydwr\EEPROM</v>
+<v>test2\motor_test\Header Files</v>
+<v>test2\motor_test\Header Files\cyapicallbacks.h</v>
+<v>test2\motor_test\Source Files</v>
+<v>test2\motor_test\Source Files\main.c</v>
+<v>test2\motor_test\Generated_Source</v>
+<v>test2\motor_test\Generated_Source\PSoC5</v>
+<v>test2\test2</v>
+<v>test2\test2\TopDesign</v>
+<v>test2\test2\test2.cydwr</v>
+<v>test2\test2\test2.cydwr\Pins</v>
+<v>test2\test2\test2.cydwr\Analog</v>
+<v>test2\test2\test2.cydwr\Clocks</v>
+<v>test2\test2\test2.cydwr\Interrupts</v>
+<v>test2\test2\test2.cydwr\DMA</v>
+<v>test2\test2\test2.cydwr\System</v>
+<v>test2\test2\test2.cydwr\Directives</v>
+<v>test2\test2\test2.cydwr\Flash Security</v>
+<v>test2\test2\test2.cydwr\EEPROM</v>
+<v>test2\test2\Header Files</v>
+<v>test2\test2\Header Files\cyapicallbacks.h</v>
+<v>test2\test2\Source Files</v>
+<v>test2\test2\Source Files\main.c</v>
+<v>test2\test2\Generated_Source</v>
+<v>test2\test2\Generated_Source\PSoC5</v>
+</ExpandedNodeIds>
+<VisibleNodeIds>
+<v>test2</v>
+<v>test2\hello-world</v>
+<v>test2\hello-world\TopDesign</v>
+<v>test2\hello-world\hello-world.cydwr</v>
+<v>test2\hello-world\hello-world.cydwr\Pins</v>
+<v>test2\hello-world\hello-world.cydwr\Analog</v>
+<v>test2\hello-world\hello-world.cydwr\Clocks</v>
+<v>test2\hello-world\hello-world.cydwr\Interrupts</v>
+<v>test2\hello-world\hello-world.cydwr\DMA</v>
+<v>test2\hello-world\hello-world.cydwr\System</v>
+<v>test2\hello-world\hello-world.cydwr\Directives</v>
+<v>test2\hello-world\hello-world.cydwr\Flash Security</v>
+<v>test2\hello-world\hello-world.cydwr\EEPROM</v>
+<v>test2\hello-world\Header Files</v>
+<v>test2\hello-world\Header Files\cyapicallbacks.h</v>
+<v>test2\hello-world\Source Files</v>
+<v>test2\hello-world\Source Files\main.c</v>
+<v>test2\hello-world\Generated_Source</v>
+<v>test2\hello-world\Generated_Source\PSoC5</v>
+<v>test2\hello-world\Generated_Source\PSoC5\cy_boot</v>
+<v>test2\hello-world\Generated_Source\PSoC5\TEST_PIN</v>
+<v>test2\hello-world\Generated_Source\PSoC5\UART_1</v>
+<v>test2\hello-world\Generated_Source\PSoC5\UART_1_IntClock</v>
+<v>test2\hello-world\Generated_Source\PSoC5\cycodeshareexport.ld</v>
+<v>test2\hello-world\Generated_Source\PSoC5\cycodeshareimport.ld</v>
+<v>test2\hello-world\Generated_Source\PSoC5\cycodeshareimport.scat</v>
+<v>test2\hello-world\Generated_Source\PSoC5\cydevice.h</v>
+<v>test2\hello-world\Generated_Source\PSoC5\cydevice_trm.h</v>
+<v>test2\hello-world\Generated_Source\PSoC5\cydevicegnu.inc</v>
+<v>test2\hello-world\Generated_Source\PSoC5\cydevicegnu_trm.inc</v>
+<v>test2\hello-world\Generated_Source\PSoC5\cydeviceiar.inc</v>
+<v>test2\hello-world\Generated_Source\PSoC5\cydeviceiar_trm.inc</v>
+<v>test2\hello-world\Generated_Source\PSoC5\cydevicerv.inc</v>
+<v>test2\hello-world\Generated_Source\PSoC5\cydevicerv_trm.inc</v>
+<v>test2\hello-world\Generated_Source\PSoC5\cydisabledsheets.h</v>
+<v>test2\hello-world\Generated_Source\PSoC5\cyfitter.h</v>
+<v>test2\hello-world\Generated_Source\PSoC5\cyfitter_cfg.c</v>
+<v>test2\hello-world\Generated_Source\PSoC5\cyfitter_cfg.h</v>
+<v>test2\hello-world\Generated_Source\PSoC5\cyfittergnu.inc</v>
+<v>test2\hello-world\Generated_Source\PSoC5\cyfitteriar.inc</v>
+<v>test2\hello-world\Generated_Source\PSoC5\cyfitterrv.inc</v>
+</VisibleNodeIds>
+</CyGuid_2a325b3b-c96a-4e9f-b7a0-2c44ecb5f237>
+<CyGuid_2a325b3b-c96a-4e9f-b7a0-2c44ecb5f237 type_name="CyDesigner.Common.Base.Controls.CyTreeViewState" version="1" SelectedNodeId="">
+<ExpandedNodeIds>
+<v>test2</v>
+<v>test2\hello-world</v>
+<v>test2\hello-world\TopDesign</v>
+<v>test2\hello-world\TopDesign\TopDesign.cysch</v>
+<v>test2\motor_test</v>
+<v>test2\motor_test\TopDesign</v>
+<v>test2\motor_test\TopDesign\TopDesign.cysch</v>
+<v>test2\test2</v>
+<v>test2\test2\TopDesign</v>
+<v>test2\test2\TopDesign\TopDesign.cysch</v>
+</ExpandedNodeIds>
+<VisibleNodeIds>
+<v>test2</v>
+<v>test2\hello-world</v>
+<v>test2\hello-world\TopDesign</v>
+<v>test2\hello-world\TopDesign\TopDesign.cysch</v>
+<v>test2\motor_test</v>
+<v>test2\motor_test\TopDesign</v>
+<v>test2\motor_test\TopDesign\TopDesign.cysch</v>
+<v>test2\test2</v>
+<v>test2\test2\TopDesign</v>
+<v>test2\test2\TopDesign\TopDesign.cysch</v>
+</VisibleNodeIds>
+</CyGuid_2a325b3b-c96a-4e9f-b7a0-2c44ecb5f237>
+<CyGuid_2a325b3b-c96a-4e9f-b7a0-2c44ecb5f237 type_name="CyDesigner.Common.Base.Controls.CyTreeViewState" version="1" SelectedNodeId="">
+<ExpandedNodeIds>
+<v>test2</v>
+<v>test2\hello-world</v>
+<v>test2\hello-world\CortexM3</v>
+<v>test2\hello-world\CortexM3\ARM_GCC_541</v>
+<v>test2\hello-world\CortexM3\ARM_GCC_541\Debug</v>
+<v>test2\hello-world\CortexM3\ARM_GCC_541\Debug\Listing Files</v>
+<v>test2\hello-world\CortexM3\ARM_GCC_541\Debug\Listing Files\Cm3Start.lst</v>
+<v>test2\hello-world\CortexM3\ARM_GCC_541\Debug\Listing Files\CyBootAsmGnu.lst</v>
+<v>test2\hello-world\CortexM3\ARM_GCC_541\Debug\Listing Files\CyDmac.lst</v>
+<v>test2\hello-world\CortexM3\ARM_GCC_541\Debug\Listing Files\cyfitter_cfg.lst</v>
+<v>test2\hello-world\CortexM3\ARM_GCC_541\Debug\Listing Files\CyFlash.lst</v>
+<v>test2\hello-world\CortexM3\ARM_GCC_541\Debug\Listing Files\CyLib.lst</v>
+<v>test2\hello-world\CortexM3\ARM_GCC_541\Debug\Listing Files\cymetadata.lst</v>
+<v>test2\hello-world\CortexM3\ARM_GCC_541\Debug\Listing Files\cyPm.lst</v>
+<v>test2\hello-world\CortexM3\ARM_GCC_541\Debug\Listing Files\CySpc.lst</v>
+<v>test2\hello-world\CortexM3\ARM_GCC_541\Debug\Listing Files\cyutils.lst</v>
+<v>test2\hello-world\CortexM3\ARM_GCC_541\Debug\Listing Files\main.lst</v>
+<v>test2\hello-world\CortexM3\ARM_GCC_541\Debug\Listing Files\TEST_PIN.lst</v>
+<v>test2\hello-world\CortexM3\ARM_GCC_541\Debug\Listing Files\UART_1.lst</v>
+<v>test2\hello-world\CortexM3\ARM_GCC_541\Debug\Listing Files\UART_1_BOOT.lst</v>
+<v>test2\hello-world\CortexM3\ARM_GCC_541\Debug\Listing Files\UART_1_INT.lst</v>
+<v>test2\hello-world\CortexM3\ARM_GCC_541\Debug\Listing Files\UART_1_IntClock.lst</v>
+<v>test2\hello-world\CortexM3\ARM_GCC_541\Debug\Listing Files\UART_1_PM.lst</v>
+<v>test2\hello-world\CortexM3\ARM_GCC_541\Debug\hello-world.elf</v>
+<v>test2\hello-world\CortexM3\ARM_GCC_541\Debug\hello-world.hex</v>
+<v>test2\hello-world\CortexM3\ARM_GCC_541\Debug\hello-world.map</v>
+<v>test2\hello-world\hello-world.gpdsc</v>
+<v>test2\hello-world\hello-world.rpt</v>
+<v>test2\hello-world\hello-world_timing.html</v>
+<v>test2\motor_test</v>
+<v>test2\motor_test\CortexM3</v>
+<v>test2\motor_test\CortexM3\ARM_GCC_541</v>
+<v>test2\motor_test\CortexM3\ARM_GCC_541\Debug</v>
+<v>test2\motor_test\CortexM3\ARM_GCC_541\Debug\Listing Files</v>
+<v>test2\motor_test\CortexM3\ARM_GCC_541\Debug\Listing Files\A1.lst</v>
+<v>test2\motor_test\CortexM3\ARM_GCC_541\Debug\Listing Files\A2.lst</v>
+<v>test2\motor_test\CortexM3\ARM_GCC_541\Debug\Listing Files\A3.lst</v>
+<v>test2\motor_test\CortexM3\ARM_GCC_541\Debug\Listing Files\A4.lst</v>
+<v>test2\motor_test\CortexM3\ARM_GCC_541\Debug\Listing Files\CLK_CNT_1.lst</v>
+<v>test2\motor_test\CortexM3\ARM_GCC_541\Debug\Listing Files\CLK_CNT_2.lst</v>
+<v>test2\motor_test\CortexM3\ARM_GCC_541\Debug\Listing Files\Clock_1.lst</v>
+<v>test2\motor_test\CortexM3\ARM_GCC_541\Debug\Listing Files\Cm3Start.lst</v>
+<v>test2\motor_test\CortexM3\ARM_GCC_541\Debug\Listing Files\CyBootAsmGnu.lst</v>
+<v>test2\motor_test\CortexM3\ARM_GCC_541\Debug\Listing Files\CyDmac.lst</v>
+<v>test2\motor_test\CortexM3\ARM_GCC_541\Debug\Listing Files\cyfitter_cfg.lst</v>
+<v>test2\motor_test\CortexM3\ARM_GCC_541\Debug\Listing Files\CyFlash.lst</v>
+<v>test2\motor_test\CortexM3\ARM_GCC_541\Debug\Listing Files\CyLib.lst</v>
+<v>test2\motor_test\CortexM3\ARM_GCC_541\Debug\Listing Files\cymetadata.lst</v>
+<v>test2\motor_test\CortexM3\ARM_GCC_541\Debug\Listing Files\cyPm.lst</v>
+<v>test2\motor_test\CortexM3\ARM_GCC_541\Debug\Listing Files\CySpc.lst</v>
+<v>test2\motor_test\CortexM3\ARM_GCC_541\Debug\Listing Files\cyutils.lst</v>
+<v>test2\motor_test\CortexM3\ARM_GCC_541\Debug\Listing Files\ISR_QUAD1.lst</v>
+<v>test2\motor_test\CortexM3\ARM_GCC_541\Debug\Listing Files\ISR_QUAD2.lst</v>
+<v>test2\motor_test\CortexM3\ARM_GCC_541\Debug\Listing Files\main.lst</v>
+<v>test2\motor_test\CortexM3\ARM_GCC_541\Debug\Listing Files\ML_EN.lst</v>
+<v>test2\motor_test\CortexM3\ARM_GCC_541\Debug\Listing Files\MR_EN.lst</v>
+<v>test2\motor_test\CortexM3\ARM_GCC_541\Debug\Listing Files\PWM_1.lst</v>
+<v>test2\motor_test\CortexM3\ARM_GCC_541\Debug\Listing Files\PWM_1_PM.lst</v>
+<v>test2\motor_test\CortexM3\ARM_GCC_541\Debug\Listing Files\SE_L_A.lst</v>
+<v>test2\motor_test\CortexM3\ARM_GCC_541\Debug\Listing Files\SE_L_B.lst</v>
+<v>test2\motor_test\CortexM3\ARM_GCC_541\Debug\Listing Files\SE_R_A.lst</v>
+<v>test2\motor_test\CortexM3\ARM_GCC_541\Debug\Listing Files\SE_R_B.lst</v>
+<v>test2\motor_test\CortexM3\ARM_GCC_541\Debug\Listing Files\SEL_QUAD.lst</v>
+<v>test2\motor_test\CortexM3\ARM_GCC_541\Debug\Listing Files\SEL_QUAD_Cnt16.lst</v>
+<v>test2\motor_test\CortexM3\ARM_GCC_541\Debug\Listing Files\SEL_QUAD_Cnt16_PM.lst</v>
+<v>test2\motor_test\CortexM3\ARM_GCC_541\Debug\Listing Files\SEL_QUAD_PM.lst</v>
+<v>test2\motor_test\CortexM3\ARM_GCC_541\Debug\Listing Files\SER_QUAD.lst</v>
+<v>test2\motor_test\CortexM3\ARM_GCC_541\Debug\Listing Files\SER_QUAD_Cnt16.lst</v>
+<v>test2\motor_test\CortexM3\ARM_GCC_541\Debug\Listing Files\SER_QUAD_Cnt16_PM.lst</v>
+<v>test2\motor_test\CortexM3\ARM_GCC_541\Debug\Listing Files\SER_QUAD_PM.lst</v>
+<v>test2\motor_test\CortexM3\ARM_GCC_541\Debug\Listing Files\UART_1.lst</v>
+<v>test2\motor_test\CortexM3\ARM_GCC_541\Debug\Listing Files\UART_1_BOOT.lst</v>
+<v>test2\motor_test\CortexM3\ARM_GCC_541\Debug\Listing Files\UART_1_INT.lst</v>
+<v>test2\motor_test\CortexM3\ARM_GCC_541\Debug\Listing Files\UART_1_IntClock.lst</v>
+<v>test2\motor_test\CortexM3\ARM_GCC_541\Debug\Listing Files\UART_1_PM.lst</v>
+<v>test2\motor_test\CortexM3\ARM_GCC_541\Debug\motor_test.elf</v>
+<v>test2\motor_test\CortexM3\ARM_GCC_541\Debug\motor_test.hex</v>
+<v>test2\motor_test\CortexM3\ARM_GCC_541\Debug\motor_test.map</v>
+<v>test2\motor_test\motor_test.gpdsc</v>
+<v>test2\motor_test\motor_test.rpt</v>
+<v>test2\motor_test\motor_test_timing.html</v>
+<v>test2\test2</v>
+<v>test2\test2\CortexM3</v>
+<v>test2\test2\CortexM3\ARM_GCC_541</v>
+<v>test2\test2\CortexM3\ARM_GCC_541\Debug</v>
+<v>test2\test2\CortexM3\ARM_GCC_541\Debug\Listing Files</v>
+<v>test2\test2\CortexM3\ARM_GCC_541\Debug\Listing Files\Clock_1.lst</v>
+<v>test2\test2\CortexM3\ARM_GCC_541\Debug\Listing Files\Cm3Start.lst</v>
+<v>test2\test2\CortexM3\ARM_GCC_541\Debug\Listing Files\COLOUT.lst</v>
+<v>test2\test2\CortexM3\ARM_GCC_541\Debug\Listing Files\Counter_1.lst</v>
+<v>test2\test2\CortexM3\ARM_GCC_541\Debug\Listing Files\Counter_1_PM.lst</v>
+<v>test2\test2\CortexM3\ARM_GCC_541\Debug\Listing Files\Counter_2.lst</v>
+<v>test2\test2\CortexM3\ARM_GCC_541\Debug\Listing Files\Counter_2_PM.lst</v>
+<v>test2\test2\CortexM3\ARM_GCC_541\Debug\Listing Files\CyBootAsmGnu.lst</v>
+<v>test2\test2\CortexM3\ARM_GCC_541\Debug\Listing Files\CyDmac.lst</v>
+<v>test2\test2\CortexM3\ARM_GCC_541\Debug\Listing Files\cyfitter_cfg.lst</v>
+<v>test2\test2\CortexM3\ARM_GCC_541\Debug\Listing Files\CyFlash.lst</v>
+<v>test2\test2\CortexM3\ARM_GCC_541\Debug\Listing Files\CyLib.lst</v>
+<v>test2\test2\CortexM3\ARM_GCC_541\Debug\Listing Files\cymetadata.lst</v>
+<v>test2\test2\CortexM3\ARM_GCC_541\Debug\Listing Files\cyPm.lst</v>
+<v>test2\test2\CortexM3\ARM_GCC_541\Debug\Listing Files\CySpc.lst</v>
+<v>test2\test2\CortexM3\ARM_GCC_541\Debug\Listing Files\cyutils.lst</v>
+<v>test2\test2\CortexM3\ARM_GCC_541\Debug\Listing Files\ECHO.lst</v>
+<v>test2\test2\CortexM3\ARM_GCC_541\Debug\Listing Files\isr_counter.lst</v>
+<v>test2\test2\CortexM3\ARM_GCC_541\Debug\Listing Files\isr_echo.lst</v>
+<v>test2\test2\CortexM3\ARM_GCC_541\Debug\Listing Files\main.lst</v>
+<v>test2\test2\CortexM3\ARM_GCC_541\Debug\Listing Files\S0.lst</v>
+<v>test2\test2\CortexM3\ARM_GCC_541\Debug\Listing Files\S1.lst</v>
+<v>test2\test2\CortexM3\ARM_GCC_541\Debug\Listing Files\S2.lst</v>
+<v>test2\test2\CortexM3\ARM_GCC_541\Debug\Listing Files\S3.lst</v>
+<v>test2\test2\CortexM3\ARM_GCC_541\Debug\Listing Files\timer_clock.lst</v>
+<v>test2\test2\CortexM3\ARM_GCC_541\Debug\Listing Files\timer_clock_1.lst</v>
+<v>test2\test2\CortexM3\ARM_GCC_541\Debug\Listing Files\timer_clock_2.lst</v>
+<v>test2\test2\CortexM3\ARM_GCC_541\Debug\Listing Files\timer_clock_3.lst</v>
+<v>test2\test2\CortexM3\ARM_GCC_541\Debug\Listing Files\TRIG.lst</v>
+<v>test2\test2\CortexM3\ARM_GCC_541\Debug\Listing Files\TRIG_CTRL.lst</v>
+<v>test2\test2\CortexM3\ARM_GCC_541\Debug\Listing Files\TRIG_CTRL_PM.lst</v>
+<v>test2\test2\CortexM3\ARM_GCC_541\Debug\Listing Files\UART_1.lst</v>
+<v>test2\test2\CortexM3\ARM_GCC_541\Debug\Listing Files\UART_1_BOOT.lst</v>
+<v>test2\test2\CortexM3\ARM_GCC_541\Debug\Listing Files\UART_1_INT.lst</v>
+<v>test2\test2\CortexM3\ARM_GCC_541\Debug\Listing Files\UART_1_IntClock.lst</v>
+<v>test2\test2\CortexM3\ARM_GCC_541\Debug\Listing Files\UART_1_PM.lst</v>
+<v>test2\test2\CortexM3\ARM_GCC_541\Debug\test2.elf</v>
+<v>test2\test2\CortexM3\ARM_GCC_541\Debug\test2.hex</v>
+<v>test2\test2\CortexM3\ARM_GCC_541\Debug\test2.map</v>
+<v>test2\test2\test2.gpdsc</v>
+<v>test2\test2\test2.rpt</v>
+<v>test2\test2\test2_timing.html</v>
+</ExpandedNodeIds>
+<VisibleNodeIds>
+<v>test2</v>
+<v>test2\hello-world</v>
+<v>test2\hello-world\hello-world.rpt</v>
+<v>test2\hello-world\hello-world_timing.html</v>
+<v>test2\motor_test</v>
+</VisibleNodeIds>
+</CyGuid_2a325b3b-c96a-4e9f-b7a0-2c44ecb5f237>
+</TreeStates>
+<TreeKeysV2>
+<v>Datasheet</v>
+</TreeKeysV2>
+<TreeStatesV2>
+<CyGuid_2a325b3b-c96a-4e9f-b7a0-2c44ecb5f237 type_name="CyDesigner.Common.Base.Controls.CyTreeViewState" version="1" SelectedNodeId="">
+<ExpandedNodeIds>
+<v>test2</v>
+<v>test2\hello-world</v>
+<v>test2\hello-world\PSoC 5LP Architecture TRM</v>
+<v>test2\hello-world\CY8C58LP Family Datasheet</v>
+<v>test2\hello-world\System Reference Guides</v>
+<v>test2\hello-world\System Reference Guides\cy_boot_v5_60</v>
+<v>test2\hello-world\cy_pins_v2_20</v>
+<v>test2\hello-world\cy_pins_v2_20\cy_pins_v2_20.pdf</v>
+<v>test2\hello-world\UART_v2_50.pdf</v>
+<v>test2\motor_test</v>
+<v>test2\motor_test\PSoC 5LP Architecture TRM</v>
+<v>test2\motor_test\CY8C58LP Family Datasheet</v>
+<v>test2\motor_test\System Reference Guides</v>
+<v>test2\motor_test\System Reference Guides\cy_boot_v5_60</v>
+<v>test2\motor_test\cy_clock_v2_20</v>
+<v>test2\motor_test\cy_clock_v2_20\cy_clock_v2_20.pdf</v>
+<v>test2\motor_test\cy_isr_v1_70</v>
+<v>test2\motor_test\cy_isr_v1_70\cy_isr_v1_70.pdf</v>
+<v>test2\motor_test\cy_pins_v2_20</v>
+<v>test2\motor_test\cy_pins_v2_20\cy_pins_v2_20.pdf</v>
+<v>test2\motor_test\PWM_v3_30.pdf</v>
+<v>test2\motor_test\QuadDec_v3_0</v>
+<v>test2\motor_test\QuadDec_v3_0\QuadDec_v3_0.pdf</v>
+<v>test2\motor_test\UART_v2_50.pdf</v>
+<v>test2\test2</v>
+<v>test2\test2\PSoC 5LP Architecture TRM</v>
+<v>test2\test2\CY8C58LP Family Datasheet</v>
+<v>test2\test2\System Reference Guides</v>
+<v>test2\test2\System Reference Guides\cy_boot_v5_60</v>
+<v>test2\test2\Counter_v3_0</v>
+<v>test2\test2\Counter_v3_0\Counter_v3_0.pdf</v>
+<v>test2\test2\cy_clock_v2_20</v>
+<v>test2\test2\cy_clock_v2_20\cy_clock_v2_20.pdf</v>
+<v>test2\test2\cy_constant_v1_0</v>
+<v>test2\test2\cy_constant_v1_0\cy_constant_v1_0.pdf</v>
+<v>test2\test2\cy_isr_v1_70</v>
+<v>test2\test2\cy_isr_v1_70\cy_isr_v1_70.pdf</v>
+<v>test2\test2\cy_pins_v2_20</v>
+<v>test2\test2\cy_pins_v2_20\cy_pins_v2_20.pdf</v>
+<v>test2\test2\CyControlReg_v1_80.pdf</v>
+<v>test2\test2\or_v1_0</v>
+<v>test2\test2\or_v1_0\or_v1_0.pdf</v>
+<v>test2\test2\UART_v2_50.pdf</v>
+</ExpandedNodeIds>
+<VisibleNodeIds>
+<v>test2</v>
+<v>test2\hello-world</v>
+<v>test2\hello-world\PSoC 5LP Architecture TRM</v>
+<v>test2\hello-world\CY8C58LP Family Datasheet</v>
+<v>test2\hello-world\System Reference Guides</v>
+<v>test2\hello-world\System Reference Guides\cy_boot_v5_60</v>
+<v>test2\hello-world\cy_pins_v2_20</v>
+<v>test2\hello-world\cy_pins_v2_20\cy_pins_v2_20.pdf</v>
+<v>test2\hello-world\UART_v2_50.pdf</v>
+<v>test2\motor_test</v>
+<v>test2\motor_test\PSoC 5LP Architecture TRM</v>
+<v>test2\motor_test\CY8C58LP Family Datasheet</v>
+<v>test2\motor_test\System Reference Guides</v>
+<v>test2\motor_test\System Reference Guides\cy_boot_v5_60</v>
+<v>test2\motor_test\cy_clock_v2_20</v>
+<v>test2\motor_test\cy_clock_v2_20\cy_clock_v2_20.pdf</v>
+<v>test2\motor_test\cy_isr_v1_70</v>
+<v>test2\motor_test\cy_isr_v1_70\cy_isr_v1_70.pdf</v>
+<v>test2\motor_test\cy_pins_v2_20</v>
+<v>test2\motor_test\cy_pins_v2_20\cy_pins_v2_20.pdf</v>
+<v>test2\motor_test\PWM_v3_30.pdf</v>
+<v>test2\motor_test\QuadDec_v3_0</v>
+<v>test2\motor_test\QuadDec_v3_0\QuadDec_v3_0.pdf</v>
+<v>test2\motor_test\UART_v2_50.pdf</v>
+<v>test2\test2</v>
+<v>test2\test2\PSoC 5LP Architecture TRM</v>
+<v>test2\test2\CY8C58LP Family Datasheet</v>
+<v>test2\test2\System Reference Guides</v>
+<v>test2\test2\System Reference Guides\cy_boot_v5_60</v>
+<v>test2\test2\Counter_v3_0</v>
+<v>test2\test2\Counter_v3_0\Counter_v3_0.pdf</v>
+<v>test2\test2\cy_clock_v2_20</v>
+<v>test2\test2\cy_clock_v2_20\cy_clock_v2_20.pdf</v>
+<v>test2\test2\cy_constant_v1_0</v>
+<v>test2\test2\cy_constant_v1_0\cy_constant_v1_0.pdf</v>
+<v>test2\test2\cy_isr_v1_70</v>
+<v>test2\test2\cy_isr_v1_70\cy_isr_v1_70.pdf</v>
+<v>test2\test2\cy_pins_v2_20</v>
+<v>test2\test2\cy_pins_v2_20\cy_pins_v2_20.pdf</v>
+<v>test2\test2\CyControlReg_v1_80.pdf</v>
+<v>test2\test2\or_v1_0</v>
+</VisibleNodeIds>
+</CyGuid_2a325b3b-c96a-4e9f-b7a0-2c44ecb5f237>
+</TreeStatesV2>
+</CyGuid_1b906a0f-a7b6-4e4d-a428-82f98b53cb35>
+</dataGuid>
+</userData>
+</CyGuid_fdba8dfd-b15b-4469-9bbb-9e40c3e70997>
+<Unloaded />
+<OpenDocs />
+<config v="" />
+<AutoUpdate v="true" />
+</CyGuid_843a90a4-0c4b-4e44-991d-05e7fb117a21>
+</CyXmlSerializer>
