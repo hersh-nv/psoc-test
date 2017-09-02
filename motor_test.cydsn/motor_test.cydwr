@@ -257,6 +257,7 @@
       <Data key="870f50fc-791a-4f0d-af09-99c77436b9b3" value="SE_R_A" />
       <Data key="9289e83f-7157-46d4-ab72-f4ded6f4b2c5" value="SE_R_B" />
       <Data key="1425177d-0d0e-4468-8bcc-e638e5509a9b" value="Rx_1" />
+      <Data key="a576bf20-e5f6-4b6f-895c-6985907c10d6" value="LED1" />
       <Data key="af605709-6cf2-479b-9915-809f4b019105" value="MR_EN" />
       <Data key="e1db9d93-0785-452c-8b7d-139bb74a589b" value="SE_L_B" />
       <Data key="e851a3b9-efb8-48be-bbb8-b303b216c393" value="A1" />
@@ -3381,6 +3382,11 @@
     <Group key="1425177d-0d0e-4468-8bcc-e638e5509a9b">
       <Group key="0">
         <Data key="Port Format" value="12,6" />
+      </Group>
+    </Group>
+    <Group key="a576bf20-e5f6-4b6f-895c-6985907c10d6">
+      <Group key="0">
+        <Data key="Port Format" value="2,1" />
       </Group>
     </Group>
     <Group key="af605709-6cf2-479b-9915-809f4b019105">

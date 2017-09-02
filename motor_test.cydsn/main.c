@@ -16,7 +16,7 @@ conversion coefficient from distance in cm to quadrature encoder counter
 i.e. dist * QUAD_COEFF = value that QuadDec should count up to to travel dist in cm.
 200 is a roughly correct value i just measured; can be adjusted for preciseness later
 */
-#define ROTATE_COEFF 36 // this is a complete estimate; test laterer
+#define ROTATE_COEFF 40 // this is a complete estimate; test laterer
 
 // initialise global variables
 int16 overflowCountL = 0u; // NB can go negative for underflow (when moving backward)
@@ -64,7 +64,7 @@ void printNumUART(int32 num) {
 CY_ISR_PROTO(QUAD1_ISR) {
     
     uint32 counter_status = 0u;
-    UART_1_PutString("\nQuadDec interrupt occurred");
+    //UART_1_PutString("\nQuadDec interrupt occurred");
     
     counter_status = SEL_QUAD_GetEvents();
     // check that the counter is from overflow
@@ -85,13 +85,13 @@ CY_ISR_PROTO(QUAD1_ISR) {
     }
     
     if ((counter_status & SEL_QUAD_INVALID_IN) == SEL_QUAD_INVALID_IN) {
-        UART_1_PutString("...because of invalid input transition");
+       // UART_1_PutString("...because of invalid input transition");
     }
 }
 CY_ISR_PROTO(QUAD2_ISR) {
     
     uint32 counter_status = 0u;
-    UART_1_PutString("\nQuadDec interrupt occurred");
+   // UART_1_PutString("\nQuadDec interrupt occurred");
     
     counter_status = SER_QUAD_GetEvents();
     // check that the counter is from overflow
@@ -111,7 +111,7 @@ CY_ISR_PROTO(QUAD2_ISR) {
     }
     
     if ((counter_status & SER_QUAD_INVALID_IN) == SER_QUAD_INVALID_IN) {
-        UART_1_PutString("...because of invalid input transition");
+        //UART_1_PutString("...because of invalid input transition");
     }
 }
 
@@ -134,11 +134,12 @@ int32 getDistance(int side, int32 startdist) {
 }
 
 /* Drives X distance (cm) forward/backward, polls shaft encoders every 50ms until X distance reached */
-void driveXdist(int32 Xdist, int dir) {
+void driveXdist(int32 Xdist, int dir, uint8 speed) {
     /* 
     INPUTS
     Xdist = distance to move forward (cm)
     dir = binary direction; 1 = forward, 0 = backward
+    speed (out of 255 max)
     */
 
     uint8 lspeed, rspeed;
@@ -160,22 +161,23 @@ void driveXdist(int32 Xdist, int dir) {
     lsdist = (getDistance(1,0)); // get left starting dist
     rsdist = (getDistance(0,0)); // get right starting dist
     
-    // 25% speed
-    lspeed = 63;
-    rspeed = 63;
+    // set speed
+    lspeed = speed;
+    rspeed = speed+3;
     PWM_1_WriteCompare1(lspeed);
     PWM_1_WriteCompare2(rspeed);
     
-    // start motors
-    A1_Write(!dir); // L
-    A2_Write(dir);
+    // set directions
     A3_Write(!dir); // R
     A4_Write(dir);
+    A1_Write(!dir); // L
+    A2_Write(dir);
+
     
     // poll SEs every 50ms, when both shaft encoders read X distance, stop
     while (!done) {
 
-        CyDelay(50); // the smaller this value, the more often the SEs are polled and hence the more accurate the distance
+        CyDelay(20); // the smaller this value, the more often the SEs are polled and hence the more accurate the distance
         
         // get relative distance from both wheels
         ldist = (getDistance(1,lsdist)); //left
@@ -199,7 +201,9 @@ void driveXdist(int32 Xdist, int dir) {
             A1_Write(0);
             A2_Write(0);
             A3_Write(0);
-            A4_Write(0);
+            A4_Write(0);            
+            PWM_1_WriteCompare1(0);
+            PWM_1_WriteCompare2(0);
             done=1;
         }
     }            
@@ -207,11 +211,12 @@ void driveXdist(int32 Xdist, int dir) {
 
 /* Turns X degrees CW/CCW, polls shaft encoders every 50 ms until X degrees is reached.
 very similar to driveXdist() */
-void turnXdegrees(int16 Xdeg, int dir) {
+void turnXdegrees(int16 Xdeg, int dir, uint8 speed) {
     /*
     INPUTS
     Xdeg = desired angle to rotate robot (degrees)
     dir = direction to rotate (1=clockwise, 0=anticlockwise)
+    speed (out of 255 max)
     */
 
     uint8 lspeed, rspeed;
@@ -230,13 +235,13 @@ void turnXdegrees(int16 Xdeg, int dir) {
     lsdist = (getDistance(1,0)); // get left starting dist
     rsdist = (getDistance(0,0)); // get right starting dist
     
-    // 25% speed
-    lspeed = 63;
-    rspeed = 63;
+    // set speed -- backwards wheel moves faster
+    lspeed = speed+dir*6;
+    rspeed = speed+dir*6;
     PWM_1_WriteCompare1(lspeed);
     PWM_1_WriteCompare2(rspeed);
     
-    // start motors
+    // set direction
     A1_Write(!dir); // L
     A2_Write(dir);
     A3_Write(dir); // R
@@ -245,7 +250,7 @@ void turnXdegrees(int16 Xdeg, int dir) {
     // poll SEs every 50ms, stop when both wheels have rotated enough
     while ((!Ldone) || (!Rdone)) {
 
-        CyDelay(50);
+        CyDelay(10);
 
         // get relative distance from both wheels
         if (!Ldone) {
@@ -286,14 +291,42 @@ int main(void)
     ISR_QUAD1_StartEx(QUAD1_ISR);
     ISR_QUAD2_StartEx(QUAD2_ISR);
     
+    // variables
+    uint8 fwdspeed = 210;
+    uint8 bwdspeed = 220;
+    uint8 trnspeed = 100;
+    
     // enable
     PWM_1_Enable();
     
     
-    // driveXdist();
-    driveXdist(20,1); // units = cm
+    // task 1
+    CyDelay(500);
+    for (int i=0;i<1;i++) {
+        LED1_Write(1);
+        CyDelay(200);
+        LED1_Write(0);
+        CyDelay(200);
+    }
+    driveXdist(50,1,fwdspeed); // units = cm
     CyDelay(100);
-    //driveXdist(20,0);
+    driveXdist(50,0,bwdspeed); //units = cm
+    CyDelay(4000);
+    
+    // task 2
+    for (int i=0;i<2;i++) { // flash LED twice
+        LED1_Write(1);
+        CyDelay(200);
+        LED1_Write(0);
+        CyDelay(200);
+    }
+    driveXdist(50,1,fwdspeed);
+    CyDelay(100);
+    turnXdegrees(180,1,trnspeed);
+    CyDelay(100);
+    driveXdist(50+21,1,fwdspeed);
+    
+    
     
     
     for(;;)

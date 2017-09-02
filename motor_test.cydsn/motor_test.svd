@@ -28,7 +28,7 @@
         <register>
           <name>SER_QUAD_STATUS_REG</name>
           <description>Quadrature Decoder Status Register</description>
-          <addressOffset>0x40006567</addressOffset>
+          <addressOffset>0x40006566</addressOffset>
           <size>8</size>
           <access>read-write</access>
           <resetValue>0</resetValue>
@@ -106,7 +106,7 @@
         <register>
           <name>SER_QUAD_Cnt16_Control_Reg</name>
           <description>UDB Control Register - Assigned Control Register Value</description>
-          <addressOffset>0x4000647B</addressOffset>
+          <addressOffset>0x40006478</addressOffset>
           <size>8</size>
           <access>read-write</access>
           <resetValue>0</resetValue>
@@ -138,7 +138,7 @@
         <register>
           <name>SER_QUAD_Cnt16_STATUS_MASK</name>
           <description>UDB Status bits Interrupt Mask Enable Register</description>
-          <addressOffset>0x40006489</addressOffset>
+          <addressOffset>0x40006488</addressOffset>
           <size>8</size>
           <access>read-write</access>
           <resetValue>0</resetValue>
@@ -198,7 +198,7 @@
         <register>
           <name>SER_QUAD_Cnt16_STATUS_AUX_CTRL</name>
           <description>UDB Auxilliary Control Register</description>
-          <addressOffset>0x40006499</addressOffset>
+          <addressOffset>0x40006498</addressOffset>
           <size>8</size>
           <access>read-write</access>
           <resetValue>0</resetValue>
@@ -353,7 +353,7 @@
         <register>
           <name>PWM_1_Control_Reg</name>
           <description>UDB Control Register - Assigned Control Register Value</description>
-          <addressOffset>0x4000647D</addressOffset>
+          <addressOffset>0x4000647E</addressOffset>
           <size>8</size>
           <access>read-write</access>
           <resetValue>0</resetValue>
@@ -577,7 +577,7 @@
         <register>
           <name>SEL_QUAD_STATUS_REG</name>
           <description>Quadrature Decoder Status Register</description>
-          <addressOffset>0x40006467</addressOffset>
+          <addressOffset>0x4000646C</addressOffset>
           <size>8</size>
           <access>read-write</access>
           <resetValue>0</resetValue>
@@ -655,7 +655,7 @@
         <register>
           <name>SEL_QUAD_Cnt16_Control_Reg</name>
           <description>UDB Control Register - Assigned Control Register Value</description>
-          <addressOffset>0x4000647C</addressOffset>
+          <addressOffset>0x4000647D</addressOffset>
           <size>8</size>
           <access>read-write</access>
           <resetValue>0</resetValue>
@@ -687,7 +687,7 @@
         <register>
           <name>SEL_QUAD_Cnt16_STATUS_MASK</name>
           <description>UDB Status bits Interrupt Mask Enable Register</description>
-          <addressOffset>0x4000648C</addressOffset>
+          <addressOffset>0x4000648B</addressOffset>
           <size>8</size>
           <access>read-write</access>
           <resetValue>0</resetValue>
@@ -747,7 +747,7 @@
         <register>
           <name>SEL_QUAD_Cnt16_STATUS_AUX_CTRL</name>
           <description>UDB Auxilliary Control Register</description>
-          <addressOffset>0x4000649C</addressOffset>
+          <addressOffset>0x4000649B</addressOffset>
           <size>8</size>
           <access>read-write</access>
           <resetValue>0</resetValue>
@@ -882,9 +882,36 @@
       </addressBlock>
       <registers>
         <register>
+          <name>RX_UART_1_RX_ADDRESS1</name>
+          <description>RX Address1 Register</description>
+          <addressOffset>0x40006529</addressOffset>
+          <size>8</size>
+          <access>read-write</access>
+          <resetValue>0</resetValue>
+          <resetMask>0</resetMask>
+        </register>
+        <register>
+          <name>RX_UART_1_RX_ADDRESS2</name>
+          <description>RX Address2 Register</description>
+          <addressOffset>0x40006539</addressOffset>
+          <size>8</size>
+          <access>read-write</access>
+          <resetValue>0</resetValue>
+          <resetMask>0</resetMask>
+        </register>
+        <register>
           <name>TX_UART_1_TX_DATA</name>
           <description>TX Data Register</description>
-          <addressOffset>0x40006446</addressOffset>
+          <addressOffset>0x40006548</addressOffset>
+          <size>8</size>
+          <access>read-write</access>
+          <resetValue>0</resetValue>
+          <resetMask>0</resetMask>
+        </register>
+        <register>
+          <name>RX_UART_1_RX_DATA</name>
+          <description>RX Data Register</description>
+          <addressOffset>0x40006549</addressOffset>
           <size>8</size>
           <access>read-write</access>
           <resetValue>0</resetValue>
@@ -893,7 +920,7 @@
         <register>
           <name>TX_UART_1_TX_STATUS</name>
           <description>TX status register</description>
-          <addressOffset>0x40006466</addressOffset>
+          <addressOffset>0x40006568</addressOffset>
           <size>8</size>
           <access>read-write</access>
           <resetValue>0</resetValue>
@@ -930,36 +957,9 @@
           </fields>
         </register>
         <register>
-          <name>RX_UART_1_RX_ADDRESS1</name>
-          <description>RX Address1 Register</description>
-          <addressOffset>0x4000652B</addressOffset>
-          <size>8</size>
-          <access>read-write</access>
-          <resetValue>0</resetValue>
-          <resetMask>0</resetMask>
-        </register>
-        <register>
-          <name>RX_UART_1_RX_ADDRESS2</name>
-          <description>RX Address2 Register</description>
-          <addressOffset>0x4000653B</addressOffset>
-          <size>8</size>
-          <access>read-write</access>
-          <resetValue>0</resetValue>
-          <resetMask>0</resetMask>
-        </register>
-        <register>
-          <name>RX_UART_1_RX_DATA</name>
-          <description>RX Data Register</description>
-          <addressOffset>0x4000654B</addressOffset>
-          <size>8</size>
-          <access>read-write</access>
-          <resetValue>0</resetValue>
-          <resetMask>0</resetMask>
-        </register>
-        <register>
           <name>RX_UART_1_RX_STATUS</name>
           <description>RX status register</description>
-          <addressOffset>0x40006568</addressOffset>
+          <addressOffset>0x40006569</addressOffset>
           <size>8</size>
           <access>read-write</access>
           <resetValue>0</resetValue>
