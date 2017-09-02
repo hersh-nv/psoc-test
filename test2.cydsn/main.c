@@ -21,9 +21,9 @@
 #endif
 
 /* Defines for puck readings */
-uint16 RED[3] = {180, 300, 250};
-uint16 GRE[3] = {245, 215, 220};
-uint16 BLU[3] = {260, 260, 170};
+uint16 RED[3] = {205, 930, 210};
+uint16 GRE[3] = {445, 240, 345};
+uint16 BLU[3] = {830, 450, 218};
 
 
 uint16 capturedCount = 0u; // counter value when capture occurs
@@ -124,34 +124,41 @@ void printNumUART(uint32 num) {
 
 void getColour(uint16* periodLen, int* col, uint16* dist) {
     // initialise
-    uint16 rCount, gCount, bCount;
+    uint16 rCount=10000;
+    uint16 gCount=10000;
+    uint16 bCount=10000;
+    uint16 rCountTmp, gCountTmp, bCountTmp;
     uint16 rDist, gDist, bDist;
     int temp, min;
+    int rep = 12;
     
     // cycle through colours
     S2_Write(0); S3_Write(0); // RED
-        capflag = FALSE; while (capflag == FALSE) {
+        for (int i=0;i<rep;i++) {
             CyDelay(10);
+            rCountTmp = (overflowCount * *periodLen) + capturedCount;
+            rCount = (rCount < rCountTmp) ? rCount : rCountTmp;
         }
-        rCount = (overflowCount * *periodLen) + capturedCount;
         overflowCount = 0u;
     
     S2_Write(1); S3_Write(1); // GREEN
-        capflag = FALSE; while (capflag == FALSE) {
+        for (int i=0;i<rep;i++) {
             CyDelay(10);
+            gCountTmp = (overflowCount * *periodLen) + capturedCount;
+            gCount = (gCount < gCountTmp) ? gCount : gCountTmp;
         }
-        gCount = (overflowCount * *periodLen) + capturedCount;
         overflowCount = 0u;
         
     S2_Write(0); S3_Write(1); // BLUE
-        capflag = FALSE; while (capflag == FALSE) {
+        for (int i=0;i<rep;i++) {
             CyDelay(10);
+            bCountTmp = (overflowCount * *periodLen) + capturedCount;
+            bCount = (bCount < bCountTmp) ? bCount : bCountTmp;
         }
-        bCount = (overflowCount * *periodLen) + capturedCount;
         overflowCount = 0u;
     
     // print measures
-    UART_1_PutString("\nSens: R");
+    UART_1_PutString("\n\nSens: R");
     printNumUART(rCount);
     UART_1_PutString(" G");
     printNumUART(gCount);
@@ -177,7 +184,13 @@ void getColour(uint16* periodLen, int* col, uint16* dist) {
     if (min==2) {
         min = (rDist < gDist) ? 1 : 2;
     }
-    *col = min;
+    UART_1_PutString("\n");
+    printNumUART(*dist);
+    if (*dist<500) {
+        *col = min;
+    } else {
+        col = 0;
+    }
 }
 
 void getDist(uint16* echolength, uint16* distance) {
@@ -218,9 +231,10 @@ int main(void)
     
     // initialise components
     UART_1_Start();
+    UART_1_PutString("UART started\n");
     Counter_1_Start();
     isr_counter_StartEx(counter_isr); // set the isr_counter code to the proto code above
-           
+    
     S0_Write(1); // 20% scaling?
     S1_Write(0);
     
@@ -230,8 +244,8 @@ int main(void)
     {
         /* Place your application code here. */
 
-        //getColour(&periodLen, &col, &dist);
-        getDist(&echolength, &distance);
+        getColour(&periodLen, &col, &dist);
+        //getDist(&echolength, &distance);
         
         
         UART_1_PutString("\nColour: ");
@@ -241,10 +255,12 @@ int main(void)
             UART_1_PutString("G ");
         } else if (col==3) {
             UART_1_PutString("B ");
+        } else if (col==0) {
+            UART_1_PutString("None ");
         }
         
-        UART_1_PutString("\nDistance: ");
-        printNumUART(distance);
+        //UART_1_PutString("\nDistance: ");
+        //printNumUART(distance);
         
 
           

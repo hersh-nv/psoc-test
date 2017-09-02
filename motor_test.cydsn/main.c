@@ -9,6 +9,24 @@ todo:
 #include "project.h"
 #include "stdlib.h"
 
+/* Defines for TRUE and FALSE */
+#ifndef TRUE
+    #define TRUE 1
+#endif
+#ifndef FALSE
+    #define FALSE 0
+#endif
+
+/* Defines for puck readings */
+uint16 RED[3] = {180, 300, 250};
+uint16 GRE[3] = {245, 215, 220};
+uint16 BLU[3] = {260, 260, 170};
+
+
+uint16 capturedCount = 0u; // counter value when capture occurs
+uint16 overflowCount = 0u; // counter overflows between captures
+uint8 capflag = FALSE;     // set by ISR to tell main when capture occurs
+
 // defines
 #define DIST_COEFF 157
 /*
@@ -57,6 +75,29 @@ void printNumUART(int32 num) {
     distLen = Hex2Dec_Str(strHex, abs(num));
     for (i=distLen; i>0; i--) {
         UART_1_PutChar(strHex[i-1]);
+    }
+}
+
+/* ISR for colour sensor */
+CY_ISR_PROTO(COL_ISR) {
+    // read and store counter status register
+    // determine if interrupt is capture or overflow
+    uint32 counter_status = 0u;
+    
+    // this is a dupe of ReadStatusRegister() therefore clears the interrupt afaik
+    counter_status = Counter_1_GetInterruptSource();
+    
+    // mask status register w pre-defd mask bits
+    // these masks come from <counter_1.h>
+    if ((counter_status & Counter_1_STATUS_OVERFLOW) == Counter_1_STATUS_OVERFLOW) {
+        // interrupt is due to overflow
+        overflowCount++;
+    }
+    
+    if ((counter_status & Counter_1_STATUS_CAPTURE) == Counter_1_STATUS_CAPTURE) {
+        // interrupt is due to capture
+        capturedCount = Counter_1_ReadCapture();
+        capflag = TRUE;
     }
 }
 
@@ -278,6 +319,67 @@ void turnXdegrees(int16 Xdeg, int dir, uint8 speed) {
     }
 }
 
+
+void getColour(uint16* periodLen, int* col, uint16* dist) {
+    
+    // initialise
+    uint16 rCount, gCount, bCount;
+    uint16 rDist, gDist, bDist;
+    int temp, min;
+    
+    // cycle through colours
+    S2_Write(0); S3_Write(0); // RED
+        //capflag = FALSE; while (capflag == FALSE) {
+            CyDelay(10);
+        //}
+        rCount = (overflowCount * *periodLen) + capturedCount;
+        overflowCount = 0u;
+    
+    S2_Write(1); S3_Write(1); // GREEN
+        //capflag = FALSE; while (capflag == FALSE) {
+            CyDelay(10);
+        //}
+        gCount = (overflowCount * *periodLen) + capturedCount;
+        overflowCount = 0u;
+        
+    S2_Write(0); S3_Write(1); // BLUE
+        //capflag = FALSE; while (capflag == FALSE) {
+            CyDelay(10);
+        //}
+        bCount = (overflowCount * *periodLen) + capturedCount;
+        overflowCount = 0u;
+    
+    // print measures
+    UART_1_PutString("\nSens: R");
+    printNumUART(rCount);
+    UART_1_PutString(" G");
+    printNumUART(gCount);
+    UART_1_PutString(" B");
+    printNumUART(bCount);
+    
+    
+    // find L1 distance to each puck location
+    rDist = abs(RED[0]-rCount) + abs(RED[1]-gCount) + abs(RED[2]-bCount);
+        UART_1_PutString("\nDist: R");
+        printNumUART(rDist);
+    gDist = abs(GRE[0]-rCount) + abs(GRE[1]-gCount) + abs(GRE[2]-bCount);
+        UART_1_PutString(" G");
+        printNumUART(gDist);
+    bDist = abs(BLU[0]-rCount) + abs(BLU[1]-gCount) + abs(BLU[2]-bCount);
+        UART_1_PutString(" B");
+        printNumUART(bDist);
+    
+    // which is lowest i guess?
+    temp = (rDist < gDist) ? rDist : gDist;
+    *dist = (bDist < temp) ? bDist : temp;
+    min = (bDist < temp) ? 3 : 2;
+    if (min==2) {
+        min = (rDist < gDist) ? 1 : 2;
+    }
+    *col = min;
+}
+
+
 int main(void)
 {
     CyGlobalIntEnable; /* Enable global interrupts. */
@@ -290,48 +392,98 @@ int main(void)
     SER_QUAD_Start();
     ISR_QUAD1_StartEx(QUAD1_ISR);
     ISR_QUAD2_StartEx(QUAD2_ISR);
+    ISR_COL_StartEx(COL_ISR);
     
     // variables
     uint8 fwdspeed = 210;
     uint8 bwdspeed = 220;
     uint8 trnspeed = 100;
     
+    uint16 periodLen = 0u;   // length of counter period
+    uint16 dist;
+    int col;
+    
     // enable
     PWM_1_Enable();
-    
-    
-    // task 1
     CyDelay(500);
-    for (int i=0;i<1;i++) {
-        LED1_Write(1);
-        CyDelay(200);
-        LED1_Write(0);
-        CyDelay(200);
-    }
-    driveXdist(50,1,fwdspeed); // units = cm
-    CyDelay(100);
-    driveXdist(50,0,bwdspeed); //units = cm
-    CyDelay(4000);
     
-    // task 2
-    for (int i=0;i<2;i++) { // flash LED twice
-        LED1_Write(1);
-        CyDelay(200);
-        LED1_Write(0);
-        CyDelay(200);
-    }
-    driveXdist(50,1,fwdspeed);
-    CyDelay(100);
-    turnXdegrees(180,1,trnspeed);
-    CyDelay(100);
-    driveXdist(50+21,1,fwdspeed);
+//    // task 1
+//    for (int i=0;i<1;i++) {
+//        LED1_Write(1);
+//        CyDelay(200);
+//        LED1_Write(0);
+//        CyDelay(200);
+//    }
+//    driveXdist(50,1,fwdspeed); // units = cm
+//    CyDelay(100);
+//    driveXdist(50,0,bwdspeed); //units = cm
+//    CyDelay(4000);
+//    
+//    // task 2
+//    for (int i=0;i<2;i++) { // flash LED twice
+//        LED1_Write(1);
+//        CyDelay(200);
+//        LED1_Write(0);
+//        CyDelay(200);
+//    }
+//    driveXdist(50,1,fwdspeed);
+//    CyDelay(100);
+//    turnXdegrees(180,1,trnspeed);
+//    CyDelay(100);
+//    driveXdist(50+21,1,fwdspeed);
+//    CyDelay(4000);
+//    
+//    // task 3
+//    for (int i=0;i<3;i++) { // flash LED twice
+//        LED1_Write(1);
+//        CyDelay(200);
+//        LED1_Write(0);
+//        CyDelay(200);
+//    }
+//    driveXdist(20,1,fwdspeed);
+//    turnXdegrees(90,1,trnspeed);
+//    driveXdist(50,1,fwdspeed);
+//    turnXdegrees(90,0,trnspeed);
+//    driveXdist(75,1,fwdspeed);
+//    turnXdegrees(80,0,trnspeed);
+//    driveXdist(100,1,fwdspeed);
+//    turnXdegrees(80,0,trnspeed);
+//    driveXdist(75,1,fwdspeed);
+//    turnXdegrees(90,0,trnspeed);
+//    driveXdist(64,1,fwdspeed);
+//    turnXdegrees(90,1,trnspeed);
+//    driveXdist(47,1,fwdspeed);
+//    CyDelay(4000);
+    
+    // task 4
     
     
+    S0_Write(1); // 20% scaling?
+    S1_Write(0);
+    periodLen = Counter_1_ReadPeriod(); // read length of period register (in counts)
     
-    
+     // task 4
+        for (int i=0;i<4;i++) {
+            LED1_Write(1);
+            CyDelay(200);
+            LED1_Write(0);
+            CyDelay(200);
+        }
     for(;;)
     {   
-
+       
+        getColour(&periodLen, &col, &dist);
+        
+        UART_1_PutString("\nColour: ");
+        if (col==1) {
+            UART_1_PutString("R ");
+        } else if (col==2) {
+            UART_1_PutString("G ");
+        } else if (col==3) {
+            UART_1_PutString("B ");
+        }
+        
+        CyDelay(500);
     }
     
     
