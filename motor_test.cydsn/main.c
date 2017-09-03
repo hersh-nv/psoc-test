@@ -17,17 +17,10 @@ todo:
     #define FALSE 0
 #endif
 
-/* Defines for puck readings */
-uint16 RED[3] = {180, 300, 250};
-uint16 GRE[3] = {245, 215, 220};
-uint16 BLU[3] = {260, 260, 170};
+#define SILENT FALSE // if set, suppress UART output
 
 
-uint16 capturedCount = 0u; // counter value when capture occurs
-uint16 overflowCount = 0u; // counter overflows between captures
-uint8 capflag = FALSE;     // set by ISR to tell main when capture occurs
-
-// defines
+// defines for driving coefficients
 #define DIST_COEFF 157
 /*
 conversion coefficient from distance in cm to quadrature encoder counter
@@ -36,9 +29,25 @@ i.e. dist * QUAD_COEFF = value that QuadDec should count up to to travel dist in
 */
 #define ROTATE_COEFF 40 // this is a complete estimate; test laterer
 
-// initialise global variables
+
+/* Defines for puck readings; calibrate when in new environment / lighting */
+uint16 RED[3] = {180, 300, 250};
+uint16 GRE[3] = {245, 215, 220};
+uint16 BLU[3] = {260, 260, 170};
+
+// for col count
+uint16 capturedCount = 0u; // counter value when capture occurs
+uint16 overflowCountCOL = 0u; // counter overflows between captures
+int capflag = FALSE;     // set by ISR to tell main when capture occurs
+
+// for shaft encoders
 int16 overflowCountL = 0u; // NB can go negative for underflow (when moving backward)
 int16 overflowCountR = 0u;
+
+// driving speeds
+uint8 fwdspeed = 210;
+uint8 bwdspeed = 220;
+uint8 trnspeed = 100;
 
 
 /* ========== FUNCTIONS START HERE ===================== */
@@ -85,23 +94,25 @@ CY_ISR_PROTO(COL_ISR) {
     uint32 counter_status = 0u;
     
     // this is a dupe of ReadStatusRegister() therefore clears the interrupt afaik
-    counter_status = Counter_1_GetInterruptSource();
+    counter_status = COL_COUNTER_GetInterruptSource();
     
     // mask status register w pre-defd mask bits
     // these masks come from <counter_1.h>
-    if ((counter_status & Counter_1_STATUS_OVERFLOW) == Counter_1_STATUS_OVERFLOW) {
+    if ((counter_status & COL_COUNTER_STATUS_OVERFLOW) == COL_COUNTER_STATUS_OVERFLOW) {
         // interrupt is due to overflow
-        overflowCount++;
+        overflowCountCOL++;
     }
     
-    if ((counter_status & Counter_1_STATUS_CAPTURE) == Counter_1_STATUS_CAPTURE) {
+    if ((counter_status & COL_COUNTER_STATUS_CAPTURE) == COL_COUNTER_STATUS_CAPTURE) {
         // interrupt is due to capture
-        capturedCount = Counter_1_ReadCapture();
+        capturedCount = COL_COUNTER_ReadCapture();
         capflag = TRUE;
     }
 }
 
-/* ISR for shaft encoders -- identical, only differ in wheel value */
+/* ISR for shaft encoders -- identical, only differ in wheel value
+NOTE: there's some issue with the invalid input interrupt triggering way more often than it should, so the
+print on those interrupts is just removed for now. doesn't solve the problem but at least the UART isn't polluted*/
 CY_ISR_PROTO(QUAD1_ISR) {
     
     uint32 counter_status = 0u;
@@ -174,7 +185,7 @@ int32 getDistance(int side, int32 startdist) {
     return distance;
 }
 
-/* Drives X distance (cm) forward/backward, polls shaft encoders every 50ms until X distance reached */
+/* Drives X distance (cm) forward/backward, polls shaft encoders every 20ms until X distance reached */
 void driveXdist(int32 Xdist, int dir, uint8 speed) {
     /* 
     INPUTS
@@ -190,11 +201,13 @@ void driveXdist(int32 Xdist, int dir, uint8 speed) {
     int32 deltDist;
     
     int32 XdistSE = Xdist*DIST_COEFF; // Xdist converted to QuadDec counter value
-    UART_1_PutString("\nMoving ");
-    printNumUART(Xdist);
-    UART_1_PutString(" cm = ");
-    printNumUART(XdistSE);
-    UART_1_PutString(" QuadDec count");
+    if (!SILENT) {
+        UART_1_PutString("\nMoving ");
+        printNumUART(Xdist);
+        UART_1_PutString(" cm = ");
+        printNumUART(XdistSE);
+        UART_1_PutString(" QuadDec count");
+    }
     
     int done=0;
     
@@ -215,7 +228,7 @@ void driveXdist(int32 Xdist, int dir, uint8 speed) {
     A2_Write(dir);
 
     
-    // poll SEs every 50ms, when both shaft encoders read X distance, stop
+    // poll SEs every 20ms, when both shaft encoders read X distance, stop
     while (!done) {
 
         CyDelay(20); // the smaller this value, the more often the SEs are polled and hence the more accurate the distance
@@ -224,17 +237,19 @@ void driveXdist(int32 Xdist, int dir, uint8 speed) {
         ldist = (getDistance(1,lsdist)); //left
         rdist = (getDistance(0,rsdist)); //right
         
-        UART_1_PutString("\nLdist = ");
-        printNumUART(ldist);
-        UART_1_PutString("  Rdist = ");
-        printNumUART(rdist);
+        if (!SILENT) {
+            UART_1_PutString("\nLdist = ");
+            printNumUART(ldist);
+            UART_1_PutString("  Rdist = ");
+            printNumUART(rdist);
+        }
         
-                // some kind of closed feedback here
-                deltDist = ldist-rdist;
-                lspeed = lspeed - (deltDist>>2); // adjust speed by difference/4, but...
-                rspeed = rspeed + (deltDist>>2);
-                //PWM_1_WriteCompare1(lspeed); // ..turned this feature off because it seems to drive straight anyway
-                //PWM_1_WriteCompare2(rspeed);
+        // some kind of closed feedback here; turned off for now because it's unreliable....
+        deltDist = ldist-rdist;
+        lspeed = lspeed - (deltDist>>2); // adjust speed by difference/4, but...
+        rspeed = rspeed + (deltDist>>2);
+        //PWM_1_WriteCompare1(lspeed); // ..turned this feature off because it seems to drive straight anyway
+        //PWM_1_WriteCompare2(rspeed);
         
         /* When either wheel reaches target distance, stop both */
         // todo?: turn off each motor individually when it reaches Xdist. for now it travels straight so maybe it doesn't matter
@@ -250,7 +265,7 @@ void driveXdist(int32 Xdist, int dir, uint8 speed) {
     }            
 }
 
-/* Turns X degrees CW/CCW, polls shaft encoders every 50 ms until X degrees is reached.
+/* Turns X degrees CW/CCW, polls shaft encoders every 10 ms until X degrees is reached.
 very similar to driveXdist() */
 void turnXdegrees(int16 Xdeg, int dir, uint8 speed) {
     /*
@@ -263,11 +278,14 @@ void turnXdegrees(int16 Xdeg, int dir, uint8 speed) {
     uint8 lspeed, rspeed;
     int32 ldist, rdist, lsdist, rsdist;
     int32 XdegSE = Xdeg * ROTATE_COEFF;
-    UART_1_PutString("\nTurning ");
-    printNumUART(Xdeg);
-    UART_1_PutString(" degrees = ");
-    printNumUART(XdegSE);
-    UART_1_PutString(" QuadDec count");
+    
+    if (!SILENT) {
+        UART_1_PutString("\nTurning ");
+        printNumUART(Xdeg);
+        UART_1_PutString(" degrees = ");
+        printNumUART(XdegSE);
+        UART_1_PutString(" QuadDec count");
+    }
 
     int Ldone=0;
     int Rdone=0;
@@ -300,10 +318,13 @@ void turnXdegrees(int16 Xdeg, int dir, uint8 speed) {
         if (!Rdone) {
             rdist = (getDistance(0,rsdist)); //right
         }
-        UART_1_PutString("\nLdist = ");
-        printNumUART(ldist);
-        UART_1_PutString("  Rdist = ");
-        printNumUART(rdist);
+        
+        if (!SILENT) {
+            UART_1_PutString("\nLdist = ");
+            printNumUART(ldist);
+            UART_1_PutString("  Rdist = ");
+            printNumUART(rdist);
+        }
 
         /* When either wheel reaches target distance, stop that wheel */
         if (abs(ldist)>=XdegSE) {
@@ -319,66 +340,188 @@ void turnXdegrees(int16 Xdeg, int dir, uint8 speed) {
     }
 }
 
-
-void getColour(uint16* periodLen, int* col, uint16* dist) {
+/* Polls colour sensor several times at 100us intervals to get a reliable colour reading, and returns a integer value
+corresponding with the closest colour reading. Outputs 0 if no colour is strongly detected */
+int getColour(uint16 periodLen) {
+    /* INPUTS
+    periodLen = length (in clock counts) of period in COL_COUNTER component
+    
+    OUTPUTS
+    col = closest colour reading within 500-units of L1 distance (units = clock counts of COL_COUNTER)
+        0 = no colour
+        1 = red
+        2 = green
+        3 = blue
+    */
     
     // initialise
     uint16 rCount, gCount, bCount;
+    uint16 temp;
     uint16 rDist, gDist, bDist;
-    int temp, min;
+    uint16 minDist;
+    int rep = 3;
+    
+    S0_Write(1); // 20% scaling?
+    S1_Write(0);
     
     // cycle through colours
+    // get 'rep' number of readings for each colour, then take the smallest
+    // this should circumvent problem of missing input pulses
+    // note overflowCount isn't being reset, shouldn't be an issue since counter period is easily sufficient to handle COLOUT period
+    rCount = gCount = bCount = 0xffff; // set these to max values to begin with so the min sensor reading overwrites them
+    
     S2_Write(0); S3_Write(0); // RED
-        //capflag = FALSE; while (capflag == FALSE) {
-            CyDelay(10);
-        //}
-        rCount = (overflowCount * *periodLen) + capturedCount;
-        overflowCount = 0u;
+        for (int i=0;i<rep;i++) {
+            CyDelayUs(100);
+            temp = (overflowCountCOL * periodLen) + capturedCount;
+            rCount = (rCount < temp) ? rCount : temp;
+        }
     
     S2_Write(1); S3_Write(1); // GREEN
-        //capflag = FALSE; while (capflag == FALSE) {
-            CyDelay(10);
-        //}
-        gCount = (overflowCount * *periodLen) + capturedCount;
-        overflowCount = 0u;
+        for (int i=0;i<rep;i++) {
+            CyDelayUs(100);
+            temp = (overflowCountCOL * periodLen) + capturedCount;
+            gCount = (gCount < temp) ? gCount : temp;
+        }
         
     S2_Write(0); S3_Write(1); // BLUE
-        //capflag = FALSE; while (capflag == FALSE) {
-            CyDelay(10);
-        //}
-        bCount = (overflowCount * *periodLen) + capturedCount;
-        overflowCount = 0u;
+        for (int i=0;i<rep;i++) {
+            CyDelayUs(100);
+            temp = (overflowCountCOL * periodLen) + capturedCount;
+            bCount = (bCount < temp) ? bCount : temp;
+        }
     
     // print measures
-    UART_1_PutString("\nSens: R");
-    printNumUART(rCount);
-    UART_1_PutString(" G");
-    printNumUART(gCount);
-    UART_1_PutString(" B");
-    printNumUART(bCount);
+    if (!SILENT) {
+        UART_1_PutString("\nSens: R");
+        printNumUART(rCount);
+        UART_1_PutString(" G");
+        printNumUART(gCount);
+        UART_1_PutString(" B");
+        printNumUART(bCount);
+    }
     
     
     // find L1 distance to each puck location
     rDist = abs(RED[0]-rCount) + abs(RED[1]-gCount) + abs(RED[2]-bCount);
+    gDist = abs(GRE[0]-rCount) + abs(GRE[1]-gCount) + abs(GRE[2]-bCount);
+    bDist = abs(BLU[0]-rCount) + abs(BLU[1]-gCount) + abs(BLU[2]-bCount);
+    
+    if (!SILENT) {
         UART_1_PutString("\nDist: R");
         printNumUART(rDist);
-    gDist = abs(GRE[0]-rCount) + abs(GRE[1]-gCount) + abs(GRE[2]-bCount);
         UART_1_PutString(" G");
         printNumUART(gDist);
-    bDist = abs(BLU[0]-rCount) + abs(BLU[1]-gCount) + abs(BLU[2]-bCount);
         UART_1_PutString(" B");
         printNumUART(bDist);
-    
-    // which is lowest i guess?
-    temp = (rDist < gDist) ? rDist : gDist;
-    *dist = (bDist < temp) ? bDist : temp;
-    min = (bDist < temp) ? 3 : 2;
-    if (min==2) {
-        min = (rDist < gDist) ? 1 : 2;
     }
-    *col = min;
+    
+    // find which is lowest i guess?
+    temp = (rDist < gDist) ? rDist : gDist;
+    minDist = (bDist < temp) ? bDist : temp;
+    
+    if (minDist<500) {
+        return 0;
+    } else if (minDist==rDist) {
+        return 1;
+    } else if (minDist==gDist) {
+        return 2;
+    } else if (minDist==bDist) {
+        return 3;
+    } else {
+        return 0;
+    }
 }
 
+/* Flashes the PSoC LED (pin 2[1]) X number of times with a 400ms period, useful for very basic signalling without UART */
+void flashXtimes(int rep) {
+    
+    for (int i=0;i<rep;i++) {
+        LED1_Write(1);
+        CyDelay(200);
+        LED1_Write(0);
+        CyDelay(200);
+    }
+    
+}
+
+/* Prelim comp tasks */
+void task1() {
+    // Prelim Task 1
+    flashXtimes(1);
+    
+    driveXdist(50,1,fwdspeed); // units = cm
+    CyDelay(100);
+    driveXdist(50,0,bwdspeed); //units = cm
+    
+    flashXtimes(1);
+}
+void task2() {
+    // Prelim Task 2
+    flashXtimes(2);
+    
+    driveXdist(50,1,fwdspeed);
+    CyDelay(100);
+    turnXdegrees(180,1,trnspeed);
+    CyDelay(100);
+    driveXdist(50+21,1,fwdspeed);
+    
+    flashXtimes(2);
+}
+void task3() {
+    // Prelim Task 3
+    flashXtimes(3);
+    
+    driveXdist(20,1,fwdspeed);
+    
+    turnXdegrees(90,1,trnspeed);
+    driveXdist(50,1,fwdspeed);
+    
+    turnXdegrees(90,0,trnspeed);
+    driveXdist(75,1,fwdspeed);
+    
+    turnXdegrees(80,0,trnspeed);
+    driveXdist(100,1,fwdspeed);
+    
+    turnXdegrees(80,0,trnspeed);
+    driveXdist(75,1,fwdspeed);
+    
+    turnXdegrees(90,0,trnspeed);
+    driveXdist(64,1,fwdspeed);
+    
+    turnXdegrees(90,1,trnspeed);
+    driveXdist(47,1,fwdspeed);
+    
+    flashXtimes(3);
+}
+void task4(uint16 periodLen) {
+    // Prelim Task 4
+    // NOTE: this enters an infinite loop by design; make an exit flag if you want to do something after Task 4
+    flashXtimes(4);
+    
+    int col;
+    
+    for(;;) {   
+        col = getColour(periodLen);
+        if (!SILENT) {
+            UART_1_PutString("\nColour: ");
+            if (col==0) {
+                UART_1_PutString("None");
+            } else if (col==1) {
+                UART_1_PutString("R ");
+            } else if (col==2) {
+                UART_1_PutString("G ");
+            } else if (col==3) {
+                UART_1_PutString("B ");
+            }
+        }
+        CyDelay(10);
+    }
+    
+}
+
+
+/* ===================================================================== */
 
 int main(void)
 {
@@ -386,7 +529,10 @@ int main(void)
     
     // start components and ISRs
     UART_1_Start();
-    UART_1_PutString("\nUART started");
+        UART_1_PutString("\nUART started");
+        if (SILENT) {
+            UART_1_PutString(" but SILENT flag is set (output is suppressed)");
+        }
     PWM_1_Start();
     SEL_QUAD_Start();
     SER_QUAD_Start();
@@ -395,97 +541,18 @@ int main(void)
     ISR_COL_StartEx(COL_ISR);
     
     // variables
-    uint8 fwdspeed = 210;
-    uint8 bwdspeed = 220;
-    uint8 trnspeed = 100;
-    
     uint16 periodLen = 0u;   // length of counter period
-    uint16 dist;
-    int col;
     
-    // enable
-    PWM_1_Enable();
+    periodLen = COL_COUNTER_ReadPeriod(); // read length of period register (in clock counts)
+    
+    // briefly wait before starting tasks
     CyDelay(500);
     
-//    // task 1
-//    for (int i=0;i<1;i++) {
-//        LED1_Write(1);
-//        CyDelay(200);
-//        LED1_Write(0);
-//        CyDelay(200);
-//    }
-//    driveXdist(50,1,fwdspeed); // units = cm
-//    CyDelay(100);
-//    driveXdist(50,0,bwdspeed); //units = cm
-//    CyDelay(4000);
-//    
-//    // task 2
-//    for (int i=0;i<2;i++) { // flash LED twice
-//        LED1_Write(1);
-//        CyDelay(200);
-//        LED1_Write(0);
-//        CyDelay(200);
-//    }
-//    driveXdist(50,1,fwdspeed);
-//    CyDelay(100);
-//    turnXdegrees(180,1,trnspeed);
-//    CyDelay(100);
-//    driveXdist(50+21,1,fwdspeed);
-//    CyDelay(4000);
-//    
-//    // task 3
-//    for (int i=0;i<3;i++) { // flash LED twice
-//        LED1_Write(1);
-//        CyDelay(200);
-//        LED1_Write(0);
-//        CyDelay(200);
-//    }
-//    driveXdist(20,1,fwdspeed);
-//    turnXdegrees(90,1,trnspeed);
-//    driveXdist(50,1,fwdspeed);
-//    turnXdegrees(90,0,trnspeed);
-//    driveXdist(75,1,fwdspeed);
-//    turnXdegrees(80,0,trnspeed);
-//    driveXdist(100,1,fwdspeed);
-//    turnXdegrees(80,0,trnspeed);
-//    driveXdist(75,1,fwdspeed);
-//    turnXdegrees(90,0,trnspeed);
-//    driveXdist(64,1,fwdspeed);
-//    turnXdegrees(90,1,trnspeed);
-//    driveXdist(47,1,fwdspeed);
-//    CyDelay(4000);
-    
-    // task 4
-    
-    
-    S0_Write(1); // 20% scaling?
-    S1_Write(0);
-    periodLen = Counter_1_ReadPeriod(); // read length of period register (in counts)
-    
-     // task 4
-        for (int i=0;i<4;i++) {
-            LED1_Write(1);
-            CyDelay(200);
-            LED1_Write(0);
-            CyDelay(200);
-        }
-    for(;;)
-    {   
-       
-        getColour(&periodLen, &col, &dist);
-        
-        UART_1_PutString("\nColour: ");
-        if (col==1) {
-            UART_1_PutString("R ");
-        } else if (col==2) {
-            UART_1_PutString("G ");
-        } else if (col==3) {
-            UART_1_PutString("B ");
-        }
-        
-        CyDelay(500);
-    }
-    
+    // prelim comp
+    task1(); CyDelay(4000);
+    task2(); CyDelay(4000);
+    task3(); CyDelay(4000);
+    task4(periodLen);
     
 }
 
