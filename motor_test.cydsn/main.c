@@ -49,6 +49,13 @@ uint8 fwdspeed = 210;
 uint8 bwdspeed = 220;
 uint8 trnspeed = 100;
 
+// US sensors
+uint16 uscount1=0;
+float distance_m1=0;
+
+uint16 uscount2=0;
+float distance_m2=0;
+
 
 /* ========== FUNCTIONS START HERE ===================== */
 
@@ -166,6 +173,81 @@ CY_ISR_PROTO(QUAD2_ISR) {
         //UART_1_PutString("...because of invalid input transition");
     }
 }
+
+
+CY_ISR(Timer_ISR_Handler1){
+
+    
+    USTimer_1_ReadStatusRegister();
+    uscount1=USTimer_1_ReadCounter();
+    //printNumUART(uscount1);;
+    //UART_1_PutString("usint1");
+    
+    distance_m1=(65535-uscount1)/58;
+  
+}
+CY_ISR(Timer_ISR_Handler2){
+
+    
+    USTimer_2_ReadStatusRegister();
+    uscount2=USTimer_2_ReadCounter();
+    //printNumUART(uscount2);;
+    //UART_1_PutString("\n");
+    
+    distance_m2=(65535-uscount2)/58;
+    
+    
+}
+
+
+
+
+void adjust_dist_US(int dir, uint16 dist, uint8 speed){
+
+    int dflag=0;
+    uint8 lspeed, rspeed;
+    
+        lspeed = speed;
+        rspeed = speed+3;
+        PWM_1_WriteCompare1(lspeed);
+        PWM_1_WriteCompare2(rspeed);
+    
+            
+        // set directions
+        A3_Write(!dir); // R
+        A4_Write(dir);
+        A1_Write(!dir); // L
+        A2_Write(dir);
+    
+    while(!dflag)
+        {
+           while(Echo1_Read()==0)
+            {
+            //UART_1_PutString("while\n");
+            Trigger1_Write(1);
+            CyDelayUs(10);
+            Trigger1_Write(0);
+            }
+            //UART_1_PutString(".....\n");
+            CyDelay(100);
+            
+        if(distance_m1<=dist){dflag=1;}
+            
+        }
+        
+    A1_Write(0);
+    A2_Write(0);
+    A3_Write(0);
+    A4_Write(0);            
+    PWM_1_WriteCompare1(0);
+    PWM_1_WriteCompare2(0);
+
+}
+
+void adjust_angle_US(uint8 speed){
+
+    
+};
 
 /* Reads the quadrature decoder connected to the shaft encoder and returns the distance as a int32 */
 int32 getDistance(int side, int32 startdist) {
@@ -524,8 +606,17 @@ void task4(uint16 periodLen) {
 /* ===================================================================== */
 
 int main(void)
-{
+{   
+    
+    USTimer_1_Start();
+    USTimer_2_Start();
+    
+    isr_1_StartEx(Timer_ISR_Handler1);
+    isr_2_StartEx(Timer_ISR_Handler2);
+    
+    
     CyGlobalIntEnable; /* Enable global interrupts. */
+    
     
     // start components and ISRs
     UART_1_Start();
@@ -549,10 +640,42 @@ int main(void)
     CyDelay(500);
     
     // prelim comp
-    task1(); CyDelay(4000);
-    task2(); CyDelay(4000);
-    task3(); CyDelay(4000);
-    task4(periodLen);
+    //task1(); CyDelay(4000);
+    //task2(); CyDelay(4000);
+    //task3(); CyDelay(4000);
+    //task4(periodLen);
+    
+    //adjust_dist_US(1,20,fwdspeed);
+    
+    
+        for(;;)
+    {
+       while(Echo1_Read()==0)
+        {
+        Trigger1_Write(1);
+        CyDelayUs(10);
+        Trigger1_Write(0);
+        }
+        
+        while(Echo2_Read()==0)
+        {
+        Trigger2_Write(1);
+        CyDelayUs(10);
+        Trigger2_Write(0);
+        }
+        
+        UART_1_PutString("R:  ");
+        printNumUART(distance_m1);
+        UART_1_PutString("L:  ");
+        printNumUART(distance_m2);
+        UART_1_PutString("\n\n");
+        
+        //UART_1_PutString(".....\n");
+        CyDelay(100);
+        
+
+        
+    }
     
 }
 
