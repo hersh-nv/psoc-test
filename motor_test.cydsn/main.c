@@ -27,7 +27,7 @@ conversion coefficient from distance in cm to quadrature encoder counter
 i.e. dist * QUAD_COEFF = value that QuadDec should count up to to travel dist in cm.
 200 is a roughly correct value i just measured; can be adjusted for preciseness later
 */
-#define ROTATE_COEFF 40 // this is a complete estimate; test laterer
+#define ROTATE_COEFF 39 // this is a complete estimate; test laterer
 
 
 /* Defines for puck readings; calibrate when in new environment / lighting */
@@ -202,53 +202,6 @@ CY_ISR(Timer_ISR_Handler2){
 
 
 
-void adjust_dist_US(int dir, uint16 dist, uint8 speed){
-
-    int dflag=0;
-    uint8 lspeed, rspeed;
-    
-        lspeed = speed;
-        rspeed = speed+3;
-        PWM_1_WriteCompare1(lspeed);
-        PWM_1_WriteCompare2(rspeed);
-    
-            
-        // set directions
-        A3_Write(!dir); // R
-        A4_Write(dir);
-        A1_Write(!dir); // L
-        A2_Write(dir);
-    
-    while(!dflag)
-        {
-           while(Echo1_Read()==0)
-            {
-            //UART_1_PutString("while\n");
-            Trigger1_Write(1);
-            CyDelayUs(10);
-            Trigger1_Write(0);
-            }
-            //UART_1_PutString(".....\n");
-            CyDelay(100);
-            
-        if(distance_m1<=dist){dflag=1;}
-            
-        }
-        
-    A1_Write(0);
-    A2_Write(0);
-    A3_Write(0);
-    A4_Write(0);            
-    PWM_1_WriteCompare1(0);
-    PWM_1_WriteCompare2(0);
-
-}
-
-void adjust_angle_US(uint8 speed){
-
-    
-};
-
 /* Reads the quadrature decoder connected to the shaft encoder and returns the distance as a int32 */
 int32 getDistance(int side, int32 startdist) {
     
@@ -280,7 +233,7 @@ void driveXdist(int32 Xdist, int dir, uint8 speed) {
     int32 ldist = 0;
     int32 rdist = 0;
     int32 lsdist,rsdist;
-    int32 deltDist;
+    //int32 deltDist;
     
     int32 XdistSE = Xdist*DIST_COEFF; // Xdist converted to QuadDec counter value
     if (!SILENT) {
@@ -291,7 +244,8 @@ void driveXdist(int32 Xdist, int dir, uint8 speed) {
         UART_1_PutString(" QuadDec count");
     }
     
-    int done=0;
+    int Ldone=0;
+    int Rdone=0;
     
     // start shaft encoders
     lsdist = (getDistance(1,0)); // get left starting dist
@@ -299,19 +253,20 @@ void driveXdist(int32 Xdist, int dir, uint8 speed) {
     
     // set speed
     lspeed = speed;
-    rspeed = speed+3;
+    rspeed = speed;
     PWM_1_WriteCompare1(lspeed);
     PWM_1_WriteCompare2(rspeed);
     
     // set directions
     A3_Write(!dir); // R
     A4_Write(dir);
+    CyDelay(12); // COMPENSATION DELAY; ADJUST AS NECESSARY
     A1_Write(!dir); // L
     A2_Write(dir);
 
     
     // poll SEs every 20ms, when both shaft encoders read X distance, stop
-    while (!done) {
+    while ((!Ldone)||(!Rdone)) {
 
         CyDelay(20); // the smaller this value, the more often the SEs are polled and hence the more accurate the distance
         
@@ -327,22 +282,22 @@ void driveXdist(int32 Xdist, int dir, uint8 speed) {
         }
         
         // some kind of closed feedback here; turned off for now because it's unreliable....
-        deltDist = ldist-rdist;
-        lspeed = lspeed - (deltDist>>2); // adjust speed by difference/4, but...
-        rspeed = rspeed + (deltDist>>2);
-        //PWM_1_WriteCompare1(lspeed); // ..turned this feature off because it seems to drive straight anyway
-        //PWM_1_WriteCompare2(rspeed);
+//        deltDist = ldist-rdist;
+//        lspeed = lspeed - (deltDist>>3); // adjust speed by difference/4, but...
+//        rspeed = rspeed + (deltDist>>3);
+//        PWM_1_WriteCompare1(lspeed); // ..turned this feature off because it seems to drive straight anyway
+//        PWM_1_WriteCompare2(rspeed);
         
-        /* When either wheel reaches target distance, stop both */
-        // todo?: turn off each motor individually when it reaches Xdist. for now it travels straight so maybe it doesn't matter
-        if ((abs(ldist)>=XdistSE) || (abs(rdist)>=XdistSE)) {
+        /* When either wheel reaches target distance, stop it */
+        if (abs(ldist)>=XdistSE) {
             A1_Write(0);
             A2_Write(0);
+            Ldone=1;
+        }
+        if (abs(rdist)>=XdistSE) {
             A3_Write(0);
-            A4_Write(0);            
-            PWM_1_WriteCompare1(0);
-            PWM_1_WriteCompare2(0);
-            done=1;
+            A4_Write(0);
+            Rdone=1;
         }
     }            
 }
@@ -382,11 +337,21 @@ void turnXdegrees(int16 Xdeg, int dir, uint8 speed) {
     PWM_1_WriteCompare1(lspeed);
     PWM_1_WriteCompare2(rspeed);
     
-    // set direction
-    A1_Write(!dir); // L
-    A2_Write(dir);
-    A3_Write(dir); // R
-    A4_Write(!dir);
+    // set direction; delay makes robot rotate at center of mass instead of center of wheel axes
+    if (dir) {
+        A3_Write(dir); // R
+        A4_Write(!dir);
+//        CyDelay(40);
+        A1_Write(!dir); // L
+        A2_Write(dir);
+    } else {
+        A1_Write(!dir); // L
+        A2_Write(dir);
+//        CyDelay(40);
+        A3_Write(dir); // R
+        A4_Write(!dir);
+    }
+        
 
     // poll SEs every 50ms, stop when both wheels have rotated enough
     while ((!Ldone) || (!Rdone)) {
@@ -421,6 +386,131 @@ void turnXdegrees(int16 Xdeg, int dir, uint8 speed) {
         }
     }
 }
+
+void adjust_dist_US(int dir, uint16 dist, uint8 speed){
+
+    int dflag=0;
+    uint8 lspeed, rspeed;
+    
+        lspeed = speed;
+        rspeed = speed+3;
+        PWM_1_WriteCompare1(lspeed);
+        PWM_1_WriteCompare2(rspeed);
+    
+            
+        // set directions
+        A3_Write(!dir); // R
+        A4_Write(dir);
+        A1_Write(!dir); // L
+        A2_Write(dir);
+    
+    while(!dflag) {
+           
+        while(ECHO_R_Read()==0)
+            {
+            //UART_1_PutString("while\n");
+            TRIG_R_Write(1);
+            CyDelayUs(10);
+            TRIG_R_Write(0);
+            }
+            //UART_1_PutString(".....\n");
+            CyDelay(100);
+            
+        if(distance_m1<=dist) {
+            dflag=1;
+        }
+            
+    }
+        
+    A1_Write(0);
+    A2_Write(0);
+    A3_Write(0);
+    A4_Write(0);            
+    PWM_1_WriteCompare1(0);
+    PWM_1_WriteCompare2(0);
+
+}
+
+void adjust_angle_US(uint8 speed){
+    /*
+    INPUTS
+    speed (out of 255 max)
+    */
+    UART_1_PutString("\nAngle adjustment started");
+    uint8 lspeed, rspeed;
+    
+    int done = 0;
+    int dir;
+    
+    // read US
+    TRIG_R_Write(1); TRIG_L_Write(1);
+    CyDelayUs(10);
+    TRIG_R_Write(0); TRIG_L_Write(0);
+    CyDelay(10);
+    dir = (distance_m1 > distance_m2) ? 0 : 1; // note: US1 is on the right, US2 on left
+    UART_1_PutString("\nR:  ");
+    printNumUART(distance_m1);
+    UART_1_PutString("  L:  ");
+    printNumUART(distance_m2);
+    UART_1_PutString("\ndir = ");
+    printNumUART(dir);
+    
+    // set speed -- backwards wheel moves faster
+    lspeed = speed+dir*6;
+    rspeed = speed+dir*6;
+    PWM_1_WriteCompare1(lspeed);
+    PWM_1_WriteCompare2(rspeed);
+    
+    
+    // set direction; delay makes robot rotate at center of mass instead of center of wheel axes
+    if (dir) {
+        A3_Write(dir); // R
+        A4_Write(!dir);
+//        CyDelay(40);
+        A1_Write(!dir); // L
+        A2_Write(dir);
+    } else {
+        A1_Write(!dir); // L
+        A2_Write(dir);
+//        CyDelay(40);
+        A3_Write(dir); // R
+        A4_Write(!dir);
+    }
+    
+        
+
+    // poll USs, stop when both wheels have rotated enough
+    while (!done) {
+
+        // set trigger so distances update
+        TRIG_R_Write(1); TRIG_L_Write(1);
+        CyDelayUs(10);
+        TRIG_R_Write(0); TRIG_L_Write(0);
+        CyDelay(10);
+        
+        // get relative distance from both wheels
+        if (dir & (distance_m2 <= distance_m1)) {
+            done=1;
+        } else if (!dir & (distance_m1 <= distance_m2)) {
+            done=1;
+        }
+        
+        UART_1_PutString("\nR:  ");
+        printNumUART(distance_m1);
+        UART_1_PutString("  L:  ");
+        printNumUART(distance_m2);
+        UART_1_PutString("\n");
+        
+    }
+    
+    // stop wheels
+    A1_Write(0);
+    A2_Write(0);
+    A3_Write(0);
+    A4_Write(0);            
+    PWM_1_WriteCompare1(0);
+    PWM_1_WriteCompare2(0);
+};
 
 /* Polls colour sensor several times at 100us intervals to get a reliable colour reading, and returns a integer value
 corresponding with the closest colour reading. Outputs 0 if no colour is strongly detected */
@@ -542,11 +632,10 @@ void task2() {
     // Prelim Task 2
     flashXtimes(2);
     
-    driveXdist(50,1,fwdspeed);
-    CyDelay(100);
-    turnXdegrees(180,1,trnspeed);
-    CyDelay(100);
-    driveXdist(50+21,1,fwdspeed);
+    driveXdist(50,1,fwdspeed); CyDelay(100);
+    turnXdegrees(180,1,trnspeed); CyDelay(100);
+    adjust_angle_US(trnspeed); CyDelay(100);
+    driveXdist(50+15,1,fwdspeed);
     
     flashXtimes(2);
 }
@@ -563,16 +652,18 @@ void task3() {
     driveXdist(75,1,fwdspeed);
     
     turnXdegrees(80,0,trnspeed);
-    driveXdist(100,1,fwdspeed);
+    driveXdist(90,1,fwdspeed);
     
-    turnXdegrees(80,0,trnspeed);
+    adjust_angle_US(trnspeed);
+    turnXdegrees(87,0,trnspeed);
     driveXdist(75,1,fwdspeed);
     
     turnXdegrees(90,0,trnspeed);
-    driveXdist(64,1,fwdspeed);
+    driveXdist(50,1,fwdspeed);
     
     turnXdegrees(90,1,trnspeed);
-    driveXdist(47,1,fwdspeed);
+    adjust_angle_US(trnspeed);
+    driveXdist(37,1,fwdspeed);
     
     flashXtimes(3);
 }
@@ -640,38 +731,38 @@ int main(void)
     CyDelay(500);
     
     // prelim comp
-    //task1(); CyDelay(4000);
-    //task2(); CyDelay(4000);
-    //task3(); CyDelay(4000);
-    //task4(periodLen);
+//    task1(); CyDelay(4000);  
+//    task2(); CyDelay(4000);
+//    task3(); CyDelay(4000);
+//    task4(periodLen);
+//    
+    task3();
     
-    //adjust_dist_US(1,20,fwdspeed);
     
-    
-        for(;;)
+    for(;;)
     {
-       while(Echo1_Read()==0)
-        {
-        Trigger1_Write(1);
-        CyDelayUs(10);
-        Trigger1_Write(0);
-        }
-        
-        while(Echo2_Read()==0)
-        {
-        Trigger2_Write(1);
-        CyDelayUs(10);
-        Trigger2_Write(0);
-        }
-        
-        UART_1_PutString("R:  ");
-        printNumUART(distance_m1);
-        UART_1_PutString("L:  ");
-        printNumUART(distance_m2);
-        UART_1_PutString("\n\n");
-        
-        //UART_1_PutString(".....\n");
-        CyDelay(100);
+//       while(ECHO_R_Read()==0)
+//        {
+//        TRIG_R_Write(1);
+//        CyDelayUs(10);
+//        TRIG_R_Write(0);
+//        }
+//        
+//        while(ECHO_L_Read()==0)
+//        {
+//        TRIG_L_Write(1);
+//        CyDelayUs(10);
+//        TRIG_L_Write(0);
+//        }
+//        
+//        UART_1_PutString("R:  ");
+//        printNumUART(distance_m1);
+//        UART_1_PutString("L:  ");
+//        printNumUART(distance_m2);
+//        UART_1_PutString("\n\n");
+//        
+//        //UART_1_PutString(".....\n");
+//        CyDelay(100);
         
 
         
