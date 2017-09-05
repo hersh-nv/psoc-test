@@ -31,9 +31,14 @@ i.e. dist * QUAD_COEFF = value that QuadDec should count up to to travel dist in
 
 
 /* Defines for puck readings; calibrate when in new environment / lighting */
-uint16 RED[3] = {180, 300, 250};
-uint16 GRE[3] = {245, 215, 220};
-uint16 BLU[3] = {260, 260, 170};
+uint16 RED[3] = {250, 100, 100};
+uint16 GRE[3] = {100, 60, 100};
+uint16 BLU[3] = {100, 200, 100};
+
+uint16 redc=250;
+uint16 greenc=60;
+uint16 bluec=70;
+
 
 // for col count
 uint16 capturedCount = 0u; // counter value when capture occurs
@@ -48,6 +53,7 @@ int16 overflowCountR = 0u;
 uint8 fwdspeed = 210;
 uint8 bwdspeed = 220;
 uint8 trnspeed = 100;
+uint8 adjspeed=36;
 
 // US sensors
 uint16 uscount1=0;
@@ -115,6 +121,9 @@ CY_ISR_PROTO(COL_ISR) {
         capturedCount = COL_COUNTER_ReadCapture();
         capflag = TRUE;
     }
+    
+    
+    
 }
 
 /* ISR for shaft encoders -- identical, only differ in wheel value
@@ -441,17 +450,33 @@ void adjust_angle_US(uint8 speed){
     
     int done = 0;
     int dir;
+    int runavg=0;
+    float dist1a=0;
+    float dist2a=0;
     
     // read US
-    TRIG_R_Write(1); TRIG_L_Write(1);
+    while(runavg<=10){
+    TRIG_R_Write(1); 
+    TRIG_L_Write(1);
     CyDelayUs(10);
     TRIG_R_Write(0); TRIG_L_Write(0);
     CyDelay(10);
-    dir = (distance_m1 > distance_m2) ? 0 : 1; // note: US1 is on the right, US2 on left
+    
+    dist1a=dist1a+distance_m1;
+    dist2a=dist2a+distance_m2;
+    runavg++;
+    
+    }
+    
+    dist1a=dist1a/10;
+    dist2a=dist2a/10;
+    
+    dir = (dist1a > dist2a) ? 0 : 1; // note: US1 is on the right, US2 on left
+    if(((dist1a-dist2a)*(dist1a-dist2a))<=1.5){return;}
     UART_1_PutString("\nR:  ");
-    printNumUART(distance_m1);
+    printNumUART(dist1a);
     UART_1_PutString("  L:  ");
-    printNumUART(distance_m2);
+    printNumUART(dist2a);
     UART_1_PutString("\ndir = ");
     printNumUART(dir);
     
@@ -477,29 +502,48 @@ void adjust_angle_US(uint8 speed){
         A4_Write(!dir);
     }
     
-        
+        runavg=0;
+        dist1a=0;
+        dist2a=0;
 
     // poll USs, stop when both wheels have rotated enough
     while (!done) {
-
+    
+        while(runavg<10){    
         // set trigger so distances update
         TRIG_R_Write(1); TRIG_L_Write(1);
         CyDelayUs(10);
         TRIG_R_Write(0); TRIG_L_Write(0);
         CyDelay(10);
         
+        dist1a=dist1a+distance_m1;
+        dist2a=dist2a+distance_m2;
+        runavg++;
+        
+        }
+        
+         dist1a=dist1a/10;
+         dist2a=dist2a/10;
+    
+        
         // get relative distance from both wheels
-        if (dir & (distance_m2 <= distance_m1)) {
+        if (dir & (dist2a <= dist1a)) {
             done=1;
-        } else if (!dir & (distance_m1 <= distance_m2)) {
+        } else if (!dir & (dist1a <= dist2a)) {
             done=1;
         }
         
-        UART_1_PutString("\nR:  ");
-        printNumUART(distance_m1);
-        UART_1_PutString("  L:  ");
-        printNumUART(distance_m2);
-        UART_1_PutString("\n");
+        if(((dist1a-dist2a)*(dist1a-dist2a))<=1){done=1;}
+        
+//        UART_1_PutString("\nR:  ");
+//        printNumUART(dist1a);
+//        UART_1_PutString("  L:  ");
+//        printNumUART(dist2a);
+//        UART_1_PutString("\n");
+        
+        runavg=0;
+        dist1a=0;
+        dist2a=0;
         
     }
     
@@ -547,6 +591,7 @@ int getColour(uint16 periodLen) {
             CyDelayUs(100);
             temp = (overflowCountCOL * periodLen) + capturedCount;
             rCount = (rCount < temp) ? rCount : temp;
+            
         }
     
     S2_Write(1); S3_Write(1); // GREEN
@@ -563,6 +608,8 @@ int getColour(uint16 periodLen) {
             bCount = (bCount < temp) ? bCount : temp;
         }
     
+        
+        
     // print measures
     if (!SILENT) {
         UART_1_PutString("\nSens: R");
@@ -579,6 +626,8 @@ int getColour(uint16 periodLen) {
     gDist = abs(GRE[0]-rCount) + abs(GRE[1]-gCount) + abs(GRE[2]-bCount);
     bDist = abs(BLU[0]-rCount) + abs(BLU[1]-gCount) + abs(BLU[2]-bCount);
     
+
+    
     if (!SILENT) {
         UART_1_PutString("\nDist: R");
         printNumUART(rDist);
@@ -592,9 +641,7 @@ int getColour(uint16 periodLen) {
     temp = (rDist < gDist) ? rDist : gDist;
     minDist = (bDist < temp) ? bDist : temp;
     
-    if (minDist<500) {
-        return 0;
-    } else if (minDist==rDist) {
+    if (minDist==rDist) {
         return 1;
     } else if (minDist==gDist) {
         return 2;
@@ -604,7 +651,6 @@ int getColour(uint16 periodLen) {
         return 0;
     }
 }
-
 /* Flashes the PSoC LED (pin 2[1]) X number of times with a 400ms period, useful for very basic signalling without UART */
 void flashXtimes(int rep) {
     
@@ -623,7 +669,8 @@ void task1() {
     flashXtimes(1);
     
     driveXdist(50,1,fwdspeed); // units = cm
-    CyDelay(100);
+    CyDelay(300);
+    
     driveXdist(50,0,bwdspeed); //units = cm
     
     flashXtimes(1);
@@ -632,38 +679,99 @@ void task2() {
     // Prelim Task 2
     flashXtimes(2);
     
-    driveXdist(50,1,fwdspeed); CyDelay(100);
-    turnXdegrees(180,1,trnspeed); CyDelay(100);
-    adjust_angle_US(trnspeed); CyDelay(100);
-    driveXdist(50+15,1,fwdspeed);
+    driveXdist(50,1,fwdspeed); CyDelay(200);
+    turnXdegrees(180,1,fwdspeed); CyDelay(200);
+    adjust_angle_US(adjspeed); CyDelay(200);
+    adjust_angle_US(adjspeed); CyDelay(200);
+    adjust_angle_US(adjspeed); CyDelay(200);
+    
+    //driveXdist(50+15,1,fwdspeed);
+    
+    adjust_dist_US(1,25,fwdspeed);CyDelay(200);
+    
+    adjust_angle_US(adjspeed); CyDelay(200);
+    adjust_angle_US(adjspeed); CyDelay(200);
+    adjust_angle_US(adjspeed); CyDelay(200);
+    
+    adjust_dist_US(1,2,fwdspeed);
     
     flashXtimes(2);
 }
 void task3() {
     // Prelim Task 3
     flashXtimes(3);
-    
+    //straight
     driveXdist(20,1,fwdspeed);
+    CyDelay(100);
     
+    //right
     turnXdegrees(90,1,trnspeed);
+    CyDelay(100);
+    //stright
     driveXdist(50,1,fwdspeed);
+    CyDelay(100);
     
+    //adjust
+    adjust_angle_US(adjspeed);
+    CyDelay(100);
+    adjust_angle_US(adjspeed);
+    CyDelay(100);
+    
+    //left
     turnXdegrees(90,0,trnspeed);
+    CyDelay(100);
+    //stright
     driveXdist(75,1,fwdspeed);
+    CyDelay(100);
     
-    turnXdegrees(80,0,trnspeed);
+    //adjust
+    adjust_angle_US(adjspeed);
+    CyDelay(100);
+    adjust_angle_US(adjspeed);
+    CyDelay(100);
+    
+    //left
+    turnXdegrees(90,0,trnspeed);
+    CyDelay(100);
+    //stright
     driveXdist(90,1,fwdspeed);
+    CyDelay(100);
     
-    adjust_angle_US(trnspeed);
-    turnXdegrees(87,0,trnspeed);
-    driveXdist(75,1,fwdspeed);
+    //adjust
+    adjust_angle_US(adjspeed);
+    CyDelay(100);
+    adjust_angle_US(adjspeed);
+    CyDelay(100);
     
+    //left 
     turnXdegrees(90,0,trnspeed);
-    driveXdist(50,1,fwdspeed);
+    CyDelay(100);
+    //straight
+    driveXdist(75,1,fwdspeed);
+    CyDelay(100);
     
+    //adjust
+    adjust_angle_US(adjspeed);
+    CyDelay(100);
+    adjust_angle_US(adjspeed);
+    CyDelay(100);
+    
+    //left
+    turnXdegrees(90,0,trnspeed);
+    CyDelay(100);
+    //straight
+    driveXdist(43,1,fwdspeed);
+    CyDelay(100);
+    
+    //right
     turnXdegrees(90,1,trnspeed);
-    adjust_angle_US(trnspeed);
-    driveXdist(37,1,fwdspeed);
+    CyDelay(100);
+    adjust_angle_US(adjspeed);
+    CyDelay(100);
+    adjust_angle_US(adjspeed); //second adjustment
+    CyDelay(100);
+    //straight
+    driveXdist(33,1,fwdspeed);
     
     flashXtimes(3);
 }
@@ -688,11 +796,152 @@ void task4(uint16 periodLen) {
                 UART_1_PutString("B ");
             }
         }
-        CyDelay(10);
+        CyDelay(100);
     }
     
 }
+void task3g(){
+flashXtimes(5);
+    //straight
+    adjust_dist_US(1,12,fwdspeed);
+    CyDelay(200);
+    
+    //adjust?
+    /*adjust_angle_US(adjspeed);
+    CyDelay(200);
+    adjust_angle_US(adjspeed);
+    CyDelay(200);*/
+    
+    //right
+    turnXdegrees(90,1,trnspeed);
+    CyDelay(200);
+    
+    //adjust
+    adjust_angle_US(adjspeed);
+    CyDelay(200);
+    adjust_angle_US(adjspeed);
+    CyDelay(200);
+    adjust_angle_US(adjspeed);
+    CyDelay(200);
+    
+    //straight
+    adjust_dist_US(1,17,fwdspeed);
+    CyDelay(200);
+    
+    //adjust
+    adjust_angle_US(adjspeed);
+    CyDelay(200);
+    adjust_angle_US(adjspeed);
+    CyDelay(200);
 
+
+    //left1
+    turnXdegrees(95,0,trnspeed);
+    CyDelay(200);
+    
+    //adjust    
+    /*adjust_angle_US(adjspeed);
+    CyDelay(200);
+    adjust_angle_US(adjspeed);
+    CyDelay(200);
+    adjust_angle_US(adjspeed);
+    CyDelay(200);*/
+    
+    //straight
+    adjust_dist_US(1,17,fwdspeed);
+    CyDelay(200);
+    
+    //adjust
+    adjust_angle_US(adjspeed);
+    CyDelay(200);
+    adjust_angle_US(adjspeed);
+    CyDelay(200);
+    
+    //left2
+    turnXdegrees(98,0,trnspeed);
+    CyDelay(200);
+    
+    //adjust
+    /*adjust_angle_US(adjspeed);
+    CyDelay(200);
+    adjust_angle_US(adjspeed);
+    CyDelay(200);
+    adjust_angle_US(adjspeed);
+    CyDelay(200);*/
+    
+    //straight
+    adjust_dist_US(1,15,fwdspeed);
+    CyDelay(200);
+    
+    //adjust
+    adjust_angle_US(adjspeed);
+    CyDelay(200);
+    adjust_angle_US(adjspeed);
+    CyDelay(200);
+
+
+    //left3
+    turnXdegrees(97,0,trnspeed);
+    CyDelay(200);
+    
+    
+    //adjust
+    /*adjust_angle_US(adjspeed);
+    CyDelay(200);
+    adjust_angle_US(adjspeed);
+    CyDelay(200);
+    adjust_angle_US(adjspeed);
+    CyDelay(200);*/
+    
+    //straight
+    adjust_dist_US(1,17,fwdspeed);
+    CyDelay(200);
+    
+    //adjust
+    adjust_angle_US(adjspeed);
+    CyDelay(200);
+    adjust_angle_US(adjspeed);
+    CyDelay(200);
+
+    
+    //left 4
+    turnXdegrees(95,0,trnspeed);
+    CyDelay(200);
+    
+    //adjust
+    /*adjust_angle_US(adjspeed);
+    CyDelay(200);
+    adjust_angle_US(adjspeed);
+    CyDelay(200);
+    adjust_angle_US(adjspeed);
+    CyDelay(200);*/
+    
+    //straight
+    adjust_dist_US(1,57,fwdspeed);
+    CyDelay(200);
+    
+    
+    //right
+    turnXdegrees(90,1,trnspeed);
+    CyDelay(200);
+    
+    //adjust
+    adjust_angle_US(adjspeed);
+    CyDelay(200);
+    adjust_angle_US(adjspeed);
+    CyDelay(200);
+    adjust_angle_US(adjspeed);
+    CyDelay(200);
+    
+
+    
+    //straight
+    adjust_dist_US(1,2,fwdspeed);
+    CyDelay(200);
+    
+    
+
+}
 
 /* ===================================================================== */
 
@@ -715,6 +964,8 @@ int main(void)
         if (SILENT) {
             UART_1_PutString(" but SILENT flag is set (output is suppressed)");
         }
+    
+    COL_COUNTER_Start();
     PWM_1_Start();
     SEL_QUAD_Start();
     SER_QUAD_Start();
@@ -728,42 +979,21 @@ int main(void)
     periodLen = COL_COUNTER_ReadPeriod(); // read length of period register (in clock counts)
     
     // briefly wait before starting tasks
-    CyDelay(500);
+    CyDelay(3000);
     
     // prelim comp
-//    task1(); CyDelay(4000);  
-//    task2(); CyDelay(4000);
-//    task3(); CyDelay(4000);
+    task1(); CyDelay(4000);  
+    task2(); CyDelay(4000);
+//  task3(); CyDelay(4000);
 //    task4(periodLen);
-//    
-    task3();
+
+    task3g();
     
+
     
     for(;;)
     {
-//       while(ECHO_R_Read()==0)
-//        {
-//        TRIG_R_Write(1);
-//        CyDelayUs(10);
-//        TRIG_R_Write(0);
-//        }
-//        
-//        while(ECHO_L_Read()==0)
-//        {
-//        TRIG_L_Write(1);
-//        CyDelayUs(10);
-//        TRIG_L_Write(0);
-//        }
-//        
-//        UART_1_PutString("R:  ");
-//        printNumUART(distance_m1);
-//        UART_1_PutString("L:  ");
-//        printNumUART(distance_m2);
-//        UART_1_PutString("\n\n");
-//        
-//        //UART_1_PutString(".....\n");
-//        CyDelay(100);
-        
+//       
 
         
     }
