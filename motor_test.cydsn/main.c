@@ -800,6 +800,7 @@ void task4(uint16 periodLen) {
     }
     
 }
+
 void task3g(){
 flashXtimes(5);
     //straight
@@ -917,7 +918,7 @@ flashXtimes(5);
     CyDelay(200);*/
     
     //straight
-    adjust_dist_US(1,57,fwdspeed);
+    adjust_dist_US(1,54,fwdspeed);
     CyDelay(200);
     
     
