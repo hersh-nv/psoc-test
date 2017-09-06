@@ -31,9 +31,9 @@ i.e. dist * QUAD_COEFF = value that QuadDec should count up to to travel dist in
 
 
 /* Defines for puck readings; calibrate when in new environment / lighting */
-uint16 RED[3] = {250, 100, 100};
-uint16 GRE[3] = {100, 60, 100};
-uint16 BLU[3] = {100, 200, 100};
+uint16 RED[3] = {215, 810, 600};
+uint16 GRE[3] = {465, 255, 355};
+uint16 BLU[3] = {820, 470, 299};
 
 uint16 redc=250;
 uint16 greenc=60;
@@ -558,99 +558,82 @@ void adjust_angle_US(uint8 speed){
 
 /* Polls colour sensor several times at 100us intervals to get a reliable colour reading, and returns a integer value
 corresponding with the closest colour reading. Outputs 0 if no colour is strongly detected */
-int getColour(uint16 periodLen) {
-    /* INPUTS
-    periodLen = length (in clock counts) of period in COL_COUNTER component
-    
-    OUTPUTS
-    col = closest colour reading within 500-units of L1 distance (units = clock counts of COL_COUNTER)
-        0 = no colour
-        1 = red
-        2 = green
-        3 = blue
-    */
-    
+int getColour(uint16* periodLen, uint16* dist) {
     // initialise
-    uint16 rCount, gCount, bCount;
-    uint16 temp;
+    uint16 rCount=10000;
+    uint16 gCount=10000;
+    uint16 bCount=10000;
+    uint16 rCountTmp, gCountTmp, bCountTmp;
     uint16 rDist, gDist, bDist;
-    uint16 minDist;
-    int rep = 3;
-    
-    S0_Write(1); // 20% scaling?
-    S1_Write(0);
+    int temp, min;
+    int rep = 12;
     
     // cycle through colours
-    // get 'rep' number of readings for each colour, then take the smallest
-    // this should circumvent problem of missing input pulses
-    // note overflowCount isn't being reset, shouldn't be an issue since counter period is easily sufficient to handle COLOUT period
-    rCount = gCount = bCount = 0xffff; // set these to max values to begin with so the min sensor reading overwrites them
-    
     S2_Write(0); S3_Write(0); // RED
         for (int i=0;i<rep;i++) {
-            CyDelayUs(100);
-            temp = (overflowCountCOL * periodLen) + capturedCount;
-            rCount = (rCount < temp) ? rCount : temp;
-            
+            CyDelay(10);
+//            rCountTmp = (overflowCountCOL * *periodLen) + capturedCount;
+            rCountTmp = capturedCount;
+            rCount = (rCount < rCountTmp) ? rCount : rCountTmp;
         }
+        overflowCountCOL = 0u;
     
     S2_Write(1); S3_Write(1); // GREEN
         for (int i=0;i<rep;i++) {
-            CyDelayUs(100);
-            temp = (overflowCountCOL * periodLen) + capturedCount;
-            gCount = (gCount < temp) ? gCount : temp;
+            CyDelay(10);
+//            gCountTmp = (overflowCountCOL * *periodLen) + capturedCount;
+            gCountTmp = capturedCount;
+            gCount = (gCount < gCountTmp) ? gCount : gCountTmp;
         }
+        overflowCountCOL = 0u;
         
     S2_Write(0); S3_Write(1); // BLUE
         for (int i=0;i<rep;i++) {
-            CyDelayUs(100);
-            temp = (overflowCountCOL * periodLen) + capturedCount;
-            bCount = (bCount < temp) ? bCount : temp;
+            CyDelay(10);
+//            bCountTmp = (overflowCountCOL * *periodLen) + capturedCount;
+            bCountTmp = capturedCount;
+            bCount = (bCount < bCountTmp) ? bCount : bCountTmp;
         }
+        overflowCountCOL = 0u;
+        
+    S2_Write(0); S3_Write(0); 
     
-        
-        
     // print measures
-    if (!SILENT) {
-        UART_1_PutString("\nSens: R");
-        printNumUART(rCount);
-        UART_1_PutString(" G");
-        printNumUART(gCount);
-        UART_1_PutString(" B");
-        printNumUART(bCount);
-    }
+    UART_1_PutString("\n\nSens: R");
+    printNumUART(rCount);
+    UART_1_PutString(" G");
+    printNumUART(gCount);
+    UART_1_PutString(" B");
+    printNumUART(bCount);
     
     
     // find L1 distance to each puck location
     rDist = abs(RED[0]-rCount) + abs(RED[1]-gCount) + abs(RED[2]-bCount);
-    gDist = abs(GRE[0]-rCount) + abs(GRE[1]-gCount) + abs(GRE[2]-bCount);
-    bDist = abs(BLU[0]-rCount) + abs(BLU[1]-gCount) + abs(BLU[2]-bCount);
-    
-
-    
-    if (!SILENT) {
         UART_1_PutString("\nDist: R");
         printNumUART(rDist);
+    gDist = abs(GRE[0]-rCount) + abs(GRE[1]-gCount) + abs(GRE[2]-bCount);
         UART_1_PutString(" G");
         printNumUART(gDist);
+    bDist = abs(BLU[0]-rCount) + abs(BLU[1]-gCount) + abs(BLU[2]-bCount);
         UART_1_PutString(" B");
         printNumUART(bDist);
-    }
     
-    // find which is lowest i guess?
+    // which is lowest i guess?
     temp = (rDist < gDist) ? rDist : gDist;
-    minDist = (bDist < temp) ? bDist : temp;
-    
-    if (minDist==rDist) {
-        return 1;
-    } else if (minDist==gDist) {
-        return 2;
-    } else if (minDist==bDist) {
-        return 3;
+    *dist = (bDist < temp) ? bDist : temp;
+    min = (bDist < temp) ? 3 : 2;
+    if (min==2) {
+        min = (rDist < gDist) ? 1 : 2;
+    }
+    UART_1_PutString("\n");
+    printNumUART(*dist);
+    if (*dist<200) {
+        return min;
     } else {
         return 0;
     }
 }
+
 /* Flashes the PSoC LED (pin 2[1]) X number of times with a 400ms period, useful for very basic signalling without UART */
 void flashXtimes(int rep) {
     
@@ -780,10 +763,14 @@ void task4(uint16 periodLen) {
     // NOTE: this enters an infinite loop by design; make an exit flag if you want to do something after Task 4
     flashXtimes(4);
     
+    S0_Write(1); // 20% scaling?
+    S1_Write(0);
+    
     int col;
+    uint16 dist;
     
     for(;;) {   
-        col = getColour(periodLen);
+        col = getColour(&periodLen, &dist);
         if (!SILENT) {
             UART_1_PutString("\nColour: ");
             if (col==0) {
@@ -985,15 +972,15 @@ int main(void)
     periodLen = COL_COUNTER_ReadPeriod(); // read length of period register (in clock counts)
     
     // briefly wait before starting tasks
-    CyDelay(3000);
+//    CyDelay(3000);
     
     // prelim comp
-    task1(); CyDelay(4000);  
-    task2(); CyDelay(4000);
+    //task1(); CyDelay(4000);  
+    //task2(); CyDelay(4000);
 //  task3(); CyDelay(4000);
-//    task4(periodLen);
+    task4(periodLen);
 
-    task3g();
+    //task3g();
     
 
     

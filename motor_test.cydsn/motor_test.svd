@@ -46,7 +46,7 @@
         <register>
           <name>COL_COUNTER_Control_Reg</name>
           <description>UDB Control Register - Assigned Control Register Value</description>
-          <addressOffset>0x4000657B</addressOffset>
+          <addressOffset>0x40006576</addressOffset>
           <size>8</size>
           <access>read-write</access>
           <resetValue>0</resetValue>
@@ -469,7 +469,7 @@
         <register>
           <name>USTimer_2_COUNTER</name>
           <description>UDB.A0 - Current Down Counter Value</description>
-          <addressOffset>0x40006402</addressOffset>
+          <addressOffset>0x40006404</addressOffset>
           <size>16</size>
           <access>read-write</access>
           <resetValue>0</resetValue>
@@ -478,7 +478,7 @@
         <register>
           <name>USTimer_2_PERIOD</name>
           <description>UDB.D0 - Assigned Period</description>
-          <addressOffset>0x40006422</addressOffset>
+          <addressOffset>0x40006424</addressOffset>
           <size>16</size>
           <access>read-write</access>
           <resetValue>0</resetValue>
@@ -487,7 +487,7 @@
         <register>
           <name>USTimer_2_STATUS_MASK</name>
           <description>UDB Status bits Interrupt Mask Enable Register</description>
-          <addressOffset>0x40006484</addressOffset>
+          <addressOffset>0x40006485</addressOffset>
           <size>8</size>
           <access>read-write</access>
           <resetValue>0</resetValue>
@@ -526,7 +526,7 @@
         <register>
           <name>USTimer_2_STATUS_AUX_CTRL</name>
           <description>UDB Auxilliary Control Register</description>
-          <addressOffset>0x40006494</addressOffset>
+          <addressOffset>0x40006495</addressOffset>
           <size>8</size>
           <access>read-write</access>
           <resetValue>0</resetValue>
@@ -663,7 +663,7 @@
         <register>
           <name>TX_UART_1_TX_DATA</name>
           <description>TX Data Register</description>
-          <addressOffset>0x40006447</addressOffset>
+          <addressOffset>0x40006448</addressOffset>
           <size>8</size>
           <access>read-write</access>
           <resetValue>0</resetValue>
@@ -672,7 +672,7 @@
         <register>
           <name>TX_UART_1_TX_STATUS</name>
           <description>TX status register</description>
-          <addressOffset>0x40006467</addressOffset>
+          <addressOffset>0x4000646B</addressOffset>
           <size>8</size>
           <access>read-write</access>
           <resetValue>0</resetValue>
@@ -738,7 +738,7 @@
         <register>
           <name>RX_UART_1_RX_STATUS</name>
           <description>RX status register</description>
-          <addressOffset>0x4000656A</addressOffset>
+          <addressOffset>0x40006569</addressOffset>
           <size>8</size>
           <access>read-write</access>
           <resetValue>0</resetValue>
@@ -798,7 +798,7 @@
       </registers>
     </peripheral>
     <peripheral>
-      <name>PWM_1</name>
+      <name>SEL_QUAD</name>
       <description>No description available</description>
       <baseAddress>0x0</baseAddress>
       <addressBlock>
@@ -808,27 +808,96 @@
       </addressBlock>
       <registers>
         <register>
-          <name>PWM_1__COMPARE1</name>
-          <description>UDB.D0 - Assigned Compare1 Value</description>
-          <addressOffset>0x4000642E</addressOffset>
-          <size>8</size>
+          <name>SEL_QUAD_Cnt16_COUNTER</name>
+          <description>Counter value</description>
+          <addressOffset>0x40006400</addressOffset>
+          <size>16</size>
           <access>read-write</access>
           <resetValue>0</resetValue>
           <resetMask>0</resetMask>
         </register>
         <register>
-          <name>PWM_1__COMPARE2</name>
-          <description>UDB.D1 - Assigned Compare2 Value</description>
-          <addressOffset>0x4000643E</addressOffset>
+          <name>SEL_QUAD_STATUS_REG</name>
+          <description>Quadrature Decoder Status Register</description>
+          <addressOffset>0x4000646F</addressOffset>
           <size>8</size>
+          <access>read-write</access>
+          <resetValue>0</resetValue>
+          <resetMask>0</resetMask>
+          <fields>
+            <field>
+              <name>OVERFLOW</name>
+              <description>Counter overflow</description>
+              <lsb>0</lsb>
+              <msb>0</msb>
+              <access>read-only</access>
+            </field>
+            <field>
+              <name>UNDERFLOW</name>
+              <description>Counter underflow</description>
+              <lsb>1</lsb>
+              <msb>1</msb>
+              <access>read-only</access>
+            </field>
+            <field>
+              <name>RESET</name>
+              <description>Counter Reset due index</description>
+              <lsb>2</lsb>
+              <msb>2</msb>
+              <access>read-only</access>
+            </field>
+            <field>
+              <name>INVALID_IN</name>
+              <description>Invalid state transition on the A and B inputs</description>
+              <lsb>3</lsb>
+              <msb>3</msb>
+              <access>read-only</access>
+            </field>
+          </fields>
+        </register>
+      </registers>
+    </peripheral>
+    <peripheral>
+      <name>SEL_QUAD_Cnt16</name>
+      <description>No description available</description>
+      <baseAddress>0x0</baseAddress>
+      <addressBlock>
+        <offset>0</offset>
+        <size>0x0</size>
+        <usage>registers</usage>
+      </addressBlock>
+      <registers>
+        <register>
+          <name>SEL_QUAD_Cnt16_COUNTER</name>
+          <description>UDB.A0 - Current Counter Value</description>
+          <addressOffset>0x40006400</addressOffset>
+          <size>16</size>
           <access>read-write</access>
           <resetValue>0</resetValue>
           <resetMask>0</resetMask>
         </register>
         <register>
-          <name>PWM_1_Control_Reg</name>
+          <name>SEL_QUAD_Cnt16_PERIOD</name>
+          <description>UDB.D0 - Assigned Period</description>
+          <addressOffset>0x40006420</addressOffset>
+          <size>16</size>
+          <access>read-write</access>
+          <resetValue>0</resetValue>
+          <resetMask>0</resetMask>
+        </register>
+        <register>
+          <name>SEL_QUAD_Cnt16_COMPARE</name>
+          <description>UDB.D1 - Assigned Compare Value</description>
+          <addressOffset>0x40006430</addressOffset>
+          <size>16</size>
+          <access>read-write</access>
+          <resetValue>0</resetValue>
+          <resetMask>0</resetMask>
+        </register>
+        <register>
+          <name>SEL_QUAD_Cnt16_Control_Reg</name>
           <description>UDB Control Register - Assigned Control Register Value</description>
-          <addressOffset>0x4000647E</addressOffset>
+          <addressOffset>0x4000647F</addressOffset>
           <size>8</size>
           <access>read-write</access>
           <resetValue>0</resetValue>
@@ -836,21 +905,21 @@
           <fields>
             <field>
               <name>CTRL_ENABLE</name>
-              <description>Enable the PWM</description>
+              <description>Enable Counter</description>
               <lsb>7</lsb>
               <msb>7</msb>
               <access>read-write</access>
             </field>
             <field>
-              <name>CTRL_CMPMODE2</name>
-              <description>Compare mode 2</description>
+              <name>CTRL_CAPMODE</name>
+              <description>Capture mode</description>
               <lsb>3</lsb>
-              <msb>5</msb>
+              <msb>4</msb>
               <access>read-write</access>
             </field>
             <field>
-              <name>CTRL_CMPMODE1</name>
-              <description>Compare mode 1</description>
+              <name>CTRL_CMPMODE</name>
+              <description>Compare mode</description>
               <lsb>0</lsb>
               <msb>2</msb>
               <access>read-write</access>
@@ -858,55 +927,69 @@
           </fields>
         </register>
         <register>
-          <name>PWM_1_STATUS_MASK</name>
+          <name>SEL_QUAD_Cnt16_STATUS_MASK</name>
           <description>UDB Status bits Interrupt Mask Enable Register</description>
-          <addressOffset>0x4000648E</addressOffset>
+          <addressOffset>0x40006481</addressOffset>
           <size>8</size>
           <access>read-write</access>
           <resetValue>0</resetValue>
           <resetMask>0</resetMask>
           <fields>
             <field>
-              <name>PWM_STS_CMP1</name>
-              <description>Enables the Interrupt on Compare 1</description>
+              <name>COUNTER_STS_CMP</name>
+              <description>Compare output status</description>
               <lsb>0</lsb>
               <msb>0</msb>
-              <access>read-only</access>
+              <access>read-write</access>
             </field>
             <field>
-              <name>PWM_STS_CMP2</name>
-              <description>Enables the Interrupt on Compare 2</description>
+              <name>COUNTER_STS_A0ZERO</name>
+              <description>A0 Zero ouput status</description>
               <lsb>1</lsb>
               <msb>1</msb>
-              <access>read-only</access>
+              <access>read-write</access>
             </field>
             <field>
-              <name>PWM_STS_TC</name>
-              <description>Enables the Interrupt on Terminal Count</description>
+              <name>COUNTER_STS_OVERFLOW</name>
+              <description>Overflow status </description>
               <lsb>2</lsb>
               <msb>2</msb>
-              <access>read-only</access>
+              <access>read-write</access>
             </field>
             <field>
-              <name>PWM_STS_FIFO_FULL</name>
-              <description>FIFO Full Status Mask </description>
+              <name>COUNTER_STS_UNDERFLOW</name>
+              <description>Underflow status </description>
               <lsb>3</lsb>
               <msb>3</msb>
-              <access>read-only</access>
+              <access>read-write</access>
             </field>
             <field>
-              <name>PWM_STS_KILL</name>
-              <description>Enables the Interrupt on Kill</description>
+              <name>COUNTER_STS_CAPTURE</name>
+              <description>Capture Status</description>
+              <lsb>4</lsb>
+              <msb>4</msb>
+              <access>read-write</access>
+            </field>
+            <field>
+              <name>COUNTER_STS_FIFO_FULL</name>
+              <description>FIFO Full Status </description>
               <lsb>5</lsb>
               <msb>5</msb>
-              <access>read-only</access>
+              <access>read-write</access>
+            </field>
+            <field>
+              <name>COUNTER_STS_FIFO_NEMPTY</name>
+              <description>FIFO Not Empty Status </description>
+              <lsb>6</lsb>
+              <msb>6</msb>
+              <access>read-write</access>
             </field>
           </fields>
         </register>
         <register>
-          <name>PWM_1_STATUS_AUX_CTRL</name>
+          <name>SEL_QUAD_Cnt16_STATUS_AUX_CTRL</name>
           <description>UDB Auxilliary Control Register</description>
-          <addressOffset>0x4000649E</addressOffset>
+          <addressOffset>0x40006491</addressOffset>
           <size>8</size>
           <access>read-write</access>
           <resetValue>0</resetValue>
@@ -1031,7 +1114,7 @@
       </registers>
     </peripheral>
     <peripheral>
-      <name>SEL_QUAD</name>
+      <name>PWM_1</name>
       <description>No description available</description>
       <baseAddress>0x0</baseAddress>
       <addressBlock>
@@ -1041,96 +1124,27 @@
       </addressBlock>
       <registers>
         <register>
-          <name>SEL_QUAD_Cnt16_COUNTER</name>
-          <description>Counter value</description>
-          <addressOffset>0x4000640C</addressOffset>
-          <size>16</size>
-          <access>read-write</access>
-          <resetValue>0</resetValue>
-          <resetMask>0</resetMask>
-        </register>
-        <register>
-          <name>SEL_QUAD_STATUS_REG</name>
-          <description>Quadrature Decoder Status Register</description>
-          <addressOffset>0x4000646F</addressOffset>
+          <name>PWM_1__COMPARE1</name>
+          <description>UDB.D0 - Assigned Compare1 Value</description>
+          <addressOffset>0x4000642D</addressOffset>
           <size>8</size>
           <access>read-write</access>
           <resetValue>0</resetValue>
           <resetMask>0</resetMask>
-          <fields>
-            <field>
-              <name>OVERFLOW</name>
-              <description>Counter overflow</description>
-              <lsb>0</lsb>
-              <msb>0</msb>
-              <access>read-only</access>
-            </field>
-            <field>
-              <name>UNDERFLOW</name>
-              <description>Counter underflow</description>
-              <lsb>1</lsb>
-              <msb>1</msb>
-              <access>read-only</access>
-            </field>
-            <field>
-              <name>RESET</name>
-              <description>Counter Reset due index</description>
-              <lsb>2</lsb>
-              <msb>2</msb>
-              <access>read-only</access>
-            </field>
-            <field>
-              <name>INVALID_IN</name>
-              <description>Invalid state transition on the A and B inputs</description>
-              <lsb>3</lsb>
-              <msb>3</msb>
-              <access>read-only</access>
-            </field>
-          </fields>
         </register>
-      </registers>
-    </peripheral>
-    <peripheral>
-      <name>SEL_QUAD_Cnt16</name>
-      <description>No description available</description>
-      <baseAddress>0x0</baseAddress>
-      <addressBlock>
-        <offset>0</offset>
-        <size>0x0</size>
-        <usage>registers</usage>
-      </addressBlock>
-      <registers>
         <register>
-          <name>SEL_QUAD_Cnt16_COUNTER</name>
-          <description>UDB.A0 - Current Counter Value</description>
-          <addressOffset>0x4000640C</addressOffset>
-          <size>16</size>
+          <name>PWM_1__COMPARE2</name>
+          <description>UDB.D1 - Assigned Compare2 Value</description>
+          <addressOffset>0x4000643D</addressOffset>
+          <size>8</size>
           <access>read-write</access>
           <resetValue>0</resetValue>
           <resetMask>0</resetMask>
         </register>
         <register>
-          <name>SEL_QUAD_Cnt16_PERIOD</name>
-          <description>UDB.D0 - Assigned Period</description>
-          <addressOffset>0x4000642C</addressOffset>
-          <size>16</size>
-          <access>read-write</access>
-          <resetValue>0</resetValue>
-          <resetMask>0</resetMask>
-        </register>
-        <register>
-          <name>SEL_QUAD_Cnt16_COMPARE</name>
-          <description>UDB.D1 - Assigned Compare Value</description>
-          <addressOffset>0x4000643C</addressOffset>
-          <size>16</size>
-          <access>read-write</access>
-          <resetValue>0</resetValue>
-          <resetMask>0</resetMask>
-        </register>
-        <register>
-          <name>SEL_QUAD_Cnt16_Control_Reg</name>
+          <name>PWM_1_Control_Reg</name>
           <description>UDB Control Register - Assigned Control Register Value</description>
-          <addressOffset>0x4000647C</addressOffset>
+          <addressOffset>0x4000647E</addressOffset>
           <size>8</size>
           <access>read-write</access>
           <resetValue>0</resetValue>
@@ -1138,21 +1152,21 @@
           <fields>
             <field>
               <name>CTRL_ENABLE</name>
-              <description>Enable Counter</description>
+              <description>Enable the PWM</description>
               <lsb>7</lsb>
               <msb>7</msb>
               <access>read-write</access>
             </field>
             <field>
-              <name>CTRL_CAPMODE</name>
-              <description>Capture mode</description>
+              <name>CTRL_CMPMODE2</name>
+              <description>Compare mode 2</description>
               <lsb>3</lsb>
-              <msb>4</msb>
+              <msb>5</msb>
               <access>read-write</access>
             </field>
             <field>
-              <name>CTRL_CMPMODE</name>
-              <description>Compare mode</description>
+              <name>CTRL_CMPMODE1</name>
+              <description>Compare mode 1</description>
               <lsb>0</lsb>
               <msb>2</msb>
               <access>read-write</access>
@@ -1160,69 +1174,55 @@
           </fields>
         </register>
         <register>
-          <name>SEL_QUAD_Cnt16_STATUS_MASK</name>
+          <name>PWM_1_STATUS_MASK</name>
           <description>UDB Status bits Interrupt Mask Enable Register</description>
-          <addressOffset>0x4000648C</addressOffset>
+          <addressOffset>0x4000648E</addressOffset>
           <size>8</size>
           <access>read-write</access>
           <resetValue>0</resetValue>
           <resetMask>0</resetMask>
           <fields>
             <field>
-              <name>COUNTER_STS_CMP</name>
-              <description>Compare output status</description>
+              <name>PWM_STS_CMP1</name>
+              <description>Enables the Interrupt on Compare 1</description>
               <lsb>0</lsb>
               <msb>0</msb>
-              <access>read-write</access>
+              <access>read-only</access>
             </field>
             <field>
-              <name>COUNTER_STS_A0ZERO</name>
-              <description>A0 Zero ouput status</description>
+              <name>PWM_STS_CMP2</name>
+              <description>Enables the Interrupt on Compare 2</description>
               <lsb>1</lsb>
               <msb>1</msb>
-              <access>read-write</access>
+              <access>read-only</access>
             </field>
             <field>
-              <name>COUNTER_STS_OVERFLOW</name>
-              <description>Overflow status </description>
+              <name>PWM_STS_TC</name>
+              <description>Enables the Interrupt on Terminal Count</description>
               <lsb>2</lsb>
               <msb>2</msb>
-              <access>read-write</access>
+              <access>read-only</access>
             </field>
             <field>
-              <name>COUNTER_STS_UNDERFLOW</name>
-              <description>Underflow status </description>
+              <name>PWM_STS_FIFO_FULL</name>
+              <description>FIFO Full Status Mask </description>
               <lsb>3</lsb>
               <msb>3</msb>
-              <access>read-write</access>
+              <access>read-only</access>
             </field>
             <field>
-              <name>COUNTER_STS_CAPTURE</name>
-              <description>Capture Status</description>
-              <lsb>4</lsb>
-              <msb>4</msb>
-              <access>read-write</access>
-            </field>
-            <field>
-              <name>COUNTER_STS_FIFO_FULL</name>
-              <description>FIFO Full Status </description>
+              <name>PWM_STS_KILL</name>
+              <description>Enables the Interrupt on Kill</description>
               <lsb>5</lsb>
               <msb>5</msb>
-              <access>read-write</access>
-            </field>
-            <field>
-              <name>COUNTER_STS_FIFO_NEMPTY</name>
-              <description>FIFO Not Empty Status </description>
-              <lsb>6</lsb>
-              <msb>6</msb>
-              <access>read-write</access>
+              <access>read-only</access>
             </field>
           </fields>
         </register>
         <register>
-          <name>SEL_QUAD_Cnt16_STATUS_AUX_CTRL</name>
+          <name>PWM_1_STATUS_AUX_CTRL</name>
           <description>UDB Auxilliary Control Register</description>
-          <addressOffset>0x4000649C</addressOffset>
+          <addressOffset>0x4000649D</addressOffset>
           <size>8</size>
           <access>read-write</access>
           <resetValue>0</resetValue>
@@ -1359,7 +1359,7 @@
         <register>
           <name>SER_QUAD_Cnt16_COUNTER</name>
           <description>Counter value</description>
-          <addressOffset>0x40006408</addressOffset>
+          <addressOffset>0x40006409</addressOffset>
           <size>16</size>
           <access>read-write</access>
           <resetValue>0</resetValue>
@@ -1368,7 +1368,7 @@
         <register>
           <name>SER_QUAD_STATUS_REG</name>
           <description>Quadrature Decoder Status Register</description>
-          <addressOffset>0x4000646B</addressOffset>
+          <addressOffset>0x40006468</addressOffset>
           <size>8</size>
           <access>read-write</access>
           <resetValue>0</resetValue>
@@ -1419,7 +1419,7 @@
         <register>
           <name>SER_QUAD_Cnt16_COUNTER</name>
           <description>UDB.A0 - Current Counter Value</description>
-          <addressOffset>0x40006408</addressOffset>
+          <addressOffset>0x40006409</addressOffset>
           <size>16</size>
           <access>read-write</access>
           <resetValue>0</resetValue>
@@ -1428,7 +1428,7 @@
         <register>
           <name>SER_QUAD_Cnt16_PERIOD</name>
           <description>UDB.D0 - Assigned Period</description>
-          <addressOffset>0x40006428</addressOffset>
+          <addressOffset>0x40006429</addressOffset>
           <size>16</size>
           <access>read-write</access>
           <resetValue>0</resetValue>
@@ -1437,7 +1437,7 @@
         <register>
           <name>SER_QUAD_Cnt16_COMPARE</name>
           <description>UDB.D1 - Assigned Compare Value</description>
-          <addressOffset>0x40006438</addressOffset>
+          <addressOffset>0x40006439</addressOffset>
           <size>16</size>
           <access>read-write</access>
           <resetValue>0</resetValue>
@@ -1478,7 +1478,7 @@
         <register>
           <name>SER_QUAD_Cnt16_STATUS_MASK</name>
           <description>UDB Status bits Interrupt Mask Enable Register</description>
-          <addressOffset>0x4000648A</addressOffset>
+          <addressOffset>0x4000648D</addressOffset>
           <size>8</size>
           <access>read-write</access>
           <resetValue>0</resetValue>
@@ -1538,7 +1538,7 @@
         <register>
           <name>SER_QUAD_Cnt16_STATUS_AUX_CTRL</name>
           <description>UDB Auxilliary Control Register</description>
-          <addressOffset>0x4000649A</addressOffset>
+          <addressOffset>0x4000649D</addressOffset>
           <size>8</size>
           <access>read-write</access>
           <resetValue>0</resetValue>
