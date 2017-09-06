@@ -472,7 +472,7 @@ void adjust_angle_US(uint8 speed){
     dist2a=dist2a/10;
     
     dir = (dist1a > dist2a) ? 0 : 1; // note: US1 is on the right, US2 on left
-    if(((dist1a-dist2a)*(dist1a-dist2a))<=1.5){return;}
+    if(((dist1a-dist2a)*(dist1a-dist2a))<=1){return;}
     UART_1_PutString("\nR:  ");
     printNumUART(dist1a);
     UART_1_PutString("  L:  ");
@@ -509,7 +509,7 @@ void adjust_angle_US(uint8 speed){
     // poll USs, stop when both wheels have rotated enough
     while (!done) {
     
-        while(runavg<10){    
+        while(runavg<8){    
         // set trigger so distances update
         TRIG_R_Write(1); TRIG_L_Write(1);
         CyDelayUs(10);
@@ -522,8 +522,8 @@ void adjust_angle_US(uint8 speed){
         
         }
         
-         dist1a=dist1a/10;
-         dist2a=dist2a/10;
+         dist1a=dist1a/8;
+         dist2a=dist2a/8;
     
         
         // get relative distance from both wheels
@@ -668,10 +668,10 @@ void task1() {
     // Prelim Task 1
     flashXtimes(1);
     
-    driveXdist(50,1,fwdspeed); // units = cm
+    driveXdist(60,1,fwdspeed); // units = cm
     CyDelay(300);
     
-    driveXdist(50,0,bwdspeed); //units = cm
+    driveXdist(60,0,bwdspeed); //units = cm
     
     flashXtimes(1);
 }
@@ -679,7 +679,7 @@ void task2() {
     // Prelim Task 2
     flashXtimes(2);
     
-    driveXdist(50,1,fwdspeed); CyDelay(200);
+    driveXdist(60,1,fwdspeed); CyDelay(200);
     turnXdegrees(180,1,fwdspeed); CyDelay(200);
     adjust_angle_US(adjspeed); CyDelay(200);
     adjust_angle_US(adjspeed); CyDelay(200);
@@ -687,7 +687,7 @@ void task2() {
     
     //driveXdist(50+15,1,fwdspeed);
     
-    adjust_dist_US(1,25,fwdspeed);CyDelay(200);
+    adjust_dist_US(1,30,fwdspeed);CyDelay(200);
     
     adjust_angle_US(adjspeed); CyDelay(200);
     adjust_angle_US(adjspeed); CyDelay(200);
@@ -895,7 +895,7 @@ flashXtimes(5);
     CyDelay(200);*/
     
     //straight
-    adjust_dist_US(1,17,fwdspeed);
+    adjust_dist_US(1,20,fwdspeed);
     CyDelay(200);
     
     //adjust
@@ -916,6 +916,11 @@ flashXtimes(5);
     CyDelay(200);
     adjust_angle_US(adjspeed);
     CyDelay(200);*/
+    
+    //back
+    
+    driveXdist(20,0,bwdspeed);
+    CyDelay(200);
     
     //straight
     adjust_dist_US(1,54,fwdspeed);
