@@ -31,9 +31,9 @@ i.e. dist * QUAD_COEFF = value that QuadDec should count up to to travel dist in
 
 
 /* Defines for puck readings; calibrate when in new environment / lighting */
-uint16 RED[3] = {215, 810, 600};
-uint16 GRE[3] = {465, 255, 355};
-uint16 BLU[3] = {820, 470, 299};
+uint16 RED[3] = {215, 850, 635};
+uint16 GRE[3] = {380, 232, 325};
+uint16 BLU[3] = {700, 448, 220};
 
 uint16 redc=250;
 uint16 greenc=60;
@@ -775,15 +775,27 @@ void task4(uint16 periodLen) {
             UART_1_PutString("\nColour: ");
             if (col==0) {
                 UART_1_PutString("None");
+                LEDR_Write(0);
+                LEDG_Write(0);
+                LEDB_Write(0);
             } else if (col==1) {
                 UART_1_PutString("R ");
+                LEDR_Write(1);
+                LEDG_Write(0);
+                LEDB_Write(0);
             } else if (col==2) {
                 UART_1_PutString("G ");
+                LEDR_Write(0);
+                LEDG_Write(1);
+                LEDB_Write(0);
             } else if (col==3) {
                 UART_1_PutString("B ");
+                LEDR_Write(0);
+                LEDG_Write(0);
+                LEDB_Write(1);
             }
         }
-        CyDelay(100);
+        CyDelay(50);
     }
     
 }
