@@ -219,31 +219,20 @@ void getDist(uint16* echolength, uint16* distance) {
     *distance = *echolength / 58;
 }
 
-int main(void)
-{
-    CyGlobalIntEnable; /* Enable global interrupts. */
+void monitorColour(void) {
+    /* Place your application code here. */
 
     // initialise variables
     uint16 periodLen = 0u;   // length of counter period
     uint16 dist;
     int col;
     
-    
-    // initialise components
-    UART_1_Start();
-    UART_1_PutString("UART started\n");
-    Counter_1_Start();
-    isr_counter_StartEx(counter_isr); // set the isr_counter code to the proto code above
-    
     S0_Write(1); // 20% scaling?
     S1_Write(0);
     
     periodLen = Counter_1_ReadPeriod(); // read length of period register (in counts)
     
-    for(;;)
-    {
-        /* Place your application code here. */
-
+    for(;;) {
         getColour(&periodLen, &col, &dist);
         //getDist(&echolength, &distance);
         
@@ -259,11 +248,49 @@ int main(void)
             UART_1_PutString("None ");
         }
         
-        //UART_1_PutString("\nDistance: ");
-        //printNumUART(distance);
-        
+    }
+}
 
-          
+void moveServo(int16 angle) {
+    /* INPUTS
+    angle = value from -90 to 90 (degrees)
+    */
+    
+    uint16 duty;
+    
+    duty = 4500 + 31*angle; // range from 3k to 6k duty cycle
+                            // pwm period = 60k, 20ms so this corresponds to
+                            // 1ms to 2ms range
+    PWM_SERVO_WriteCompare(duty);
+    UART_1_PutString("\nduty  ");
+    printNumUART(duty);
+}
+
+int main(void)
+{
+    CyGlobalIntEnable; /* Enable global interrupts. */
+
+    
+    
+    // initialise components
+    UART_1_Start();
+    UART_1_PutString("UART started\n");
+    Counter_1_Start();
+    PWM_SERVO_Start();
+    
+    isr_counter_StartEx(counter_isr); // set the isr_counter code to the proto code above
+    
+    
+    for(;;)
+    {
+        moveServo(-20);
+        CyDelay(2000);
+        moveServo(0);
+        CyDelay(500);
+        
+        moveServo(20);
+        CyDelay(2000);
+        moveServo(0);
         CyDelay(500);
         
     }

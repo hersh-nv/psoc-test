@@ -31,9 +31,9 @@ i.e. dist * QUAD_COEFF = value that QuadDec should count up to to travel dist in
 
 
 /* Defines for puck readings; calibrate when in new environment / lighting */
-uint16 RED[3] = {215, 850, 635};
-uint16 GRE[3] = {380, 232, 325};
-uint16 BLU[3] = {700, 448, 220};
+uint16 RED[3] = {177, 627, 480};
+uint16 GRE[3] = {395, 225, 309};
+uint16 BLU[3] = {677, 380, 190};
 
 uint16 redc=250;
 uint16 greenc=60;
@@ -801,7 +801,7 @@ void task4(uint16 periodLen) {
 }
 
 void task3g(){
-flashXtimes(5);
+flashXtimes(3);
     //straight
     adjust_dist_US(1,12,fwdspeed);
     CyDelay(200);
@@ -918,7 +918,7 @@ flashXtimes(5);
     
     //back
     
-    driveXdist(20,0,bwdspeed);
+    driveXdist(35,0,bwdspeed);
     CyDelay(200);
     
     //straight
@@ -984,12 +984,12 @@ int main(void)
     periodLen = COL_COUNTER_ReadPeriod(); // read length of period register (in clock counts)
     
     // briefly wait before starting tasks
-//    CyDelay(3000);
     
     // prelim comp
-    //task1(); CyDelay(4000);  
-    //task2(); CyDelay(4000);
-//  task3(); CyDelay(4000);
+    CyDelay(3000);
+    task1(); CyDelay(8000);  
+    task2(); CyDelay(8000);
+    task3g(); CyDelay(1000);
     task4(periodLen);
 
     //task3g();
