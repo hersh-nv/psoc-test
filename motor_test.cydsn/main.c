@@ -277,7 +277,7 @@ void driveXdist(int32 Xdist, int dir, uint8 speed) {
     // poll SEs every 20ms, when both shaft encoders read X distance, stop
     while ((!Ldone)||(!Rdone)) {
 
-        CyDelay(20); // the smaller this value, the more often the SEs are polled and hence the more accurate the distance
+        CyDelay(100); // the smaller this value, the more often the SEs are polled and hence the more accurate the distance
         
         // get relative distance from both wheels
         ldist = (getDistance(1,lsdist)); //left
@@ -396,6 +396,15 @@ void turnXdegrees(int16 Xdeg, int dir, uint8 speed) {
     }
 }
 
+void updateUS(void) {
+    
+    //right
+    TRIG_R_Write(1); TRIG_L_Write(0);
+    CyDelayUs(10);
+    TRIG_R_Write(0); TRIG_L_Write(0);
+    
+}
+    
 void adjust_dist_US(int dir, uint16 dist, uint8 speed){
 
     int dflag=0;
@@ -639,9 +648,9 @@ void flashXtimes(int rep) {
     
     for (int i=0;i<rep;i++) {
         LED1_Write(1);
-        CyDelay(200);
+        CyDelay(100);
         LED1_Write(0);
-        CyDelay(200);
+        CyDelay(100);
     }
     
 }
@@ -984,21 +993,35 @@ int main(void)
     periodLen = COL_COUNTER_ReadPeriod(); // read length of period register (in clock counts)
     
     // briefly wait before starting tasks
+//    CyDelay(1000);
+    
     
     // prelim comp
-    CyDelay(3000);
-    task1(); CyDelay(8000);  
-    task2(); CyDelay(8000);
-    task3g(); CyDelay(1000);
-    task4(periodLen);
-
-    //task3g();
+//    
+//    task1(); CyDelay(8000);  
+//    task2(); CyDelay(8000);
+//    task3g(); CyDelay(1000);
+//    task4(periodLen);
     
-
+    flashXtimes(3);
     
     for(;;)
     {
-//       
+        
+        updateUS();
+        
+        UART_1_PutString("\nright us dist  ");
+        printNumUART(distance_m1);
+        
+        if (distance_m1<=5) {
+            LED1_Write(1);
+        } else {
+            LED1_Write(0);
+        }
+        
+        CyDelay(10);
+        
+        
 
         
     }

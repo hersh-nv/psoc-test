@@ -283,14 +283,10 @@ int main(void)
     
     for(;;)
     {
-        moveServo(-20);
-        CyDelay(2000);
-        moveServo(0);
+        LED1_Write(1);
         CyDelay(500);
         
-        moveServo(20);
-        CyDelay(2000);
-        moveServo(0);
+        LED1_Write(0);
         CyDelay(500);
         
     }
