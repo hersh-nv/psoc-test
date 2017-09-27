@@ -183,7 +183,7 @@ CY_ISR_PROTO(QUAD2_ISR) {
     }
 }
 
-
+/* ISRs for ultrasonics */
 CY_ISR(Timer_ISR_Handler1){
 
     
@@ -643,6 +643,22 @@ int getColour(uint16* periodLen, uint16* dist) {
     }
 }
 
+/* Moves servo to specified angle */
+void moveServo(int16 angle) {
+    /* INPUTS
+    angle = value from -90 to 90 (degrees)
+    */
+    
+    uint16 duty;
+    
+    duty = 4500 + 16*angle; // range from 3k to 6k duty cycle
+                            // pwm period = 60k, 20ms so this corresponds to
+                            // 1ms to 2ms range
+    PWM_SERVO_WriteCompare(duty);
+    UART_1_PutString("\nduty  ");
+    printNumUART(duty);
+}
+
 /* Flashes the PSoC LED (pin 2[1]) X number of times with a 400ms period, useful for very basic signalling without UART */
 void flashXtimes(int rep) {
     
@@ -986,44 +1002,31 @@ int main(void)
     ISR_QUAD1_StartEx(QUAD1_ISR);
     ISR_QUAD2_StartEx(QUAD2_ISR);
     ISR_COL_StartEx(COL_ISR);
+    PWM_SERVO_Start();
     
     // variables
     uint16 periodLen = 0u;   // length of counter period
-    
     periodLen = COL_COUNTER_ReadPeriod(); // read length of period register (in clock counts)
     
-    // briefly wait before starting tasks
-//    CyDelay(1000);
+    flashXtimes(3);
     
+    driveXdist(4,1,fwdspeed);
+    moveServo(30);
     
-    // prelim comp
-//    
-//    task1(); CyDelay(8000);  
-//    task2(); CyDelay(8000);
-//    task3g(); CyDelay(1000);
-//    task4(periodLen);
+    for (int i=0; i<4; i++) {
+        flashXtimes(1);
+        CyDelay(1000);
+    }
+    
+    moveServo(0);
+    CyDelay(500);
+    driveXdist(4,0,bwdspeed);
     
     flashXtimes(3);
     
     for(;;)
     {
-        
-        updateUS();
-        
-        UART_1_PutString("\nright us dist  ");
-        printNumUART(distance_m1);
-        
-        if (distance_m1<=5) {
-            LED1_Write(1);
-        } else {
-            LED1_Write(0);
-        }
-        
-        CyDelay(10);
-        
-        
 
-        
     }
     
 }
