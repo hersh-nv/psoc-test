@@ -31,9 +31,9 @@ i.e. dist * QUAD_COEFF = value that QuadDec should count up to to travel dist in
 
 
 /* Defines for puck readings; calibrate when in new environment / lighting */
-uint16 RED[3] = {177, 627, 480};
-uint16 GRE[3] = {395, 225, 309};
-uint16 BLU[3] = {677, 380, 190};
+uint16 RED[3] = {6400, 6400, 9300};
+uint16 GRE[3] = {8600, 7300, 7300};
+uint16 BLU[3] = {10000, 9200, 5500};
 
 uint16 redc=250;
 uint16 greenc=60;
@@ -58,9 +58,12 @@ uint8 adjspeed=36;
 // US sensors
 uint16 uscount1=0;
 float distance_m1=0;
-
 uint16 uscount2=0;
 float distance_m2=0;
+
+// for storing colour sequence
+int8 SEQ[5];
+
 
 
 /* ========== FUNCTIONS START HERE ===================== */
@@ -567,7 +570,7 @@ void adjust_angle_US(uint8 speed){
 
 /* Polls colour sensor several times at 100us intervals to get a reliable colour reading, and returns a integer value
 corresponding with the closest colour reading. Outputs 0 if no colour is strongly detected */
-int getColour(uint16* periodLen, uint16* dist) {
+int getColour(uint16* periodLen, uint16 dist) {
     // initialise
     uint16 rCount=10000;
     uint16 gCount=10000;
@@ -580,27 +583,27 @@ int getColour(uint16* periodLen, uint16* dist) {
     // cycle through colours
     S2_Write(0); S3_Write(0); // RED
         for (int i=0;i<rep;i++) {
-            CyDelay(10);
-//            rCountTmp = (overflowCountCOL * *periodLen) + capturedCount;
-            rCountTmp = capturedCount;
+            CyDelay(2);
+            rCountTmp = (overflowCountCOL * *periodLen) + capturedCount;
+//            rCountTmp = capturedCount;
             rCount = (rCount < rCountTmp) ? rCount : rCountTmp;
         }
         overflowCountCOL = 0u;
     
     S2_Write(1); S3_Write(1); // GREEN
         for (int i=0;i<rep;i++) {
-            CyDelay(10);
-//            gCountTmp = (overflowCountCOL * *periodLen) + capturedCount;
-            gCountTmp = capturedCount;
+            CyDelay(2);
+            gCountTmp = (overflowCountCOL * *periodLen) + capturedCount;
+//            gCountTmp = capturedCount;
             gCount = (gCount < gCountTmp) ? gCount : gCountTmp;
         }
         overflowCountCOL = 0u;
         
     S2_Write(0); S3_Write(1); // BLUE
         for (int i=0;i<rep;i++) {
-            CyDelay(10);
-//            bCountTmp = (overflowCountCOL * *periodLen) + capturedCount;
-            bCountTmp = capturedCount;
+            CyDelay(2);
+            bCountTmp = (overflowCountCOL * *periodLen) + capturedCount;
+//            bCountTmp = capturedCount;
             bCount = (bCount < bCountTmp) ? bCount : bCountTmp;
         }
         overflowCountCOL = 0u;
@@ -629,14 +632,14 @@ int getColour(uint16* periodLen, uint16* dist) {
     
     // which is lowest i guess?
     temp = (rDist < gDist) ? rDist : gDist;
-    *dist = (bDist < temp) ? bDist : temp;
+    dist = (bDist < temp) ? bDist : temp;
     min = (bDist < temp) ? 3 : 2;
     if (min==2) {
         min = (rDist < gDist) ? 1 : 2;
     }
     UART_1_PutString("\n");
-    printNumUART(*dist);
-    if (*dist<200) {
+    printNumUART(dist);
+    if (dist<3500) {
         return min;
     } else {
         return 0;
@@ -649,12 +652,19 @@ void moveServo(int16 angle) {
     angle = value from -90 to 90 (degrees)
     */
     
-    uint16 duty;
+    uint16 duty, oldduty;
+    
+    oldduty = PWM_SERVO_ReadCompare();
     
     duty = 4500 + 16*angle; // range from 3k to 6k duty cycle
-                            // pwm period = 60k, 20ms so this corresponds to
+                            // pwm period = 60k, 20ms so this corresponds 
                             // 1ms to 2ms range
+//    for (int i=0; i<8; i++) {
+//        PWM_SERVO_WriteCompare(oldduty+i*((duty-oldduty)>>3));
+//        CyDelay(100);
+//    }
     PWM_SERVO_WriteCompare(duty);
+    
     UART_1_PutString("\nduty  ");
     printNumUART(duty);
 }
@@ -788,14 +798,14 @@ void task4(uint16 periodLen) {
     // NOTE: this enters an infinite loop by design; make an exit flag if you want to do something after Task 4
     flashXtimes(4);
     
-    S0_Write(1); // 20% scaling?
-    S1_Write(0);
+    S0_Write(0); // 2% scaling?
+    S1_Write(1);
     
     int col;
     uint16 dist;
     
     for(;;) {   
-        col = getColour(&periodLen, &dist);
+        col = getColour(&periodLen, dist);
         if (!SILENT) {
             UART_1_PutString("\nColour: ");
             if (col==0) {
@@ -973,6 +983,67 @@ flashXtimes(3);
 
 }
 
+
+/* Store 5 colours from wall-mounted pucks */
+void readWallPucks(uint16 periodLen) {
+    
+    int col;
+    uint16 dist;
+    
+    flashXtimes(3);
+    CyDelay(2000);
+    
+    /* SCALE HERE */
+    S0_Write(0); // 2% scaling?
+    S1_Write(1);
+    
+    for (int i=0; i<5; i++) {
+        // get colour
+        col = getColour(&periodLen, dist);
+        
+        if (!SILENT) {
+            UART_1_PutString("\nColour: ");
+            if (col==0) {
+                UART_1_PutString("None");
+                LEDR_Write(0);
+                LEDG_Write(0);
+                LEDB_Write(0);
+            } else if (col==1) {
+                UART_1_PutString("R ");
+                LEDR_Write(1);
+                LEDG_Write(0);
+                LEDB_Write(0);
+            } else if (col==2) {
+                UART_1_PutString("G ");
+                LEDR_Write(0);
+                LEDG_Write(1);
+                LEDB_Write(0);
+            } else if (col==3) {
+                UART_1_PutString("B ");
+                LEDR_Write(0);
+                LEDG_Write(0);
+                LEDB_Write(1);
+            }
+        }
+        
+        // store colour
+        SEQ[i]=col;
+        
+        // wait
+        flashXtimes(1);
+        CyDelay(1000);
+    }
+    
+    flashXtimes(3);
+    
+    
+    UART_1_PutString("\n SEQ: ");
+    for (int i=0; i<5; i++) {
+        printNumUART(SEQ[i]);
+        UART_1_PutString("  ");
+    }
+}
+
 /* ===================================================================== */
 
 int main(void)
@@ -1005,28 +1076,34 @@ int main(void)
     PWM_SERVO_Start();
     
     // variables
+    int col;
     uint16 periodLen = 0u;   // length of counter period
     periodLen = COL_COUNTER_ReadPeriod(); // read length of period register (in clock counts)
     
+    S0_Write(0); // 2% scaling?
+    S1_Write(1);
+    
+    moveServo(90);
+    
+    ////////
+//    task4(periodLen);  
+    
     flashXtimes(3);
+    CyDelay(1000);
     
-    driveXdist(4,1,fwdspeed);
-    moveServo(30);
+    col = getColour(&periodLen, 0);
+    UART_1_PutString("\nCol  ");
+    printNumUART(col);
     
-    for (int i=0; i<4; i++) {
-        flashXtimes(1);
-        CyDelay(1000);
+    if (col==1) {
+        moveServo(0);
     }
-    
-    moveServo(0);
-    CyDelay(500);
-    driveXdist(4,0,bwdspeed);
     
     flashXtimes(3);
     
     for(;;)
     {
-
+        
     }
     
 }
