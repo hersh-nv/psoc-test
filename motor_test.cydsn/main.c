@@ -27,7 +27,9 @@ conversion coefficient from distance in cm to quadrature encoder counter
 i.e. dist * QUAD_COEFF = value that QuadDec should count up to to travel dist in cm.
 200 is a roughly correct value i just measured; can be adjusted for preciseness later
 */
-#define ROTATE_COEFF 39 // this is a complete estimate; test laterer
+#define ROTATE_COEFF 39
+#define PULLEY_DIST_COEFF 157 // TO BE TESTED
+
 
 
 /* Defines for puck readings; calibrate when in new environment / lighting */
@@ -53,7 +55,8 @@ int16 overflowCountR = 0u;
 uint8 fwdspeed = 210;
 uint8 bwdspeed = 220;
 uint8 trnspeed = 100;
-uint8 adjspeed=36;
+uint8 adjspeed = 36;
+uint8 pllspeed = 100;
 
 // US sensors
 uint16 uscount1=0;
@@ -63,6 +66,8 @@ float distance_m2=0;
 
 // for storing colour sequence
 int8 SEQ[5];
+uint16 mindist = 0u;
+uint16 periodLen = 0u;   // length of counter period
 
 
 
@@ -187,22 +192,22 @@ CY_ISR_PROTO(QUAD2_ISR) {
 }
 
 /* ISRs for ultrasonics */
-CY_ISR(Timer_ISR_Handler1){
+CY_ISR(Timer_ISR_HandlerR){
 
     
-    USTimer_1_ReadStatusRegister();
-    uscount1=USTimer_1_ReadCounter();
+    USTimer_R_ReadStatusRegister();
+    uscount1=USTimer_R_ReadCounter();
     //printNumUART(uscount1);;
     //UART_1_PutString("usint1");
     
     distance_m1=(65535-uscount1)/58;
   
 }
-CY_ISR(Timer_ISR_Handler2){
+CY_ISR(Timer_ISR_HandlerL){
 
     
-    USTimer_2_ReadStatusRegister();
-    uscount2=USTimer_2_ReadCounter();
+    USTimer_L_ReadStatusRegister();
+    uscount2=USTimer_L_ReadCounter();
     //printNumUART(uscount2);;
     //UART_1_PutString("\n");
     
@@ -212,16 +217,20 @@ CY_ISR(Timer_ISR_Handler2){
 }
 
 
-/* Reads the quadrature decoder connected to the shaft encoder and returns the distance as a int32 */
+/* Reads the quadrature decoder connected to the shaft encoder and returns the distance as a int32
+   Used for all shaft encoders, on wheel motors and pulley motor */
 int32 getDistance(int side, int32 startdist) {
     
     int32 distance;
     int16 SE_COUNT = 0u;
-    if (side==1) {
+    if (side==0) {
+        SE_COUNT = SER_QUAD_GetCounter();
+        distance = overflowCountR * 0x7fff + SE_COUNT;
+    } else if (side==1) {
         SE_COUNT = SEL_QUAD_GetCounter();
         distance = overflowCountL * 0x7fff + SE_COUNT;
-    } else {
-        SE_COUNT = SER_QUAD_GetCounter();
+    } else if (side==2) {
+        SE_COUNT = SECL_QUAD_GetCounter();
         distance = overflowCountR * 0x7fff + SE_COUNT;
     }
     
@@ -231,7 +240,7 @@ int32 getDistance(int side, int32 startdist) {
 }
 
 /* Drives X distance (cm) forward/backward, polls shaft encoders every 20ms until X distance reached */
-void driveXdist(int32 Xdist, int dir, uint8 speed) {
+void driveXdist(int32 Xdist, int dir) {
     /* 
     INPUTS
     Xdist = distance to move forward (cm)
@@ -262,8 +271,13 @@ void driveXdist(int32 Xdist, int dir, uint8 speed) {
     rsdist = (getDistance(0,0)); // get right starting dist
     
     // set speed
-    lspeed = speed;
-    rspeed = speed;
+    if (dir) {
+        lspeed = fwdspeed;
+        rspeed = fwdspeed;
+    } else {
+        lspeed = bwdspeed;
+        rspeed = bwdspeed;
+    }
     PWM_1_WriteCompare1(lspeed);
     PWM_1_WriteCompare2(rspeed);
     
@@ -314,7 +328,7 @@ void driveXdist(int32 Xdist, int dir, uint8 speed) {
 
 /* Turns X degrees CW/CCW, polls shaft encoders every 10 ms until X degrees is reached.
 very similar to driveXdist() */
-void turnXdegrees(int16 Xdeg, int dir, uint8 speed) {
+void turnXdegrees(int16 Xdeg, int dir) {
     /*
     INPUTS
     Xdeg = desired angle to rotate robot (degrees)
@@ -342,8 +356,8 @@ void turnXdegrees(int16 Xdeg, int dir, uint8 speed) {
     rsdist = (getDistance(0,0)); // get right starting dist
     
     // set speed -- backwards wheel moves faster
-    lspeed = speed+dir*6;
-    rspeed = speed+dir*6;
+    lspeed = trnspeed+dir*6;
+    rspeed = trnspeed+dir*6;
     PWM_1_WriteCompare1(lspeed);
     PWM_1_WriteCompare2(rspeed);
     
@@ -401,9 +415,9 @@ void turnXdegrees(int16 Xdeg, int dir, uint8 speed) {
 void updateUS(void) {
     
     //right
-    TRIG_R_Write(1); TRIG_L_Write(0);
+    TRIG_Write(1);
     CyDelayUs(10);
-    TRIG_R_Write(0); TRIG_L_Write(0);
+    TRIG_Write(0);
     
 }
     
@@ -429,9 +443,7 @@ void adjust_dist_US(int dir, uint16 dist, uint8 speed){
         while(ECHO_R_Read()==0)
             {
             //UART_1_PutString("while\n");
-            TRIG_R_Write(1);
-            CyDelayUs(10);
-            TRIG_R_Write(0);
+            updateUS();
             }
             //UART_1_PutString(".....\n");
             CyDelay(100);
@@ -467,10 +479,7 @@ void adjust_angle_US(uint8 speed){
     
     // read US
     while(runavg<=10){
-    TRIG_R_Write(1); 
-    TRIG_L_Write(1);
-    CyDelayUs(10);
-    TRIG_R_Write(0); TRIG_L_Write(0);
+    updateUS();
     CyDelay(10);
     
     dist1a=dist1a+distance_m1;
@@ -522,9 +531,7 @@ void adjust_angle_US(uint8 speed){
     
         while(runavg<8){    
         // set trigger so distances update
-        TRIG_R_Write(1); TRIG_L_Write(1);
-        CyDelayUs(10);
-        TRIG_R_Write(0); TRIG_L_Write(0);
+        updateUS();
         CyDelay(10);
         
         dist1a=dist1a+distance_m1;
@@ -569,7 +576,7 @@ void adjust_angle_US(uint8 speed){
 
 /* Polls colour sensor several times at 100us intervals to get a reliable colour reading, and returns a integer value
 corresponding with the closest colour reading. Outputs 0 if no colour is strongly detected */
-int getColour(uint16* periodLen, uint16 dist) {
+int getColour() {
     // initialise
     uint16 rCount=10000;
     uint16 gCount=10000;
@@ -583,7 +590,7 @@ int getColour(uint16* periodLen, uint16 dist) {
     S2_Write(0); S3_Write(0); // RED
         for (int i=0;i<rep;i++) {
             CyDelay(2);
-            rCountTmp = (overflowCountCOL * *periodLen) + capturedCount;
+            rCountTmp = (overflowCountCOL * periodLen) + capturedCount;
 //            rCountTmp = capturedCount;
             rCount = (rCount < rCountTmp) ? rCount : rCountTmp;
         }
@@ -592,7 +599,7 @@ int getColour(uint16* periodLen, uint16 dist) {
     S2_Write(1); S3_Write(1); // GREEN
         for (int i=0;i<rep;i++) {
             CyDelay(2);
-            gCountTmp = (overflowCountCOL * *periodLen) + capturedCount;
+            gCountTmp = (overflowCountCOL * periodLen) + capturedCount;
 //            gCountTmp = capturedCount;
             gCount = (gCount < gCountTmp) ? gCount : gCountTmp;
         }
@@ -601,7 +608,7 @@ int getColour(uint16* periodLen, uint16 dist) {
     S2_Write(0); S3_Write(1); // BLUE
         for (int i=0;i<rep;i++) {
             CyDelay(2);
-            bCountTmp = (overflowCountCOL * *periodLen) + capturedCount;
+            bCountTmp = (overflowCountCOL * periodLen) + capturedCount;
 //            bCountTmp = capturedCount;
             bCount = (bCount < bCountTmp) ? bCount : bCountTmp;
         }
@@ -610,12 +617,14 @@ int getColour(uint16* periodLen, uint16 dist) {
     S2_Write(0); S3_Write(0); 
     
     // print measures
-    UART_1_PutString("\n\nSens: R");
-    printNumUART(rCount);
-    UART_1_PutString(" G");
-    printNumUART(gCount);
-    UART_1_PutString(" B");
-    printNumUART(bCount);
+    if (!SILENT) {
+        UART_1_PutString("\n\nSens: R");
+        printNumUART(rCount);
+        UART_1_PutString(" G");
+        printNumUART(gCount);
+        UART_1_PutString(" B");
+        printNumUART(bCount);
+    }
     
     
     // find L1 distance to each puck location
@@ -631,14 +640,22 @@ int getColour(uint16* periodLen, uint16 dist) {
     
     // which is lowest i guess?
     temp = (rDist < gDist) ? rDist : gDist;
-    dist = (bDist < temp) ? bDist : temp;
+    mindist = (bDist < temp) ? bDist : temp;
     min = (bDist < temp) ? 3 : 2;
     if (min==2) {
         min = (rDist < gDist) ? 1 : 2;
     }
-    UART_1_PutString("\n");
-    printNumUART(dist);
-    if (dist<3500) {
+    
+    if (!SILENT) {
+        UART_1_PutString("\n");
+        printNumUART(mindist);
+        UART_1_PutString("\n Colour: ");
+        char cols[4]="0RGB";
+        char col=cols[min];
+        UART_1_PutString(&col); // not sure if this col printing works
+    }
+    
+    if (mindist<3500) {
         return min;
     } else {
         return 0;
@@ -668,7 +685,49 @@ void moveServo(int16 angle) {
     printNumUART(duty);
 }
 
-/* Flashes the PSoC LED (pin 2[1]) X number of times with a 400ms period, useful for very basic signalling without UART */
+/* Lift or drop claw using pulley */
+void liftClaw(int16 dist, int dir) {
+    int32 pdist = 0;
+    int32 psdist = 0; // starting distance
+    
+    int32 pdistSE = dist*PULLEY_DIST_COEFF; // Xdist converted to QuadDec counter value
+    
+    int done=0;
+    
+    // start shaft encoders
+    psdist = (getDistance(0,0)); // get right starting dist
+    
+    // set speed
+    PWM_2_WriteCompare(pllspeed);
+    
+    // set direction
+    A5_Write(!dir);
+    A6_Write(dir);
+    
+    // poll SEs every 20ms, when both shaft encoders read X distance, stop
+    while (!done) {
+
+        CyDelay(100); // the smaller this value, the more often the SEs are polled and hence the more accurate the distance
+        
+        // get relative pulley travel distance
+        pdist = (getDistance(1,psdist)); 
+        
+        if (!SILENT) {
+            UART_1_PutString("\nPdist = ");
+            printNumUART(pdist);
+        }
+        
+        /* When pulley reaches target distance, stop it */
+        if (abs(pdist)>=pdistSE) {
+            A5_Write(0);
+            A6_Write(0);
+            done=1;
+        }
+    } 
+    
+}
+
+/* Flashes the PSoC LED (pin 2[1]) X number of times */
 void flashXtimes(int rep) {
     
     for (int i=0;i<rep;i++) {
@@ -680,11 +739,11 @@ void flashXtimes(int rep) {
     
 }
 
-/* Sound the piezo for X seconds */
-void soundPiezo(int sec) {
+/* Sound the piezo for X milliseconds */
+void soundPiezo(int msec) {
     
     PIEZO_Write(1);
-    CyDelay(sec*1000);
+    CyDelay(msec);
     PIEZO_Write(0);
     
 }
@@ -694,10 +753,10 @@ void task1() {
     // Prelim Task 1
     flashXtimes(1);
     
-    driveXdist(60,1,fwdspeed); // units = cm
+    driveXdist(60,1); // units = cm
     CyDelay(300);
     
-    driveXdist(60,0,bwdspeed); //units = cm
+    driveXdist(60,0); //units = cm
     
     flashXtimes(1);
 }
@@ -705,13 +764,13 @@ void task2() {
     // Prelim Task 2
     flashXtimes(2);
     
-    driveXdist(60,1,fwdspeed); CyDelay(200);
-    turnXdegrees(180,1,fwdspeed); CyDelay(200);
+    driveXdist(60,1); CyDelay(200);
+    turnXdegrees(180,1); CyDelay(200);
     adjust_angle_US(adjspeed); CyDelay(200);
     adjust_angle_US(adjspeed); CyDelay(200);
     adjust_angle_US(adjspeed); CyDelay(200);
     
-    //driveXdist(50+15,1,fwdspeed);
+    //driveXdist(50+15,1);
     
     adjust_dist_US(1,30,fwdspeed);CyDelay(200);
     
@@ -727,14 +786,14 @@ void task3() {
     // Prelim Task 3
     flashXtimes(3);
     //straight
-    driveXdist(20,1,fwdspeed);
+    driveXdist(20,1);
     CyDelay(100);
     
     //right
-    turnXdegrees(90,1,trnspeed);
+    turnXdegrees(90,1);
     CyDelay(100);
     //stright
-    driveXdist(50,1,fwdspeed);
+    driveXdist(50,1);
     CyDelay(100);
     
     //adjust
@@ -744,10 +803,10 @@ void task3() {
     CyDelay(100);
     
     //left
-    turnXdegrees(90,0,trnspeed);
+    turnXdegrees(90,0);
     CyDelay(100);
     //stright
-    driveXdist(75,1,fwdspeed);
+    driveXdist(75,1);
     CyDelay(100);
     
     //adjust
@@ -757,10 +816,10 @@ void task3() {
     CyDelay(100);
     
     //left
-    turnXdegrees(90,0,trnspeed);
+    turnXdegrees(90,0);
     CyDelay(100);
     //stright
-    driveXdist(90,1,fwdspeed);
+    driveXdist(90,1);
     CyDelay(100);
     
     //adjust
@@ -770,10 +829,10 @@ void task3() {
     CyDelay(100);
     
     //left 
-    turnXdegrees(90,0,trnspeed);
+    turnXdegrees(90,0);
     CyDelay(100);
     //straight
-    driveXdist(75,1,fwdspeed);
+    driveXdist(75,1);
     CyDelay(100);
     
     //adjust
@@ -783,25 +842,172 @@ void task3() {
     CyDelay(100);
     
     //left
-    turnXdegrees(90,0,trnspeed);
+    turnXdegrees(90,0);
     CyDelay(100);
     //straight
-    driveXdist(43,1,fwdspeed);
+    driveXdist(43,1);
     CyDelay(100);
     
     //right
-    turnXdegrees(90,1,trnspeed);
+    turnXdegrees(90,1);
     CyDelay(100);
     adjust_angle_US(adjspeed);
     CyDelay(100);
     adjust_angle_US(adjspeed); //second adjustment
     CyDelay(100);
     //straight
-    driveXdist(33,1,fwdspeed);
+    driveXdist(33,1);
     
     flashXtimes(3);
 }
-void task4(uint16 periodLen) {
+void task3g(){
+flashXtimes(3);
+    //straight
+    adjust_dist_US(1,12,fwdspeed);
+    CyDelay(200);
+    
+    //adjust?
+    /*adjust_angle_US(adjspeed);
+    CyDelay(200);
+    adjust_angle_US(adjspeed);
+    CyDelay(200);*/
+    
+    //right
+    turnXdegrees(90,1);
+    CyDelay(200);
+    
+    //adjust
+    adjust_angle_US(adjspeed);
+    CyDelay(200);
+    adjust_angle_US(adjspeed);
+    CyDelay(200);
+    adjust_angle_US(adjspeed);
+    CyDelay(200);
+    
+    //straight
+    adjust_dist_US(1,17,fwdspeed);
+    CyDelay(200);
+    
+    //adjust
+    adjust_angle_US(adjspeed);
+    CyDelay(200);
+    adjust_angle_US(adjspeed);
+    CyDelay(200);
+
+
+    //left1
+    turnXdegrees(95,0);
+    CyDelay(200);
+    
+    //adjust    
+    /*adjust_angle_US(adjspeed);
+    CyDelay(200);
+    adjust_angle_US(adjspeed);
+    CyDelay(200);
+    adjust_angle_US(adjspeed);
+    CyDelay(200);*/
+    
+    //straight
+    adjust_dist_US(1,17,fwdspeed);
+    CyDelay(200);
+    
+    //adjust
+    adjust_angle_US(adjspeed);
+    CyDelay(200);
+    adjust_angle_US(adjspeed);
+    CyDelay(200);
+    
+    //left2
+    turnXdegrees(98,0);
+    CyDelay(200);
+    
+    //adjust
+    /*adjust_angle_US(adjspeed);
+    CyDelay(200);
+    adjust_angle_US(adjspeed);
+    CyDelay(200);
+    adjust_angle_US(adjspeed);
+    CyDelay(200);*/
+    
+    //straight
+    adjust_dist_US(1,15,fwdspeed);
+    CyDelay(200);
+    
+    //adjust
+    adjust_angle_US(adjspeed);
+    CyDelay(200);
+    adjust_angle_US(adjspeed);
+    CyDelay(200);
+
+
+    //left3
+    turnXdegrees(97,0);
+    CyDelay(200);
+    
+    
+    //adjust
+    /*adjust_angle_US(adjspeed);
+    CyDelay(200);
+    adjust_angle_US(adjspeed);
+    CyDelay(200);
+    adjust_angle_US(adjspeed);
+    CyDelay(200);*/
+    
+    //straight
+    adjust_dist_US(1,20,fwdspeed);
+    CyDelay(200);
+    
+    //adjust
+    adjust_angle_US(adjspeed);
+    CyDelay(200);
+    adjust_angle_US(adjspeed);
+    CyDelay(200);
+
+    
+    //left 4
+    turnXdegrees(95,0);
+    CyDelay(200);
+    
+    //adjust
+    /*adjust_angle_US(adjspeed);
+    CyDelay(200);
+    adjust_angle_US(adjspeed);
+    CyDelay(200);
+    adjust_angle_US(adjspeed);
+    CyDelay(200);*/
+    
+    //back
+    
+    driveXdist(35,0);
+    CyDelay(200);
+    
+    //straight
+    adjust_dist_US(1,54,fwdspeed);
+    CyDelay(200);
+    
+    
+    //right
+    turnXdegrees(90,1);
+    CyDelay(200);
+    
+    //adjust
+    adjust_angle_US(adjspeed);
+    CyDelay(200);
+    adjust_angle_US(adjspeed);
+    CyDelay(200);
+    adjust_angle_US(adjspeed);
+    CyDelay(200);
+    
+
+    
+    //straight
+    adjust_dist_US(1,2,fwdspeed);
+    CyDelay(200);
+    
+    
+
+}
+void task4() {
     // Prelim Task 4
     // NOTE: this enters an infinite loop by design; make an exit flag if you want to do something after Task 4
     flashXtimes(4);
@@ -813,7 +1019,7 @@ void task4(uint16 periodLen) {
     uint16 dist;
     
     for(;;) {   
-        col = getColour(&periodLen, dist);
+        col = getColour();
         if (!SILENT) {
             UART_1_PutString("\nColour: ");
             if (col==0) {
@@ -843,171 +1049,33 @@ void task4(uint16 periodLen) {
     
 }
 
-void task3g(){
-flashXtimes(3);
-    //straight
-    adjust_dist_US(1,12,fwdspeed);
-    CyDelay(200);
-    
-    //adjust?
-    /*adjust_angle_US(adjspeed);
-    CyDelay(200);
-    adjust_angle_US(adjspeed);
-    CyDelay(200);*/
-    
-    //right
-    turnXdegrees(90,1,trnspeed);
-    CyDelay(200);
-    
-    //adjust
-    adjust_angle_US(adjspeed);
-    CyDelay(200);
-    adjust_angle_US(adjspeed);
-    CyDelay(200);
-    adjust_angle_US(adjspeed);
-    CyDelay(200);
-    
-    //straight
-    adjust_dist_US(1,17,fwdspeed);
-    CyDelay(200);
-    
-    //adjust
-    adjust_angle_US(adjspeed);
-    CyDelay(200);
-    adjust_angle_US(adjspeed);
-    CyDelay(200);
-
-
-    //left1
-    turnXdegrees(95,0,trnspeed);
-    CyDelay(200);
-    
-    //adjust    
-    /*adjust_angle_US(adjspeed);
-    CyDelay(200);
-    adjust_angle_US(adjspeed);
-    CyDelay(200);
-    adjust_angle_US(adjspeed);
-    CyDelay(200);*/
-    
-    //straight
-    adjust_dist_US(1,17,fwdspeed);
-    CyDelay(200);
-    
-    //adjust
-    adjust_angle_US(adjspeed);
-    CyDelay(200);
-    adjust_angle_US(adjspeed);
-    CyDelay(200);
-    
-    //left2
-    turnXdegrees(98,0,trnspeed);
-    CyDelay(200);
-    
-    //adjust
-    /*adjust_angle_US(adjspeed);
-    CyDelay(200);
-    adjust_angle_US(adjspeed);
-    CyDelay(200);
-    adjust_angle_US(adjspeed);
-    CyDelay(200);*/
-    
-    //straight
-    adjust_dist_US(1,15,fwdspeed);
-    CyDelay(200);
-    
-    //adjust
-    adjust_angle_US(adjspeed);
-    CyDelay(200);
-    adjust_angle_US(adjspeed);
-    CyDelay(200);
-
-
-    //left3
-    turnXdegrees(97,0,trnspeed);
-    CyDelay(200);
-    
-    
-    //adjust
-    /*adjust_angle_US(adjspeed);
-    CyDelay(200);
-    adjust_angle_US(adjspeed);
-    CyDelay(200);
-    adjust_angle_US(adjspeed);
-    CyDelay(200);*/
-    
-    //straight
-    adjust_dist_US(1,20,fwdspeed);
-    CyDelay(200);
-    
-    //adjust
-    adjust_angle_US(adjspeed);
-    CyDelay(200);
-    adjust_angle_US(adjspeed);
-    CyDelay(200);
-
-    
-    //left 4
-    turnXdegrees(95,0,trnspeed);
-    CyDelay(200);
-    
-    //adjust
-    /*adjust_angle_US(adjspeed);
-    CyDelay(200);
-    adjust_angle_US(adjspeed);
-    CyDelay(200);
-    adjust_angle_US(adjspeed);
-    CyDelay(200);*/
-    
-    //back
-    
-    driveXdist(35,0,bwdspeed);
-    CyDelay(200);
-    
-    //straight
-    adjust_dist_US(1,54,fwdspeed);
-    CyDelay(200);
-    
-    
-    //right
-    turnXdegrees(90,1,trnspeed);
-    CyDelay(200);
-    
-    //adjust
-    adjust_angle_US(adjspeed);
-    CyDelay(200);
-    adjust_angle_US(adjspeed);
-    CyDelay(200);
-    adjust_angle_US(adjspeed);
-    CyDelay(200);
-    
-
-    
-    //straight
-    adjust_dist_US(1,2,fwdspeed);
-    CyDelay(200);
-    
-    
-
-}
-
-
 /* Store 5 colours from wall-mounted pucks */
-void readWallPucks(uint16 periodLen) {
+void readWallPucks(void) {
     
     int col;
-    uint16 dist;
-    
-    flashXtimes(3);
-    CyDelay(2000);
-    
+        
     /* SCALE HERE */
     S0_Write(0); // 2% scaling?
     S1_Write(1);
     
+    // start
+    driveXdist(20,1);
+    turnXdegrees(90,1);
+    adjust_dist_US(1,46,fwdspeed);
+    adjust_angle_US(adjspeed);
+    CyDelay(100);
+    adjust_angle_US(adjspeed);
+    CyDelay(100);
+    
+    turnXdegrees(90,1);
+    adjust_angle_US(adjspeed);
+    CyDelay(100);
+    adjust_angle_US(adjspeed);
+    
+    
     for (int i=0; i<5; i++) {
         // get colour
-        col = getColour(&periodLen, dist);
+        col = getColour();
         
         if (!SILENT) {
             UART_1_PutString("\nColour: ");
@@ -1057,9 +1125,6 @@ void readWallPucks(uint16 periodLen) {
 int main(void)
 {   
     
-    
-    
-    
     CyGlobalIntEnable; /* Enable global interrupts. */
     
     
@@ -1071,20 +1136,21 @@ int main(void)
         }    
     COL_COUNTER_Start();
     PWM_1_Start();
+    PWM_2_Start();
     SEL_QUAD_Start();
     SER_QUAD_Start();
+    SECL_QUAD_Start();
     ISR_QUAD1_StartEx(QUAD1_ISR);
     ISR_QUAD2_StartEx(QUAD2_ISR);
     ISR_COL_StartEx(COL_ISR);
     PWM_SERVO_Start();
-    USTimer_1_Start();
-    USTimer_2_Start();    
-    isr_1_StartEx(Timer_ISR_Handler1);
-    isr_2_StartEx(Timer_ISR_Handler2);
+    USTimer_R_Start();
+    USTimer_L_Start();    
+    ISR_US_R_StartEx(Timer_ISR_HandlerR);
+    ISR_US_L_StartEx(Timer_ISR_HandlerL);
     
     // variables
     int col;
-    uint16 periodLen = 0u;   // length of counter period
     periodLen = COL_COUNTER_ReadPeriod(); // read length of period register (in clock counts)
     
     // some hardware initialisations 
@@ -1092,23 +1158,19 @@ int main(void)
     S1_Write(1);
     moveServo(90); // open claw
     
-    ////////
-    
+    // signal start
     flashXtimes(3);
-//    CyDelay(1000);
-//    
-//    col = getColour(&periodLen, 0);
-//    UART_1_PutString("\nCol  ");
-//    printNumUART(col);
-//    
-//    if (col==1) {
-//        moveServo(0);
-//    }
-//    
-//    flashXtimes(3);
-    
+    soundPiezo(200);
+    CyDelay(1000);
+
     for(;;)
     {
+        
+        liftClaw(10,1);
+        CyDelay(1000);
+        
+        liftClaw(10,0);
+        CyDelay(1000);
         
     }
     
