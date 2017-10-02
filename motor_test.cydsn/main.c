@@ -212,8 +212,6 @@ CY_ISR(Timer_ISR_Handler2){
 }
 
 
-
-
 /* Reads the quadrature decoder connected to the shaft encoder and returns the distance as a int32 */
 int32 getDistance(int side, int32 startdist) {
     
@@ -399,6 +397,7 @@ void turnXdegrees(int16 Xdeg, int dir, uint8 speed) {
     }
 }
 
+/* Write to all ultrasonic TRIG pins, which should update all their distance values through respective ISRs. */
 void updateUS(void) {
     
     //right
@@ -678,6 +677,15 @@ void flashXtimes(int rep) {
         LED1_Write(0);
         CyDelay(100);
     }
+    
+}
+
+/* Sound the piezo for X seconds */
+void soundPiezo(int sec) {
+    
+    PIEZO_Write(1);
+    CyDelay(sec*1000);
+    PIEZO_Write(0);
     
 }
 
@@ -1049,11 +1057,7 @@ void readWallPucks(uint16 periodLen) {
 int main(void)
 {   
     
-    USTimer_1_Start();
-    USTimer_2_Start();
     
-    isr_1_StartEx(Timer_ISR_Handler1);
-    isr_2_StartEx(Timer_ISR_Handler2);
     
     
     CyGlobalIntEnable; /* Enable global interrupts. */
@@ -1064,8 +1068,7 @@ int main(void)
         UART_1_PutString("\nUART started");
         if (SILENT) {
             UART_1_PutString(" but SILENT flag is set (output is suppressed)");
-        }
-    
+        }    
     COL_COUNTER_Start();
     PWM_1_Start();
     SEL_QUAD_Start();
@@ -1074,32 +1077,35 @@ int main(void)
     ISR_QUAD2_StartEx(QUAD2_ISR);
     ISR_COL_StartEx(COL_ISR);
     PWM_SERVO_Start();
+    USTimer_1_Start();
+    USTimer_2_Start();    
+    isr_1_StartEx(Timer_ISR_Handler1);
+    isr_2_StartEx(Timer_ISR_Handler2);
     
     // variables
     int col;
     uint16 periodLen = 0u;   // length of counter period
     periodLen = COL_COUNTER_ReadPeriod(); // read length of period register (in clock counts)
     
-    S0_Write(0); // 2% scaling?
+    // some hardware initialisations 
+    S0_Write(0); // 2% colour scaling
     S1_Write(1);
-    
-    moveServo(90);
+    moveServo(90); // open claw
     
     ////////
-//    task4(periodLen);  
     
     flashXtimes(3);
-    CyDelay(1000);
-    
-    col = getColour(&periodLen, 0);
-    UART_1_PutString("\nCol  ");
-    printNumUART(col);
-    
-    if (col==1) {
-        moveServo(0);
-    }
-    
-    flashXtimes(3);
+//    CyDelay(1000);
+//    
+//    col = getColour(&periodLen, 0);
+//    UART_1_PutString("\nCol  ");
+//    printNumUART(col);
+//    
+//    if (col==1) {
+//        moveServo(0);
+//    }
+//    
+//    flashXtimes(3);
     
     for(;;)
     {

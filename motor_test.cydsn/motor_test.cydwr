@@ -263,6 +263,7 @@
       <Data key="735ee2fe-6fff-4a11-8027-4d592c019403" value="S0" />
       <Data key="870f50fc-791a-4f0d-af09-99c77436b9b3" value="SE_R_A" />
       <Data key="1597dae3-47c4-450b-9268-a29303868921" value="ECHO_L" />
+      <Data key="2623e620-ff2a-40c6-9e58-1035b3d730d7" value="PIEZO" />
       <Data key="9289e83f-7157-46d4-ab72-f4ded6f4b2c5" value="SE_R_B" />
       <Data key="1425177d-0d0e-4468-8bcc-e638e5509a9b" value="Rx_1" />
       <Data key="13205373-8148-40ac-a321-247181e14e28" value="S1" />
@@ -3424,7 +3425,12 @@
     </Group>
     <Group key="1597dae3-47c4-450b-9268-a29303868921">
       <Group key="0">
-        <Data key="Port Format" value="2,7" />
+        <Data key="Port Format" value="12,3" />
+      </Group>
+    </Group>
+    <Group key="2623e620-ff2a-40c6-9e58-1035b3d730d7">
+      <Group key="0">
+        <Data key="Port Format" value="15,5" />
       </Group>
     </Group>
     <Group key="9289e83f-7157-46d4-ab72-f4ded6f4b2c5">
