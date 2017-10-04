@@ -1,3 +1,19 @@
---------------- Rebuild Started: 09/05/2017 09:25:25 Project: main.c, Configuration: ARM GCC 5.4-2016-q2-update Debug ---------------
+--------------- Rebuild Started: 10/04/2017 13:13:22 Project: main.c, Configuration: ARM GCC 5.4-2016-q2-update Debug ---------------
 arm-none-eabi-gcc.exe -mcpu=cortex-m3 -mthumb -I. -IGenerated_Source\PSoC5 -Wa,-alh=.\CortexM3\ARM_GCC_541\Debug/main.lst -g -D DEBUG -D CY_CORE_ID=0 -Wall -ffunction-sections -ffat-lto-objects -Og -c main.c -o .\CortexM3\ARM_GCC_541\Debug\main.o
---------------- Rebuild Succeeded: 09/05/2017 09:25:26 ---------------
+main.c: In function 'moveServo':
+main.c:674:18: warning: variable 'oldduty' set but not used [-Wunused-but-set-variable]
+     uint16 duty, oldduty;
+                  ^
+main.c: In function 'task4':
+main.c:1022:12: warning: unused variable 'dist' [-Wunused-variable]
+     uint16 dist;
+            ^
+main.c: In function 'main':
+main.c:1166:9: warning: unused variable 'col' [-Wunused-variable]
+     int col;
+         ^
+main.c: In function 'getDistance':
+main.c:237:14: warning: 'distance' may be used uninitialized in this function [-Wmaybe-uninitialized]
+     distance = distance-startdist;
+              ^
+--------------- Rebuild Succeeded: 10/04/2017 13:13:22 ---------------

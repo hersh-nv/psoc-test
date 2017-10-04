@@ -446,12 +446,15 @@ void adjust_dist_US(int dir, uint16 dist, uint8 speed){
             updateUS();
             }
             //UART_1_PutString(".....\n");
-            CyDelay(100);
             
+        CyDelay(10);
+        
         if(distance_m1<=dist) {
             dflag=1;
         }
-            
+        
+        
+        
     }
         
     A1_Write(0);
@@ -710,7 +713,7 @@ void liftClaw(int16 dist, int dir) {
         CyDelay(100); // the smaller this value, the more often the SEs are polled and hence the more accurate the distance
         
         // get relative pulley travel distance
-        pdist = (getDistance(1,psdist)); 
+        pdist = (getDistance(2,psdist)); 
         
         if (!SILENT) {
             UART_1_PutString("\nPdist = ");
@@ -1061,17 +1064,28 @@ void readWallPucks(void) {
     // start
     driveXdist(20,1);
     turnXdegrees(90,1);
-    adjust_dist_US(1,46,fwdspeed);
+    CyDelay(1000);
+    soundPiezo(200);
+    adjust_dist_US(1,14,fwdspeed);
+    
+    
     adjust_angle_US(adjspeed);
     CyDelay(100);
     adjust_angle_US(adjspeed);
     CyDelay(100);
     
-    turnXdegrees(90,1);
+    turnXdegrees(80,1);
     adjust_angle_US(adjspeed);
     CyDelay(100);
     adjust_angle_US(adjspeed);
     
+    // move up to wall
+    adjust_dist_US(1,14,fwdspeed);
+    
+    soundPiezo(200);
+    CyDelay(5000);
+    soundPiezo(600);
+    CyDelay(1000);
     
     for (int i=0; i<5; i++) {
         // get colour
@@ -1089,6 +1103,7 @@ void readWallPucks(void) {
                 LEDR_Write(1);
                 LEDG_Write(0);
                 LEDB_Write(0);
+                soundPiezo(300);
             } else if (col==2) {
                 UART_1_PutString("G ");
                 LEDR_Write(0);
@@ -1163,14 +1178,16 @@ int main(void)
     soundPiezo(200);
     CyDelay(1000);
 
+    readWallPucks();
+    
     for(;;)
     {
         
-        liftClaw(10,1);
-        CyDelay(1000);
-        
-        liftClaw(10,0);
-        CyDelay(1000);
+//        liftClaw(10,1);
+//        CyDelay(1000);
+//        
+//        liftClaw(10,0);
+//        CyDelay(1000);
         
     }
     
