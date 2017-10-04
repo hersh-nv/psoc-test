@@ -28,7 +28,7 @@ i.e. dist * QUAD_COEFF = value that QuadDec should count up to to travel dist in
 200 is a roughly correct value i just measured; can be adjusted for preciseness later
 */
 #define ROTATE_COEFF 39
-#define PULLEY_DIST_COEFF 157 // TO BE TESTED
+#define PULLEY_DIST_COEFF 50 // TO BE TESTED
 
 
 
@@ -56,7 +56,7 @@ uint8 fwdspeed = 210;
 uint8 bwdspeed = 220;
 uint8 trnspeed = 100;
 uint8 adjspeed = 36;
-uint8 pllspeed = 100;
+uint8 pllspeed = 160;
 
 // US sensors
 uint16 uscount1=0;
@@ -652,10 +652,10 @@ int getColour() {
     if (!SILENT) {
         UART_1_PutString("\n");
         printNumUART(mindist);
-        UART_1_PutString("\n Colour: ");
-        char cols[4]="0RGB";
-        char col=cols[min];
-        UART_1_PutString(&col); // not sure if this col printing works
+//        UART_1_PutString("\n Colour: ");
+//        char cols[4]="0RGB";
+//        char col=cols[min];
+//        UART_1_PutString(&col); // not sure if this col printing works
     }
     
     if (mindist<3500) {
@@ -688,7 +688,7 @@ void moveServo(int16 angle) {
     printNumUART(duty);
 }
 
-/* Lift or drop claw using pulley */
+/* Lift or drop claw using pulley, in dist in mm */
 void liftClaw(int16 dist, int dir) {
     int32 pdist = 0;
     int32 psdist = 0; // starting distance
@@ -698,10 +698,14 @@ void liftClaw(int16 dist, int dir) {
     int done=0;
     
     // start shaft encoders
-    psdist = (getDistance(0,0)); // get right starting dist
+    psdist = (getDistance(2,0)); // get right starting dist
     
     // set speed
-    PWM_2_WriteCompare(pllspeed);
+    if (dir) {
+        PWM_2_WriteCompare(pllspeed);
+    } else {
+        PWM_2_WriteCompare(pllspeed/2);
+    }
     
     // set direction
     A5_Write(!dir);
@@ -1061,31 +1065,31 @@ void readWallPucks(void) {
     S0_Write(0); // 2% scaling?
     S1_Write(1);
     
-    // start
-    driveXdist(20,1);
-    turnXdegrees(90,1);
-    CyDelay(1000);
-    soundPiezo(200);
-    adjust_dist_US(1,14,fwdspeed);
-    
-    
-    adjust_angle_US(adjspeed);
-    CyDelay(100);
-    adjust_angle_US(adjspeed);
-    CyDelay(100);
-    
-    turnXdegrees(80,1);
-    adjust_angle_US(adjspeed);
-    CyDelay(100);
-    adjust_angle_US(adjspeed);
-    
-    // move up to wall
-    adjust_dist_US(1,14,fwdspeed);
-    
-    soundPiezo(200);
-    CyDelay(5000);
-    soundPiezo(600);
-    CyDelay(1000);
+//    // start
+//    driveXdist(20,1);
+//    turnXdegrees(90,1);
+//    CyDelay(1000);
+//    soundPiezo(200);
+//    adjust_dist_US(1,14,fwdspeed);
+//    
+//    
+//    adjust_angle_US(adjspeed);
+//    CyDelay(100);
+//    adjust_angle_US(adjspeed);
+//    CyDelay(100);
+//    
+//    turnXdegrees(80,1);
+//    adjust_angle_US(adjspeed);
+//    CyDelay(100);
+//    adjust_angle_US(adjspeed);
+//    
+//    // move up to wall
+//    adjust_dist_US(1,14,fwdspeed);
+//    
+//    soundPiezo(200);
+//    CyDelay(5000);
+//    soundPiezo(600);
+//    CyDelay(1000);
     
     for (int i=0; i<5; i++) {
         // get colour
@@ -1176,17 +1180,22 @@ int main(void)
     // signal start
     flashXtimes(3);
     soundPiezo(200);
+    CyDelay(2000);
+    
+    liftClaw(50,0);
+    moveServo(90);
+    CyDelay(4000);
+    moveServo(4);
     CyDelay(1000);
-
-    readWallPucks();
+    liftClaw(50,1);
     
     for(;;)
     {
         
-//        liftClaw(10,1);
+//        liftClaw(100,1);
 //        CyDelay(1000);
 //        
-//        liftClaw(10,0);
+//        liftClaw(100,0);
 //        CyDelay(1000);
         
     }
