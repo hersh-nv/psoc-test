@@ -33,9 +33,9 @@ i.e. dist * QUAD_COEFF = value that QuadDec should count up to to travel dist in
 
 
 /* Defines for puck readings; calibrate when in new environment / lighting */
-uint16 RED[3] = {6400, 6400, 9300};
-uint16 GRE[3] = {8600, 7300, 7300};
-uint16 BLU[3] = {10000, 9200, 5500};
+uint16 RED[3] = {4100, 4500, 5000};
+uint16 GRE[3] = {5600, 3700, 4300};
+uint16 BLU[3] = {4700, 4700, 5000};
 
 uint16 redc=250;
 uint16 greenc=60;
@@ -1181,13 +1181,14 @@ int main(void)
     flashXtimes(3);
     soundPiezo(200);
     CyDelay(2000);
+    readWallPucks();
     
-    liftClaw(50,0);
-    moveServo(90);
-    CyDelay(4000);
-    moveServo(4);
-    CyDelay(1000);
-    liftClaw(50,1);
+    //liftClaw(75,0);
+    //moveServo(90);
+    //CyDelay(4000);
+    //moveServo(4);
+    //CyDelay(1000);
+    //liftClaw(100,1);
     
     for(;;)
     {
