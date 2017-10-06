@@ -21,7 +21,7 @@ todo:
 
 
 // defines for driving coefficients
-#define DIST_COEFF 157
+#define DIST_COEFF 210
 /*
 conversion coefficient from distance in cm to quadrature encoder counter
 i.e. dist * QUAD_COEFF = value that QuadDec should count up to to travel dist in cm.
@@ -33,9 +33,9 @@ i.e. dist * QUAD_COEFF = value that QuadDec should count up to to travel dist in
 
 
 /* Defines for puck readings; calibrate when in new environment / lighting */
-uint16 RED[3] = {3800, 3800, 2000};
-uint16 GRE[3] = {5200, 4900, 1750};
-uint16 BLU[3] = {6200, 6200, 1950};
+uint16 RED[3] = {5000, 5010, 7530};
+uint16 GRE[3] = {6750, 5870, 5870};
+uint16 BLU[3] = {7900, 7400, 4750};
 
 uint16 redc=250;
 uint16 greenc=60;
@@ -284,7 +284,7 @@ void driveXdist(int32 Xdist, int dir) {
     // set directions
     A3_Write(!dir); // R
     A4_Write(dir);
-    CyDelay(12); // COMPENSATION DELAY; ADJUST AS NECESSARY
+//    CyDelay(12); // COMPENSATION DELAY; ADJUST AS NECESSARY
     A1_Write(!dir); // L
     A2_Write(dir);
 
@@ -449,7 +449,12 @@ void adjust_dist_US(int dir, uint16 dist, uint8 speed){
             
         CyDelay(10);
         
-        if(distance_m1<=dist) {
+        if (!SILENT) {
+            UART_1_PutString("\n");
+            printNumUART((int)distance_m1);
+        }
+        
+        if(distance_m2<=(dist+11)) {
             dflag=1;
         }        
              
@@ -586,13 +591,13 @@ int getColour() {
     uint16 rDist, gDist, bDist;
     int temp, min;
     int rep = 12;
-    
+   
     // cycle through colours
     S2_Write(0); S3_Write(0); // RED
         for (int i=0;i<rep;i++) {
             CyDelay(2);
-            rCountTmp = (overflowCountCOL * periodLen) + capturedCount;
-//            rCountTmp = capturedCount;
+//            rCountTmp = (overflowCountCOL * periodLen) + capturedCount;
+            rCountTmp = capturedCount;
             rCount = (rCount < rCountTmp) ? rCount : rCountTmp;
         }
         overflowCountCOL = 0u;
@@ -600,8 +605,8 @@ int getColour() {
     S2_Write(1); S3_Write(1); // GREEN
         for (int i=0;i<rep;i++) {
             CyDelay(2);
-            gCountTmp = (overflowCountCOL * periodLen) + capturedCount;
-//            gCountTmp = capturedCount;
+//            gCountTmp = (overflowCountCOL * periodLen) + capturedCount;
+            gCountTmp = capturedCount;
             gCount = (gCount < gCountTmp) ? gCount : gCountTmp;
         }
         overflowCountCOL = 0u;
@@ -609,8 +614,8 @@ int getColour() {
     S2_Write(0); S3_Write(1); // BLUE
         for (int i=0;i<rep;i++) {
             CyDelay(2);
-            bCountTmp = (overflowCountCOL * periodLen) + capturedCount;
-//            bCountTmp = capturedCount;
+//            bCountTmp = (overflowCountCOL * periodLen) + capturedCount;
+            bCountTmp = capturedCount;
             bCount = (bCount < bCountTmp) ? bCount : bCountTmp;
         }
         overflowCountCOL = 0u;
@@ -865,10 +870,12 @@ void task3() {
     
     flashXtimes(3);
 }
-void task3r(){
-flashXtimes(3);
+void task3r() {
+    
+    
+    
     //straight
-    driveXdist(12,1);
+    driveXdist(6,1);
     CyDelay(200);
     
     //right
@@ -876,36 +883,45 @@ flashXtimes(3);
     CyDelay(200);
     
     //straight
-    driveXdist(55,1);
+    driveXdist(20,1);
     CyDelay(200);
+    adjust_dist_US(1,5,fwdspeed);
+    CyDelay(200);
+    adjust_angle_US(adjspeed);
+    CyDelay(2000);
+    
 
     //left1
-    turnXdegrees(95,0);
+    turnXdegrees(90,0);
     CyDelay(200);
     
     //straight
-    driveXdist(40,1);
+    driveXdist(45,1);
     CyDelay(200);
+    adjust_dist_US(1,8,fwdspeed);
+    CyDelay(200);
+    adjust_angle_US(adjspeed);
+    CyDelay(2000);
     
     
     //left2
-    turnXdegrees(98,0);
+    turnXdegrees(90,0);
     CyDelay(200);
     
     //backup here
-    driveXdist(25,0);
+    driveXdist(6,0);
     CyDelay(200);
     
      //straight
-    driveXdist(30,1);
+    driveXdist(15,1);
     CyDelay(200);
     
-    //openservo
+    //closeservo
     moveServo(0);
     CyDelay(200);
     
     liftClaw(10,1);
-    CyDelay(200);
+    CyDelay(20000);
     
     //reverse
     driveXdist(35,0);
@@ -916,7 +932,7 @@ flashXtimes(3);
     CyDelay(200);
     
     //first return left
-    turnXdegrees(95,0);
+    turnXdegrees(90,0);
     CyDelay(200);
     
     //turn right for homebase
@@ -1072,6 +1088,17 @@ void readWallPucks(void) {
     }
 }
 
+void checkColour(void) {
+    moveServo(0);
+    CyDelay(500);
+    
+    int col1 = getColour();
+    int col2 = getColour();
+    int col3 = getColour();
+    
+    
+}
+
 /* ===================================================================== */
 
 int main(void)
@@ -1117,15 +1144,14 @@ int main(void)
     CyDelay(2000);
     
     // code here
-    liftClaw(4,0);
-    CyDelay(200);
-    
-    task3r();
+    moveServo(5);
+    CyDelay(500);
+    task4();
     
     
     for(;;)
     {
-      
+        
     }
     
 }
