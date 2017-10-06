@@ -33,9 +33,9 @@ i.e. dist * QUAD_COEFF = value that QuadDec should count up to to travel dist in
 
 
 /* Defines for puck readings; calibrate when in new environment / lighting */
-uint16 RED[3] = {4100, 4500, 5000};
-uint16 GRE[3] = {5600, 3700, 4300};
-uint16 BLU[3] = {4700, 4700, 5000};
+uint16 RED[3] = {3800, 3800, 2000};
+uint16 GRE[3] = {5200, 4900, 1750};
+uint16 BLU[3] = {6200, 6200, 1950};
 
 uint16 redc=250;
 uint16 greenc=60;
@@ -451,10 +451,8 @@ void adjust_dist_US(int dir, uint16 dist, uint8 speed){
         
         if(distance_m1<=dist) {
             dflag=1;
-        }
-        
-        
-        
+        }        
+             
     }
         
     A1_Write(0);
@@ -867,137 +865,72 @@ void task3() {
     
     flashXtimes(3);
 }
-void task3g(){
+void task3r(){
 flashXtimes(3);
     //straight
-    adjust_dist_US(1,12,fwdspeed);
+    driveXdist(12,1);
     CyDelay(200);
-    
-    //adjust?
-    /*adjust_angle_US(adjspeed);
-    CyDelay(200);
-    adjust_angle_US(adjspeed);
-    CyDelay(200);*/
     
     //right
     turnXdegrees(90,1);
     CyDelay(200);
     
-    //adjust
-    adjust_angle_US(adjspeed);
-    CyDelay(200);
-    adjust_angle_US(adjspeed);
-    CyDelay(200);
-    adjust_angle_US(adjspeed);
-    CyDelay(200);
-    
     //straight
-    adjust_dist_US(1,17,fwdspeed);
+    driveXdist(55,1);
     CyDelay(200);
-    
-    //adjust
-    adjust_angle_US(adjspeed);
-    CyDelay(200);
-    adjust_angle_US(adjspeed);
-    CyDelay(200);
-
 
     //left1
     turnXdegrees(95,0);
     CyDelay(200);
     
-    //adjust    
-    /*adjust_angle_US(adjspeed);
-    CyDelay(200);
-    adjust_angle_US(adjspeed);
-    CyDelay(200);
-    adjust_angle_US(adjspeed);
-    CyDelay(200);*/
-    
     //straight
-    adjust_dist_US(1,17,fwdspeed);
+    driveXdist(40,1);
     CyDelay(200);
     
-    //adjust
-    adjust_angle_US(adjspeed);
-    CyDelay(200);
-    adjust_angle_US(adjspeed);
-    CyDelay(200);
     
     //left2
     turnXdegrees(98,0);
     CyDelay(200);
     
-    //adjust
-    /*adjust_angle_US(adjspeed);
-    CyDelay(200);
-    adjust_angle_US(adjspeed);
-    CyDelay(200);
-    adjust_angle_US(adjspeed);
-    CyDelay(200);*/
-    
-    //straight
-    adjust_dist_US(1,15,fwdspeed);
+    //backup here
+    driveXdist(25,0);
     CyDelay(200);
     
-    //adjust
-    adjust_angle_US(adjspeed);
-    CyDelay(200);
-    adjust_angle_US(adjspeed);
-    CyDelay(200);
-
-
-    //left3
-    turnXdegrees(97,0);
+     //straight
+    driveXdist(30,1);
     CyDelay(200);
     
-    
-    //adjust
-    /*adjust_angle_US(adjspeed);
-    CyDelay(200);
-    adjust_angle_US(adjspeed);
-    CyDelay(200);
-    adjust_angle_US(adjspeed);
-    CyDelay(200);*/
-    
-    //straight
-    adjust_dist_US(1,20,fwdspeed);
+    //openservo
+    moveServo(0);
     CyDelay(200);
     
-    //adjust
-    adjust_angle_US(adjspeed);
-    CyDelay(200);
-    adjust_angle_US(adjspeed);
-    CyDelay(200);
-
-    
-    //left 4
-    turnXdegrees(95,0);
+    liftClaw(10,1);
     CyDelay(200);
     
-    //adjust
-    /*adjust_angle_US(adjspeed);
-    CyDelay(200);
-    adjust_angle_US(adjspeed);
-    CyDelay(200);
-    adjust_angle_US(adjspeed);
-    CyDelay(200);*/
-    
-    //back
-    
+    //reverse
     driveXdist(35,0);
     CyDelay(200);
     
-    //straight
-    adjust_dist_US(1,54,fwdspeed);
+    //going straight before turn
+    driveXdist(15,1);
     CyDelay(200);
     
+    //first return left
+    turnXdegrees(95,0);
+    CyDelay(200);
     
-    //right
+    //turn right for homebase
     turnXdegrees(90,1);
     CyDelay(200);
     
-    //adjust
+    //go straight to consturction zone
+    driveXdist(40,1);
+    CyDelay(200);
+    
+    //turn left to drop into consturctionzone
+    turnXdegrees(90,1);
+    CyDelay(200);
+    
     adjust_angle_US(adjspeed);
     CyDelay(200);
     adjust_angle_US(adjspeed);
@@ -1005,13 +938,13 @@ flashXtimes(3);
     adjust_angle_US(adjspeed);
     CyDelay(200);
     
-
-    
-    //straight
-    adjust_dist_US(1,2,fwdspeed);
+    //lower claw
+    liftClaw(5,0);
     CyDelay(200);
     
-    
+    //openclaw
+    moveServo(50);
+    CyDelay(200);
 
 }
 void task4() {
@@ -1176,29 +1109,23 @@ int main(void)
     S0_Write(0); // 2% colour scaling
     S1_Write(1);
     moveServo(90); // open claw
+    CyDelay(200);
     
     // signal start
-    flashXtimes(3);
+    flashXtimes(3);    
     soundPiezo(200);
     CyDelay(2000);
-    readWallPucks();
     
-    //liftClaw(75,0);
-    //moveServo(90);
-    //CyDelay(4000);
-    //moveServo(4);
-    //CyDelay(1000);
-    //liftClaw(100,1);
+    // code here
+    liftClaw(4,0);
+    CyDelay(200);
+    
+    task3r();
+    
     
     for(;;)
     {
-        
-//        liftClaw(100,1);
-//        CyDelay(1000);
-//        
-//        liftClaw(100,0);
-//        CyDelay(1000);
-        
+      
     }
     
 }
