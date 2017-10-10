@@ -18,10 +18,11 @@ todo:
 #endif
 
 #define SILENT FALSE // if set, suppress UART output
+#define DRIVESILENT TRUE // if set, suppress driving UART
 
 
 // defines for driving coefficients
-#define DIST_COEFF 210
+#define DIST_COEFF 21
 /*
 conversion coefficient from distance in cm to quadrature encoder counter
 i.e. dist * QUAD_COEFF = value that QuadDec should count up to to travel dist in cm.
@@ -39,9 +40,9 @@ uint16 GRE[3] = {6750, 5870, 5870};
 uint16 BLU[3] = {7900, 7400, 4750};
 
 // sensor 2 : on wall
-uint16 RED2[3] = {2400, 2400, 5800};
-uint16 GRE2[3] = {2950, 2380, 2380};
-uint16 BLU2[3] = {1870, 3750, 1870};
+uint16 RED2[3] = {3000, 3000, 6300};
+uint16 GRE2[3] = {4800, 4500, 4400};
+uint16 BLU2[3] = {5800, 5800, 3500};
 
 uint16 redc=250;
 uint16 greenc=60;
@@ -298,13 +299,13 @@ void driveXdist(int32 Xdist, int dir) {
     // poll SEs every 20ms, when both shaft encoders read X distance, stop
     while ((!Ldone)||(!Rdone)) {
 
-        CyDelay(100); // the smaller this value, the more often the SEs are polled and hence the more accurate the distance
+        CyDelay(10); // the smaller this value, the more often the SEs are polled and hence the more accurate the distance
         
         // get relative distance from both wheels
         ldist = (getDistance(1,lsdist)); //left
         rdist = (getDistance(0,rsdist)); //right
         
-        if (!SILENT) {
+        if (!DRIVESILENT) {
             UART_1_PutString("\nLdist = ");
             printNumUART(ldist);
             UART_1_PutString("  Rdist = ");
@@ -599,15 +600,19 @@ int getColour(int sensor) {
     uint16 rCountTmp, gCountTmp, bCountTmp;
     uint16 rDist, gDist, bDist;
     int temp, min;
-    int rep = 6;
+    int rep = 10;
+    
+    uint16 nonethres; // largest size of mindist before sensor decides 'none' colour
    
     // enable output
     if (sensor==1) {
         COL2EN_Write(0);
         COL1EN_Write(1);
+        nonethres=3500;
     } else if (sensor==2) {
         COL1EN_Write(0);
         COL2EN_Write(1);
+        nonethres=20000;
     }
     
     // cycle through colours
@@ -695,7 +700,7 @@ int getColour(int sensor) {
 //        UART_1_PutString(&col); // not sure if this col printing works
     }
     
-    if (mindist<3500) {
+    if (mindist<nonethres) {
         return min;
     } else {
         return 0;
@@ -790,8 +795,8 @@ void soundPiezo(int msec) {
 void beepXtimes(int rep) {
     
     for (int i=0; i<rep; i++) {
-        soundPiezo(200);
-        CyDelay(200);
+        soundPiezo(100);
+        CyDelay(100);
     }
 }
 
@@ -912,7 +917,7 @@ void task3r() {
     
     
     //straight
-    driveXdist(6,1);
+    driveXdist(60,1);
     CyDelay(200);
     
     //right
@@ -920,7 +925,7 @@ void task3r() {
     CyDelay(200);
     
     //straight
-    driveXdist(20,1);
+    driveXdist(200,1);
     CyDelay(200);
     adjust_dist_US(1,5,fwdspeed);
     CyDelay(200);
@@ -933,7 +938,7 @@ void task3r() {
     CyDelay(200);
     
     //straight
-    driveXdist(45,1);
+    driveXdist(450,1);
     CyDelay(200);
     adjust_dist_US(1,8,fwdspeed);
     CyDelay(200);
@@ -946,11 +951,11 @@ void task3r() {
     CyDelay(200);
     
     //backup here
-    driveXdist(6,0);
+    driveXdist(60,0);
     CyDelay(200);
     
      //straight
-    driveXdist(15,1);
+    driveXdist(150,1);
     CyDelay(200);
     
     //closeservo
@@ -961,11 +966,11 @@ void task3r() {
     CyDelay(20000);
     
     //reverse
-    driveXdist(35,0);
+    driveXdist(350,0);
     CyDelay(200);
     
     //going straight before turn
-    driveXdist(15,1);
+    driveXdist(150,1);
     CyDelay(200);
     
     //first return left
@@ -977,7 +982,7 @@ void task3r() {
     CyDelay(200);
     
     //go straight to consturction zone
-    driveXdist(40,1);
+    driveXdist(400,1);
     CyDelay(200);
     
     //turn left to drop into consturctionzone
@@ -1047,22 +1052,29 @@ void task4(int sensor) {
 /* Store 5 colours from wall-mounted pucks */
 void readWallPucks(void) {
     
-    int col;
+    int col; //takes 'best out of 3'
+    int cols[3];
         
     /* SCALE HERE */
     S0_Write(0); // 2% scaling?
     S1_Write(1);
     
-    // rotate and align side sensor with first puck
-    // THIS IS COMPLETELY UNTESTED, drive values are guesses
-    
-    //beepXtimes(2);    
-    
     // drive along wall fetching colours
     for (int i=0; i<5; i++) {
         
         // get colour
-        col = getColour(1);
+        cols[0] = getColour(2);
+            CyDelay(20);
+        cols[1] = getColour(2);
+            CyDelay(20);    
+        cols[2] = getColour(2);
+            CyDelay(20);
+        // this is a pretty hacky solution to take best of 3
+        if (cols[0]==cols[1] || cols[0]==cols[2]) {
+            col=cols[0];
+        } else {
+            col=cols[1];
+        }
         
         // print colour to UART
         if (!SILENT) {
@@ -1096,12 +1108,11 @@ void readWallPucks(void) {
         // store colour
         SEQ[i]=col;
         
-        // wait
-        flashXtimes(1);
-        CyDelay(1000);
-        
         // drive to next colour
-        driveXdist(6,1);
+        driveXdist(56,1);
+        
+        // wait
+        CyDelay(1000);
     }
     
     flashXtimes(3);
@@ -1160,14 +1171,16 @@ int main(void)
     CyDelay(2000);
     
     // code here
+    readWallPucks();
     
-    for (int i=0;i<3;i++) {
-        beepXtimes(1);
-        driveXdist(4,1);
-        CyDelay(1000);
-    }
-    
-    beepXtimes(3);
+//    
+//    for (int i=0;i<3;i++) {
+//        beepXtimes(1);
+//        driveXdist(4,1);
+//        CyDelay(1000);
+//    }
+//    
+//    beepXtimes(3);
     
     
     for(;;)
