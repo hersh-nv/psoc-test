@@ -70,6 +70,8 @@ uint16 uscount1=0;
 float distance_m1=0;
 uint16 uscount2=0;
 float distance_m2=0;
+uint16 uscount3=0;
+float distance_mid=0;
 
 // for storing colour sequence
 int8 SEQ[5];
@@ -207,7 +209,7 @@ CY_ISR(Timer_ISR_HandlerR){
     //printNumUART(uscount1);;
     //UART_1_PutString("usint1");
     
-    distance_m1=(65535-uscount1)/58;
+    distance_m1=(65535-uscount1)/5.8;
   
 }
 CY_ISR(Timer_ISR_HandlerL){
@@ -218,11 +220,22 @@ CY_ISR(Timer_ISR_HandlerL){
     //printNumUART(uscount2);;
     //UART_1_PutString("\n");
     
-    distance_m2=(65535-uscount2)/58;
+    distance_m2=(65535-uscount2)/5.8;
     
     
 }
+CY_ISR(Timer_ISR_HandlerM){
 
+    
+    USTimer_M_ReadStatusRegister();
+    uscount3=USTimer_M_ReadCounter();
+    //printNumUART(uscount2);;
+    //UART_1_PutString("\n");
+    
+    distance_mid=(65535-uscount3)/5.8;
+    
+    
+}
 
 /* Reads the quadrature decoder connected to the shaft encoder and returns the distance as a int32
    Used for all shaft encoders, on wheel motors and pulley motor */
@@ -246,7 +259,7 @@ int32 getDistance(int side, int32 startdist) {
     return distance;
 }
 
-/* Drives X distance (cm) forward/backward, polls shaft encoders every 20ms until X distance reached */
+/* Drives X distance (mm) forward/backward, polls shaft encoders every 10ms until X distance reached */
 void driveXdist(int32 Xdist, int dir) {
     /* 
     INPUTS
@@ -432,18 +445,18 @@ void adjust_dist_US(int dir, uint16 dist, uint8 speed){
 
     int dflag=0;
     uint8 lspeed, rspeed;
-    
-        lspeed = speed;
-        rspeed = speed+3;
-        PWM_1_WriteCompare1(lspeed);
-        PWM_1_WriteCompare2(rspeed);
-    
-            
-        // set directions
-        A3_Write(!dir); // R
-        A4_Write(dir);
-        A1_Write(!dir); // L
-        A2_Write(dir);
+
+    lspeed = speed;
+    rspeed = speed+3;
+    PWM_1_WriteCompare1(lspeed);
+    PWM_1_WriteCompare2(rspeed);
+
+        
+    // set directions
+    A3_Write(!dir); // R
+    A4_Write(dir);
+    A1_Write(!dir); // L
+    A2_Write(dir);
     
     while(!dflag) {
            
@@ -600,7 +613,7 @@ int getColour(int sensor) {
     uint16 rCountTmp, gCountTmp, bCountTmp;
     uint16 rDist, gDist, bDist;
     int temp, min;
-    int rep = 10;
+    int rep = 12;
     
     uint16 nonethres; // largest size of mindist before sensor decides 'none' colour
    
@@ -750,7 +763,7 @@ void liftClaw(int16 dist, int dir) {
     // poll SEs every 20ms, when both shaft encoders read X distance, stop
     while (!done) {
 
-        CyDelay(100); // the smaller this value, the more often the SEs are polled and hence the more accurate the distance
+        CyDelay(5); // the smaller this value, the more often the SEs are polled and hence the more accurate the distance
         
         // get relative pulley travel distance
         pdist = (getDistance(2,psdist)); 
@@ -1106,7 +1119,7 @@ void readWallPucks(void) {
         beepXtimes(col);
         
         // store colour
-        SEQ[i]=col;
+        SEQ[4-i]=col; // reads top->bottom so fill SEQ backwards
         
         // drive to next colour
         driveXdist(56,1);
@@ -1125,6 +1138,71 @@ void readWallPucks(void) {
     }
 }
 
+/* Drive until middle ultrasonic detects puck then pick it up*/
+void collectPuck(void) {
+    
+    int dflag=0;
+    uint8 lspeed, rspeed;
+
+    lspeed = 130;
+    rspeed = 130+3;
+    PWM_1_WriteCompare1(lspeed);
+    PWM_1_WriteCompare2(rspeed);
+
+        
+    // set directions
+    A3_Write(0); // R
+    A4_Write(1);
+    A1_Write(0); // L
+    A2_Write(1);
+    
+    while(!dflag) {
+           
+        while(ECHO_M_Read()==0)
+            {
+            //UART_1_PutString("while\n");
+            updateUS();
+            }
+            //UART_1_PutString(".....\n");
+            
+        CyDelay(10);
+        
+        if (!SILENT) {
+            UART_1_PutString("\n");
+            printNumUART((int)distance_mid);
+        }
+        
+        if(distance_mid<=70) {
+            dflag=1;
+        }        
+             
+    }
+    
+    // stop wheels
+    A1_Write(0);
+    A2_Write(0);
+    A3_Write(0);
+    A4_Write(0);            
+    PWM_1_WriteCompare1(0);
+    PWM_1_WriteCompare2(0);
+    CyDelay(500);
+    
+    // open claw, drop then close
+    liftClaw(40,0);
+    CyDelay(100);
+    moveServo(13);
+    CyDelay(200);
+    
+    // determine colour
+    int col = getColour(1);
+    beepXtimes(col);
+    
+    // lift
+    liftClaw(40,1);
+    
+    
+    
+}
 
 /* ===================================================================== */
 
@@ -1152,8 +1230,10 @@ int main(void)
     PWM_SERVO_Start();
     USTimer_R_Start();
     USTimer_L_Start();    
+    USTimer_M_Start();
     ISR_US_R_StartEx(Timer_ISR_HandlerR);
     ISR_US_L_StartEx(Timer_ISR_HandlerL);
+    ISR_US_M_StartEx(Timer_ISR_HandlerM);
     
     // variables
     int col;
@@ -1171,20 +1251,21 @@ int main(void)
     CyDelay(2000);
     
     // code here
-    readWallPucks();
-    
-//    
-//    for (int i=0;i<3;i++) {
-//        beepXtimes(1);
-//        driveXdist(4,1);
-//        CyDelay(1000);
-//    }
-//    
-//    beepXtimes(3);
-    
+    collectPuck();
     
     for(;;)
     {
+//        updateUS();
+//        CyDelayUs(10);
+//        UART_1_PutString("\nDist  ");
+//        printNumUART((int)distance_mid);
+//        
+//        if (distance_mid<50) {
+//            LED1_Write(1);
+//        } else {
+//            LED1_Write(0);
+//        }
+//        CyDelay(100);
         
     }
     
