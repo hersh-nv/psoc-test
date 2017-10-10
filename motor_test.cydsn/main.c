@@ -33,9 +33,15 @@ i.e. dist * QUAD_COEFF = value that QuadDec should count up to to travel dist in
 
 
 /* Defines for puck readings; calibrate when in new environment / lighting */
+// sensor 1 : inside claw
 uint16 RED[3] = {5000, 5010, 7530};
 uint16 GRE[3] = {6750, 5870, 5870};
 uint16 BLU[3] = {7900, 7400, 4750};
+
+// sensor 2 : on wall
+uint16 RED2[3] = {2400, 2400, 5800};
+uint16 GRE2[3] = {2950, 2380, 2380};
+uint16 BLU2[3] = {1870, 3750, 1870};
 
 uint16 redc=250;
 uint16 greenc=60;
@@ -582,7 +588,10 @@ void adjust_angle_US(uint8 speed){
 
 /* Polls colour sensor several times at 100us intervals to get a reliable colour reading, and returns a integer value
 corresponding with the closest colour reading. Outputs 0 if no colour is strongly detected */
-int getColour() {
+int getColour(int sensor) {
+    /* INPUTS */
+    // sensor = 1 for claw colour sensor, 2 for side sensor
+    
     // initialise
     uint16 rCount=10000;
     uint16 gCount=10000;
@@ -590,8 +599,17 @@ int getColour() {
     uint16 rCountTmp, gCountTmp, bCountTmp;
     uint16 rDist, gDist, bDist;
     int temp, min;
-    int rep = 12;
+    int rep = 6;
    
+    // enable output
+    if (sensor==1) {
+        COL2EN_Write(0);
+        COL1EN_Write(1);
+    } else if (sensor==2) {
+        COL1EN_Write(0);
+        COL2EN_Write(1);
+    }
+    
     // cycle through colours
     S2_Write(0); S3_Write(0); // RED
         for (int i=0;i<rep;i++) {
@@ -620,7 +638,11 @@ int getColour() {
         }
         overflowCountCOL = 0u;
         
-    S2_Write(0); S3_Write(0); 
+    S2_Write(0); S3_Write(0);
+    
+    // disable output
+    COL1EN_Write(0);
+    COL2EN_Write(0);
     
     // print measures
     if (!SILENT) {
@@ -634,15 +656,27 @@ int getColour() {
     
     
     // find L1 distance to each puck location
-    rDist = abs(RED[0]-rCount) + abs(RED[1]-gCount) + abs(RED[2]-bCount);
-        UART_1_PutString("\nDist: R");
-        printNumUART(rDist);
-    gDist = abs(GRE[0]-rCount) + abs(GRE[1]-gCount) + abs(GRE[2]-bCount);
-        UART_1_PutString(" G");
-        printNumUART(gDist);
-    bDist = abs(BLU[0]-rCount) + abs(BLU[1]-gCount) + abs(BLU[2]-bCount);
-        UART_1_PutString(" B");
-        printNumUART(bDist);
+    if (sensor==1) {
+        rDist = abs(RED[0]-rCount) + abs(RED[1]-gCount) + abs(RED[2]-bCount);
+            UART_1_PutString("\nDist: R");
+            printNumUART(rDist);
+        gDist = abs(GRE[0]-rCount) + abs(GRE[1]-gCount) + abs(GRE[2]-bCount);
+            UART_1_PutString(" G");
+            printNumUART(gDist);
+        bDist = abs(BLU[0]-rCount) + abs(BLU[1]-gCount) + abs(BLU[2]-bCount);
+            UART_1_PutString(" B");
+            printNumUART(bDist);
+    } else if (sensor==2) {
+        rDist = abs(RED2[0]-rCount) + abs(RED2[1]-gCount) + abs(RED2[2]-bCount);
+            UART_1_PutString("\nDist: R");
+            printNumUART(rDist);
+        gDist = abs(GRE2[0]-rCount) + abs(GRE2[1]-gCount) + abs(GRE2[2]-bCount);
+            UART_1_PutString(" G");
+            printNumUART(gDist);
+        bDist = abs(BLU2[0]-rCount) + abs(BLU2[1]-gCount) + abs(BLU2[2]-bCount);
+            UART_1_PutString(" B");
+            printNumUART(bDist);
+    }
     
     // which is lowest i guess?
     temp = (rDist < gDist) ? rDist : gDist;
@@ -674,17 +708,11 @@ void moveServo(int16 angle) {
     angle = value from -90 to 90 (degrees)
     */
     
-    uint16 duty, oldduty;
-    
-    oldduty = PWM_SERVO_ReadCompare();
+    uint16 duty;
     
     duty = 4500 + 16*angle; // range from 3k to 6k duty cycle
                             // pwm period = 60k, 20ms so this corresponds 
                             // 1ms to 2ms range
-//    for (int i=0; i<8; i++) {
-//        PWM_SERVO_WriteCompare(oldduty+i*((duty-oldduty)>>3));
-//        CyDelay(100);
-//    }
     PWM_SERVO_WriteCompare(duty);
     
     UART_1_PutString("\nduty  ");
@@ -756,6 +784,15 @@ void soundPiezo(int msec) {
     CyDelay(msec);
     PIEZO_Write(0);
     
+}
+
+/* Beep the piezo X times */
+void beepXtimes(int rep) {
+    
+    for (int i=0; i<rep; i++) {
+        soundPiezo(200);
+        CyDelay(200);
+    }
 }
 
 /* Prelim comp tasks */
@@ -963,41 +1000,43 @@ void task3r() {
     CyDelay(200);
 
 }
-void task4() {
+void task4(int sensor) {
     // Prelim Task 4
     // NOTE: this enters an infinite loop by design; make an exit flag if you want to do something after Task 4
+    // NOTE: now used as a generic infinite colour sensing loop; therefore set sensor number as input
+    // sensor = 1 for claw colour sensor, 2 for side colour sensor
+    
     flashXtimes(4);
     
     S0_Write(0); // 2% scaling?
     S1_Write(1);
     
     int col;
-    uint16 dist;
     
     for(;;) {   
-        col = getColour();
+        col = getColour(sensor);
         if (!SILENT) {
             UART_1_PutString("\nColour: ");
             if (col==0) {
                 UART_1_PutString("None");
-                LEDR_Write(0);
-                LEDG_Write(0);
-                LEDB_Write(0);
+//                LEDR_Write(0);
+//                LEDG_Write(0);
+//                LEDB_Write(0);
             } else if (col==1) {
                 UART_1_PutString("R ");
-                LEDR_Write(1);
-                LEDG_Write(0);
-                LEDB_Write(0);
+//                LEDR_Write(1);
+//                LEDG_Write(0);
+//                LEDB_Write(0);
             } else if (col==2) {
                 UART_1_PutString("G ");
-                LEDR_Write(0);
-                LEDG_Write(1);
-                LEDB_Write(0);
+//                LEDR_Write(0);
+//                LEDG_Write(1);
+//                LEDB_Write(0);
             } else if (col==3) {
                 UART_1_PutString("B ");
-                LEDR_Write(0);
-                LEDG_Write(0);
-                LEDB_Write(1);
+//                LEDR_Write(0);
+//                LEDG_Write(0);
+//                LEDB_Write(1);
             }
         }
         CyDelay(50);
@@ -1014,61 +1053,45 @@ void readWallPucks(void) {
     S0_Write(0); // 2% scaling?
     S1_Write(1);
     
-//    // start
-//    driveXdist(20,1);
-//    turnXdegrees(90,1);
-//    CyDelay(1000);
-//    soundPiezo(200);
-//    adjust_dist_US(1,14,fwdspeed);
-//    
-//    
-//    adjust_angle_US(adjspeed);
-//    CyDelay(100);
-//    adjust_angle_US(adjspeed);
-//    CyDelay(100);
-//    
-//    turnXdegrees(80,1);
-//    adjust_angle_US(adjspeed);
-//    CyDelay(100);
-//    adjust_angle_US(adjspeed);
-//    
-//    // move up to wall
-//    adjust_dist_US(1,14,fwdspeed);
-//    
-//    soundPiezo(200);
-//    CyDelay(5000);
-//    soundPiezo(600);
-//    CyDelay(1000);
+    // rotate and align side sensor with first puck
+    // THIS IS COMPLETELY UNTESTED, drive values are guesses
     
+    //beepXtimes(2);    
+    
+    // drive along wall fetching colours
     for (int i=0; i<5; i++) {
-        // get colour
-        col = getColour();
         
+        // get colour
+        col = getColour(1);
+        
+        // print colour to UART
         if (!SILENT) {
             UART_1_PutString("\nColour: ");
             if (col==0) {
                 UART_1_PutString("None");
-                LEDR_Write(0);
-                LEDG_Write(0);
-                LEDB_Write(0);
+//                LEDR_Write(0);
+//                LEDG_Write(0);
+//                LEDB_Write(0);
             } else if (col==1) {
                 UART_1_PutString("R ");
-                LEDR_Write(1);
-                LEDG_Write(0);
-                LEDB_Write(0);
-                soundPiezo(300);
+//                LEDR_Write(1);
+//                LEDG_Write(0);
+//                LEDB_Write(0);
             } else if (col==2) {
                 UART_1_PutString("G ");
-                LEDR_Write(0);
-                LEDG_Write(1);
-                LEDB_Write(0);
+//                LEDR_Write(0);
+//                LEDG_Write(1);
+//                LEDB_Write(0);
             } else if (col==3) {
                 UART_1_PutString("B ");
-                LEDR_Write(0);
-                LEDG_Write(0);
-                LEDB_Write(1);
+//                LEDR_Write(0);
+//                LEDG_Write(0);
+//                LEDB_Write(1);
             }
         }
+        
+        // indicate colour with piezo
+        beepXtimes(col);
         
         // store colour
         SEQ[i]=col;
@@ -1076,6 +1099,9 @@ void readWallPucks(void) {
         // wait
         flashXtimes(1);
         CyDelay(1000);
+        
+        // drive to next colour
+        driveXdist(6,1);
     }
     
     flashXtimes(3);
@@ -1088,16 +1114,6 @@ void readWallPucks(void) {
     }
 }
 
-void checkColour(void) {
-    moveServo(0);
-    CyDelay(500);
-    
-    int col1 = getColour();
-    int col2 = getColour();
-    int col3 = getColour();
-    
-    
-}
 
 /* ===================================================================== */
 
@@ -1144,9 +1160,14 @@ int main(void)
     CyDelay(2000);
     
     // code here
-    moveServo(5);
-    CyDelay(500);
-    task4();
+    
+    for (int i=0;i<3;i++) {
+        beepXtimes(1);
+        driveXdist(4,1);
+        CyDelay(1000);
+    }
+    
+    beepXtimes(3);
     
     
     for(;;)
