@@ -59,8 +59,8 @@ int16 overflowCountL = 0u; // NB can go negative for underflow (when moving back
 int16 overflowCountR = 0u;
 
 // driving speeds
-uint8 fwdspeed = 210;
-uint8 bwdspeed = 220;
+uint8 fwdspeed = 150;
+uint8 bwdspeed = 180;
 uint8 trnspeed = 100;
 uint8 adjspeed = 36;
 uint8 pllspeed = 160;
@@ -410,7 +410,7 @@ void turnXdegrees(int16 Xdeg, int dir) {
             rdist = (getDistance(0,rsdist)); //right
         }
         
-        if (!SILENT) {
+        if (!DRIVESILENT) {
             UART_1_PutString("\nLdist = ");
             printNumUART(ldist);
             UART_1_PutString("  Rdist = ");
@@ -471,10 +471,10 @@ void adjust_dist_US(int dir, uint16 dist, uint8 speed){
         
         if (!SILENT) {
             UART_1_PutString("\n");
-            printNumUART((int)distance_m1);
+            printNumUART(distance_m1);
         }
         
-        if(distance_m2<=(dist+11)) {
+        if(distance_m1<=(dist+120)) {
             dflag=1;
         }        
              
@@ -1062,6 +1062,7 @@ void task4(int sensor) {
     
 }
 
+/**** Final comp tasks ****/
 /* Store 5 colours from wall-mounted pucks */
 void readWallPucks(void) {
     
@@ -1071,6 +1072,11 @@ void readWallPucks(void) {
     /* SCALE HERE */
     S0_Write(0); // 2% scaling?
     S1_Write(1);
+    
+    // drive into starting position
+    driveXdist(30,0);
+    CyDelay(300);
+    
     
     // drive along wall fetching colours
     for (int i=0; i<5; i++) {
@@ -1119,13 +1125,16 @@ void readWallPucks(void) {
         beepXtimes(col);
         
         // store colour
-        SEQ[4-i]=col; // reads top->bottom so fill SEQ backwards
+        SEQ[4-i]=col; // reads top->bottom so fill SEQ backwards 
         
         // drive to next colour
         driveXdist(56,1);
         
         // wait
         CyDelay(1000);
+        
+        
+        
     }
     
     flashXtimes(3);
@@ -1136,6 +1145,33 @@ void readWallPucks(void) {
         printNumUART(SEQ[i]);
         UART_1_PutString("  ");
     }
+    
+    // turn 180 to get ready for next task
+    turnXdegrees(180,1);
+    CyDelay(500);
+    
+}
+
+/* Navigate to pucks using ultrasonics and adjustments etc */
+void navToPucks(void) {
+    
+    // drive to corner A
+    //driveXdist(600,1);
+    CyDelay(50);
+    adjust_dist_US(1,100,100);
+    CyDelay(4000);
+    
+    // rotate to drive backwards
+    turnXdegrees(90,0);
+    CyDelay(50);
+    for (int i=0;i<4;i++) {
+        adjust_angle_US(adjspeed);
+        CyDelay(400);
+    }
+    
+    // drive backwards
+        
+    
 }
 
 /* Drive until middle ultrasonic detects puck then pick it up*/
@@ -1155,6 +1191,10 @@ void collectPuck(void) {
     A4_Write(1);
     A1_Write(0); // L
     A2_Write(1);
+    
+    // enable middle US
+    US_M_EN_Write(1);
+    US_SIDEL_EN_Write(0);
     
     while(!dflag) {
            
@@ -1177,6 +1217,10 @@ void collectPuck(void) {
         }        
              
     }
+    
+    // enable sideleft US
+    US_M_EN_Write(0);
+    US_SIDEL_EN_Write(1);
     
     // stop wheels
     A1_Write(0);
@@ -1251,22 +1295,46 @@ int main(void)
     CyDelay(2000);
     
     // code here
-    collectPuck();
+    driveXdist(400,1);
     
     for(;;)
     {
-//        updateUS();
-//        CyDelayUs(10);
-//        UART_1_PutString("\nDist  ");
-//        printNumUART((int)distance_mid);
 //        
-//        if (distance_mid<50) {
-//            LED1_Write(1);
-//        } else {
-//            LED1_Write(0);
+//        for(int i=0;i<50;i++) {
+//            US_M_EN_Write(0);
+//            US_SIDEL_EN_Write(1);
+//        
+//            updateUS();
+//            CyDelayUs(10);
+//            UART_1_PutString("\nDist  ");
+//            printNumUART((int)distance_mid);
+//            
+//            if (distance_mid<50) {
+//                LED1_Write(1);
+//            } else {
+//                LED1_Write(0);
+//            }
+//            CyDelay(100);
 //        }
-//        CyDelay(100);
-        
+//        beepXtimes(1);
+//        for(int i=0;i<50;i++) {
+//            US_M_EN_Write(1);
+//            US_SIDEL_EN_Write(0);
+//    
+//            updateUS();
+//            CyDelayUs(10);
+//            UART_1_PutString("\nDist  ");
+//            printNumUART((int)distance_mid);
+//            
+//            if (distance_mid<50) {
+//                LED1_Write(1);
+//            } else {
+//                LED1_Write(0);
+//            }
+//            CyDelay(100);
+//        }
+//        beepXtimes(2);
+//    
     }
     
 }

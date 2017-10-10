@@ -284,6 +284,7 @@
       <Data key="e851a3b9-efb8-48be-bbb8-b303b216c393" value="A1" />
       <Data key="ed5f9f3b-d299-40a9-9c6a-4bf2720d31d6" value="SE_CL_B" />
       <Data key="ed092b9b-d398-4703-be89-cebf998501f6" value="Tx_1" />
+      <Data key="f8fbefd9-8b72-4478-ae17-e6831a3204ad" value="ECHO_SIDEL" />
       <Data key="fb613a29-f157-4379-b24c-54a089bd8e17" value="A3" />
       <Data key="fcb9c17a-95dc-4cfb-a1a5-a135ee2cae8e" value="SERVO_CTRL" />
     </Group>
@@ -3520,6 +3521,11 @@
     <Group key="ed092b9b-d398-4703-be89-cebf998501f6">
       <Group key="0">
         <Data key="Port Format" value="12,7" />
+      </Group>
+    </Group>
+    <Group key="f8fbefd9-8b72-4478-ae17-e6831a3204ad">
+      <Group key="0">
+        <Data key="Port Format" value="2,6" />
       </Group>
     </Group>
     <Group key="fb613a29-f157-4379-b24c-54a089bd8e17">
