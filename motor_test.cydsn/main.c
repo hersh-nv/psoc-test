@@ -83,6 +83,10 @@ uint8 pcol=0u;
 // stacking
 int stackcount=0; // count of how many pucks have been stacked; max of 5
 
+// servo angles
+uint8 sopen=100;
+uint8 sclose=23;
+
 // flag
 int alldone=0; // only set when all tasks have been completed; tells robot to exit stack loop
 
@@ -316,7 +320,7 @@ void driveXdist(int32 Xdist, int dir) {
     // poll SEs every 20ms, when both shaft encoders read X distance, stop
     while ((!Ldone)||(!Rdone)) {
 
-        CyDelay(10); // the smaller this value, the more often the SEs are polled and hence the more accurate the distance
+        CyDelay(1); // the smaller this value, the more often the SEs are polled and hence the more accurate the distance
         
         // get relative distance from both wheels
         ldist = (getDistance(1,lsdist)); //left
@@ -454,6 +458,8 @@ void adjust_dist_US(int dir, uint16 dist, uint8 speed){
     int cdist=0;
     int ccount=0;
     uint8 lspeed, rspeed;
+    
+    uint8 frontdist=100;
 
     lspeed = speed;
     rspeed = speed+3;
@@ -491,7 +497,7 @@ void adjust_dist_US(int dir, uint16 dist, uint8 speed){
             printNumUART(cdist);
         }
         
-        if(cdist<=(dist+120)) {
+        if(cdist<=(dist+frontdist)) {
             dflag=1;
         }        
              
@@ -503,21 +509,28 @@ void adjust_dist_US(int dir, uint16 dist, uint8 speed){
     A4_Write(0);            
     PWM_1_WriteCompare1(0);
     PWM_1_WriteCompare2(0);
+    
+    CyDelay(10);
 
 }
 
 void adjust_distances(uint16 dist, uint8 speed){
 
-    int dflagl,dflagr;
+    int dflagl=0;
+    int dflagr=0;
     uint8 lspeed, rspeed;
+    
+    uint8 frontdist=105;
 
     // calc average us distances
     float distR=0;
     float distL=0;
     for (int runavg=0;runavg<10;runavg++){
         updateUS();
-        CyDelayUs(100);
+        CyDelay(5);
         distR=distR+distance_m1;
+        UART_1_PutString("\nd_M1 ");
+        printNumUART(distance_m1);
         distL=distL+distance_m2;
     }
     distR=distR/10;
@@ -530,8 +543,14 @@ void adjust_distances(uint16 dist, uint8 speed){
     }
         
     // set directions
-    int dirR = (distR < dist) ? 1 : 0;
-    int dirL = (distL < dist) ? 1 : 0;
+    int dirR = (distR > dist+frontdist) ? 1 : 0;
+    int dirL = (distL > dist+frontdist) ? 1 : 0;
+    if (!SILENT) {
+        UART_1_PutString("\ndirL  ");
+        printNumUART(dirL);
+        UART_1_PutString("  dirR  ");
+        printNumUART(dirR);
+    }
     lspeed = speed;
     rspeed = speed;
     PWM_1_WriteCompare1(lspeed);
@@ -545,28 +564,33 @@ void adjust_distances(uint16 dist, uint8 speed){
            
         distR=0;
         distL=0;
-        for (int runavg=0;runavg<10;runavg++){
+        for (int runavg=0;runavg<2;runavg++){
             updateUS();
-            CyDelayUs(100);
+            CyDelay(4);
             distR=distR+distance_m1;
             distL=distL+distance_m2;
+            UART_1_PutString("\nM1  ");
+            printNumUART(distance_m1);
+            UART_1_PutString(" M2  ");
+            printNumUART(distance_m2);
         }
-        distR=distR/10;
-        distL=distL/10;
+        distR=distR/2;
+        distL=distL/2;
+        
         if (!SILENT) {
-            UART_1_PutString("\nL  ");
+            UART_1_PutString("\nloopL  ");
             printNumUART(distL);
-            UART_1_PutString("\nR  ");
+            UART_1_PutString(" loopR  ");
             printNumUART(distR);
         }
         
         // stop each wheel individually
-        if(distance_m1<=(dist+120)) {
+        if((dirR&&distR<=(dist+frontdist))||(!dirR&&distR>=(dist+frontdist))) {
             dflagr=1;
             A3_Write(0);
             A4_Write(0);   
         }
-        if(distance_m2<=(dist+120)) {
+        if((dirL&&distL<=(dist+frontdist))||(!dirL&&distL>=(dist+frontdist))) {
             dflagl=1;
             A1_Write(0);
             A2_Write(0); 
@@ -576,6 +600,8 @@ void adjust_distances(uint16 dist, uint8 speed){
 
     PWM_1_WriteCompare1(0);
     PWM_1_WriteCompare2(0);
+    
+    CyDelay(10);
 
 }
 
@@ -688,6 +714,9 @@ void adjust_angle_US(uint8 speed){
     A4_Write(0);            
     PWM_1_WriteCompare1(0);
     PWM_1_WriteCompare2(0);
+    
+    CyDelay(10);
+    
 };
 
 /* Polls colour sensor several times to get a reliable colour reading, and returns a integer value
@@ -910,14 +939,14 @@ int updateusxtimes(int rep){
     
     while(ccount<rep){
   
-    updateUS();
-    CyDelay(1);
-    
-    cdist=distance_m1+cdist;
-    ccount++;
-    
-    UART_1_PutString("\ncdist iteration:");
-    printNumUART(cdist);
+        updateUS();
+        CyDelay(5);
+        
+        cdist=distance_m1+cdist;
+        ccount++;
+        
+        UART_1_PutString("\ncdist iteration:");
+        printNumUART(cdist);
     }
     
     UART_1_PutString("\ncdist total:");
@@ -1263,7 +1292,7 @@ void readWallPucks(void) {
     
     // turn 180 to get ready for next task
     turnXdegrees(30,1);
-    driveXdist(20,0);
+    driveXdist(150,0);
     turnXdegrees(150,1);
     CyDelay(500);
     
@@ -1275,11 +1304,10 @@ void firstNavToPucks(void) {
     // drive to corner A
     driveXdist(400,1);
     adjust_dist_US(1,100,100);
-    CyDelay(10);
+    adjust_distances(100,50);
     adjust_angle_US(adjspeed);
-    CyDelay(10);
-    adjust_distances(100,100);
-    CyDelay(4000);
+    adjust_angle_US(adjspeed);
+    
     
     // rotate to drive forwards
     // must be forwards to detect if block is present using front US
@@ -1295,10 +1323,10 @@ void firstNavToPucks(void) {
         CyDelay(1000);
         curdist=updateusxtimes(10);
         CyDelayUs(100);
-        if (curdist<=150) { // if block in next 15cm
+        if (curdist<=130) { // if block in next 15cm
             UART_1_PutString("\nblock detected");
             beepXtimes(2);
-            blockflag=1;
+            //blockflag=1; // disabled this because it kept detecting block for no reason
         } else {
             driveXdist(50,1);
         }
@@ -1311,11 +1339,10 @@ void firstNavToPucks(void) {
     // else; continue on with navigation to pucks i guess?
 
     // reach corner B
+    driveXdist(200,1);
     adjust_dist_US(1,250,100);
-    CyDelay(10);
+    adjust_distances(130,50);
     adjust_angle_US(adjspeed);
-    CyDelay(10);
-    adjust_distances(250,100);
     
     // turn to face row of pucks; must be aligned
     turnXdegrees(90,1);
@@ -1336,7 +1363,7 @@ void collectPuck(void) {
     PWM_1_WriteCompare1(lspeed);
     PWM_1_WriteCompare2(rspeed);
 
-    liftClaw(20,1);
+    liftClaw(40,1);
 
     // set directions
     A3_Write(0); // R
@@ -1379,10 +1406,10 @@ void collectPuck(void) {
     US_SIDEL_EN_Write(1);
     
     // open claw, drop then close
-    moveServo(90);
-    liftClaw(20,0);
+    moveServo(sopen);
+    liftClaw(40,0);
     CyDelay(100);
-    moveServo(13);
+    moveServo(sclose);
     CyDelay(200);
     
     // determine colour
@@ -1390,7 +1417,7 @@ void collectPuck(void) {
     beepXtimes(col);
     
     // lift
-    liftClaw(20,1);
+    liftClaw(40,1);
         
 }
 
@@ -1504,7 +1531,7 @@ int main(void)
     // some hardware initialisations 
     S0_Write(0); // 2% colour scaling
     S1_Write(1);
-    moveServo(90); // open claw
+    moveServo(sopen); // open claw
     
     // signal start
     flashXtimes(3);    
@@ -1512,7 +1539,10 @@ int main(void)
     CyDelay(2000);
     
     // code here
-    adjust_distances(100,100);
+    liftClaw(30,1);
+    collectPuck();
+    CyDelay(2000);
+    liftClaw(40,0);
     
 
     
