@@ -451,6 +451,8 @@ void updateUS(void) {
 void adjust_dist_US(int dir, uint16 dist, uint8 speed){
 
     int dflag=0;
+    int cdist=0;
+    int ccount=0;
     uint8 lspeed, rspeed;
 
     lspeed = speed;
@@ -466,6 +468,9 @@ void adjust_dist_US(int dir, uint16 dist, uint8 speed){
     A2_Write(dir);
     
     while(!dflag) {
+        ccount=0;
+        cdist=0;
+        while(ccount<7){
            
         while(ECHO_R_Read()==0)
             {
@@ -473,15 +478,20 @@ void adjust_dist_US(int dir, uint16 dist, uint8 speed){
             updateUS();
             }
             //UART_1_PutString(".....\n");
-            
+         cdist=cdist+distance_m1;   
         CyDelay(10);
-        
-        if (!SILENT) {
-            UART_1_PutString("\n");
-            printNumUART(distance_m1);
+        ccount++;
         }
         
-        if(distance_m1<=(dist+120)) {
+        
+        cdist=cdist/7;
+        
+        if (!SILENT) {
+            UART_1_PutString("\n cdist: ");
+            printNumUART(cdist);
+        }
+        
+        if(cdist<=(dist+120)) {
             dflag=1;
         }        
              
@@ -893,6 +903,31 @@ void beepXtimes(int rep) {
     }
 }
 
+int updateusxtimes(int rep){
+    
+    int ccount=0;
+    int cdist=0;
+    
+    while(ccount<rep){
+  
+    updateUS();
+    CyDelay(1);
+    
+    cdist=distance_m1+cdist;
+    ccount++;
+    
+    UART_1_PutString("\ncdist iteration:");
+    printNumUART(cdist);
+    }
+    
+    UART_1_PutString("\ncdist total:");
+    printNumUART(cdist);
+    UART_1_PutString("\n");
+    
+    cdist=cdist/rep;
+    return cdist;
+}
+
 /* Prelim comp tasks */
 void task1() {
     // Prelim Task 1
@@ -1227,7 +1262,9 @@ void readWallPucks(void) {
     }
     
     // turn 180 to get ready for next task
-    turnXdegrees(185,1);
+    turnXdegrees(30,1);
+    driveXdist(20,0);
+    turnXdegrees(150,1);
     CyDelay(500);
     
 }
@@ -1236,7 +1273,7 @@ void readWallPucks(void) {
 void firstNavToPucks(void) {
     
     // drive to corner A
-    driveXdist(600,1);
+    driveXdist(400,1);
     adjust_dist_US(1,100,100);
     CyDelay(10);
     adjust_angle_US(adjspeed);
@@ -1250,10 +1287,17 @@ void firstNavToPucks(void) {
 
     // drive forwards, checking US every 5cm
     int i=0;
+    int curdist=0;
+    
     while (i<4 && !blockflag) {
-        updateUS();
+        UART_1_PutString("\nloop entered");
+        beepXtimes(1);
+        CyDelay(1000);
+        curdist=updateusxtimes(10);
         CyDelayUs(100);
-        if (distance_m1<=200) { // if block in next 20cm
+        if (curdist<=150) { // if block in next 15cm
+            UART_1_PutString("\nblock detected");
+            beepXtimes(2);
             blockflag=1;
         } else {
             driveXdist(50,1);
@@ -1468,46 +1512,18 @@ int main(void)
     CyDelay(2000);
     
     // code here
-    driveXdist(400,1);
+    adjust_distances(100,100);
+    
+
+    
+    
     
     for(;;)
     {
-//        
-//        for(int i=0;i<50;i++) {
-//            US_M_EN_Write(0);
-//            US_SIDEL_EN_Write(1);
-//        
-//            updateUS();
-//            CyDelayUs(10);
-//            UART_1_PutString("\nDist  ");
-//            printNumUART((int)distance_mid);
-//            
-//            if (distance_mid<50) {
-//                LED1_Write(1);
-//            } else {
-//                LED1_Write(0);
-//            }
-//            CyDelay(100);
-//        }
-//        beepXtimes(1);
-//        for(int i=0;i<50;i++) {
-//            US_M_EN_Write(1);
-//            US_SIDEL_EN_Write(0);
-//    
-//            updateUS();
-//            CyDelayUs(10);
-//            UART_1_PutString("\nDist  ");
-//            printNumUART((int)distance_mid);
-//            
-//            if (distance_mid<50) {
-//                LED1_Write(1);
-//            } else {
-//                LED1_Write(0);
-//            }
-//            CyDelay(100);
-//        }
-//        beepXtimes(2);
-//    
+        
+        //updateusxtimes(10);
+        //CyDelay(1000);
+        
     }
     
 }
