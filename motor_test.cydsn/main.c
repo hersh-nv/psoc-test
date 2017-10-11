@@ -17,20 +17,14 @@ todo:
     #define FALSE 0
 #endif
 
-#define SILENT FALSE // if set, suppress UART output
+#define SILENT FALSE // if set, suppress general UART output
 #define DRIVESILENT TRUE // if set, suppress driving UART
 
 
-// defines for driving coefficients
+// defines for unit-conversion coefficients
 #define DIST_COEFF 21
-/*
-conversion coefficient from distance in cm to quadrature encoder counter
-i.e. dist * QUAD_COEFF = value that QuadDec should count up to to travel dist in cm.
-200 is a roughly correct value i just measured; can be adjusted for preciseness later
-*/
 #define ROTATE_COEFF 39
 #define PULLEY_DIST_COEFF 50 // TO BE TESTED
-
 
 
 /* Defines for puck readings; calibrate when in new environment / lighting */
@@ -44,9 +38,9 @@ uint16 RED2[3] = {3000, 3000, 6300};
 uint16 GRE2[3] = {4800, 4500, 4400};
 uint16 BLU2[3] = {5800, 5800, 3500};
 
-uint16 redc=250;
-uint16 greenc=60;
-uint16 bluec=70;
+// uint16 redc=250;
+// uint16 greenc=60;
+// uint16 bluec=70;
 
 
 // for col count
@@ -78,6 +72,19 @@ int8 SEQ[5];
 uint16 mindist = 0u;
 uint16 periodLen = 0u;   // length of counter period
 
+// flag for block presence (on initial path)
+int blockflag=0;
+
+// puck array
+uint8 puckcount=0u; // count of how many pucks in arena have been fetched / checked; max of 25?
+uint8 prow=0u; // puckrow; this and puckcol are used to program location of next puck to retrieve
+uint8 pcol=0u;
+
+// stacking
+int stackcount=0; // count of how many pucks have been stacked; max of 5
+
+// flag
+int alldone=0; // only set when all tasks have been completed; tells robot to exit stack loop
 
 
 /* ========== FUNCTIONS START HERE ===================== */
@@ -138,9 +145,6 @@ CY_ISR_PROTO(COL_ISR) {
         capturedCount = COL_COUNTER_ReadCapture();
         capflag = TRUE;
     }
-    
-    
-    
 }
 
 /* ISR for shaft encoders -- identical, only differ in wheel value
@@ -304,7 +308,7 @@ void driveXdist(int32 Xdist, int dir) {
     // set directions
     A3_Write(!dir); // R
     A4_Write(dir);
-//    CyDelay(12); // COMPENSATION DELAY; ADJUST AS NECESSARY
+    // CyDelay(12); // COMPENSATION DELAY; ADJUST AS NECESSARY
     A1_Write(!dir); // L
     A2_Write(dir);
 
@@ -326,11 +330,11 @@ void driveXdist(int32 Xdist, int dir) {
         }
         
         // some kind of closed feedback here; turned off for now because it's unreliable....
-//        deltDist = ldist-rdist;
-//        lspeed = lspeed - (deltDist>>3); // adjust speed by difference/4, but...
-//        rspeed = rspeed + (deltDist>>3);
-//        PWM_1_WriteCompare1(lspeed); // ..turned this feature off because it seems to drive straight anyway
-//        PWM_1_WriteCompare2(rspeed);
+       // deltDist = ldist-rdist;
+       // lspeed = lspeed - (deltDist>>3); // adjust speed by difference/4, but...
+       // rspeed = rspeed + (deltDist>>3);
+       // PWM_1_WriteCompare1(lspeed); // ..turned this feature off because it seems to drive straight anyway
+       // PWM_1_WriteCompare2(rspeed);
         
         /* When either wheel reaches target distance, stop it */
         if (abs(ldist)>=XdistSE) {
@@ -343,7 +347,9 @@ void driveXdist(int32 Xdist, int dir) {
             A4_Write(0);
             Rdone=1;
         }
-    }            
+    }
+
+    CyDelay(10);
 }
 
 /* Turns X degrees CW/CCW, polls shaft encoders every 10 ms until X degrees is reached.
@@ -385,13 +391,13 @@ void turnXdegrees(int16 Xdeg, int dir) {
     if (dir) {
         A3_Write(dir); // R
         A4_Write(!dir);
-//        CyDelay(40);
+       // CyDelay(40);
         A1_Write(!dir); // L
         A2_Write(dir);
     } else {
         A1_Write(!dir); // L
         A2_Write(dir);
-//        CyDelay(40);
+       // CyDelay(40);
         A3_Write(dir); // R
         A4_Write(!dir);
     }
@@ -429,6 +435,7 @@ void turnXdegrees(int16 Xdeg, int dir) {
             Rdone=1;
         }
     }
+    CyDelay(10);
 }
 
 /* Write to all ultrasonic TRIG pins, which should update all their distance values through respective ISRs. */
@@ -489,6 +496,79 @@ void adjust_dist_US(int dir, uint16 dist, uint8 speed){
 
 }
 
+void adjust_distances(uint16 dist, uint8 speed){
+
+    int dflagl,dflagr;
+    uint8 lspeed, rspeed;
+
+    // calc average us distances
+    float distR=0;
+    float distL=0;
+    for (int runavg=0;runavg<10;runavg++){
+        updateUS();
+        CyDelayUs(100);
+        distR=distR+distance_m1;
+        distL=distL+distance_m2;
+    }
+    distR=distR/10;
+    distL=distL/10;
+    if (!SILENT) {
+        UART_1_PutString("\nL  ");
+        printNumUART(distL);
+        UART_1_PutString("\nR  ");
+        printNumUART(distR);
+    }
+        
+    // set directions
+    int dirR = (distR < dist) ? 1 : 0;
+    int dirL = (distL < dist) ? 1 : 0;
+    lspeed = speed;
+    rspeed = speed;
+    PWM_1_WriteCompare1(lspeed);
+    PWM_1_WriteCompare2(rspeed);
+    A3_Write(!dirR); // R
+    A4_Write(dirR);
+    A1_Write(!dirL); // L
+    A2_Write(dirL);
+    
+    while((!dflagl)||(!dflagr)) {
+           
+        distR=0;
+        distL=0;
+        for (int runavg=0;runavg<10;runavg++){
+            updateUS();
+            CyDelayUs(100);
+            distR=distR+distance_m1;
+            distL=distL+distance_m2;
+        }
+        distR=distR/10;
+        distL=distL/10;
+        if (!SILENT) {
+            UART_1_PutString("\nL  ");
+            printNumUART(distL);
+            UART_1_PutString("\nR  ");
+            printNumUART(distR);
+        }
+        
+        // stop each wheel individually
+        if(distance_m1<=(dist+120)) {
+            dflagr=1;
+            A3_Write(0);
+            A4_Write(0);   
+        }
+        if(distance_m2<=(dist+120)) {
+            dflagl=1;
+            A1_Write(0);
+            A2_Write(0); 
+        }            
+             
+    }
+
+    PWM_1_WriteCompare1(0);
+    PWM_1_WriteCompare2(0);
+
+}
+
 void adjust_angle_US(uint8 speed){
     /*
     INPUTS
@@ -537,13 +617,13 @@ void adjust_angle_US(uint8 speed){
     if (dir) {
         A3_Write(dir); // R
         A4_Write(!dir);
-//        CyDelay(40);
+       // CyDelay(40);
         A1_Write(!dir); // L
         A2_Write(dir);
     } else {
         A1_Write(!dir); // L
         A2_Write(dir);
-//        CyDelay(40);
+       // CyDelay(40);
         A3_Write(dir); // R
         A4_Write(!dir);
     }
@@ -579,11 +659,11 @@ void adjust_angle_US(uint8 speed){
         
         if(((dist1a-dist2a)*(dist1a-dist2a))<=1){done=1;}
         
-//        UART_1_PutString("\nR:  ");
-//        printNumUART(dist1a);
-//        UART_1_PutString("  L:  ");
-//        printNumUART(dist2a);
-//        UART_1_PutString("\n");
+       UART_1_PutString("\nR:  ");
+       printNumUART(dist1a);
+       UART_1_PutString("  L:  ");
+       printNumUART(dist2a);
+       UART_1_PutString("\n");
         
         runavg=0;
         dist1a=0;
@@ -600,7 +680,7 @@ void adjust_angle_US(uint8 speed){
     PWM_1_WriteCompare2(0);
 };
 
-/* Polls colour sensor several times at 100us intervals to get a reliable colour reading, and returns a integer value
+/* Polls colour sensor several times to get a reliable colour reading, and returns a integer value
 corresponding with the closest colour reading. Outputs 0 if no colour is strongly detected */
 int getColour(int sensor) {
     /* INPUTS */
@@ -632,7 +712,7 @@ int getColour(int sensor) {
     S2_Write(0); S3_Write(0); // RED
         for (int i=0;i<rep;i++) {
             CyDelay(2);
-//            rCountTmp = (overflowCountCOL * periodLen) + capturedCount;
+           // rCountTmp = (overflowCountCOL * periodLen) + capturedCount;
             rCountTmp = capturedCount;
             rCount = (rCount < rCountTmp) ? rCount : rCountTmp;
         }
@@ -641,7 +721,7 @@ int getColour(int sensor) {
     S2_Write(1); S3_Write(1); // GREEN
         for (int i=0;i<rep;i++) {
             CyDelay(2);
-//            gCountTmp = (overflowCountCOL * periodLen) + capturedCount;
+           // gCountTmp = (overflowCountCOL * periodLen) + capturedCount;
             gCountTmp = capturedCount;
             gCount = (gCount < gCountTmp) ? gCount : gCountTmp;
         }
@@ -650,7 +730,7 @@ int getColour(int sensor) {
     S2_Write(0); S3_Write(1); // BLUE
         for (int i=0;i<rep;i++) {
             CyDelay(2);
-//            bCountTmp = (overflowCountCOL * periodLen) + capturedCount;
+           // bCountTmp = (overflowCountCOL * periodLen) + capturedCount;
             bCountTmp = capturedCount;
             bCount = (bCount < bCountTmp) ? bCount : bCountTmp;
         }
@@ -707,10 +787,10 @@ int getColour(int sensor) {
     if (!SILENT) {
         UART_1_PutString("\n");
         printNumUART(mindist);
-//        UART_1_PutString("\n Colour: ");
-//        char cols[4]="0RGB";
-//        char col=cols[min];
-//        UART_1_PutString(&col); // not sure if this col printing works
+       // UART_1_PutString("\n Colour: ");
+       // char cols[4]="0RGB";
+       // char col=cols[min];
+       // UART_1_PutString(&col); // not sure if this col printing works
     }
     
     if (mindist<nonethres) {
@@ -1037,24 +1117,24 @@ void task4(int sensor) {
             UART_1_PutString("\nColour: ");
             if (col==0) {
                 UART_1_PutString("None");
-//                LEDR_Write(0);
-//                LEDG_Write(0);
-//                LEDB_Write(0);
+               // LEDR_Write(0);
+               // LEDG_Write(0);
+               // LEDB_Write(0);
             } else if (col==1) {
                 UART_1_PutString("R ");
-//                LEDR_Write(1);
-//                LEDG_Write(0);
-//                LEDB_Write(0);
+               // LEDR_Write(1);
+               // LEDG_Write(0);
+               // LEDB_Write(0);
             } else if (col==2) {
                 UART_1_PutString("G ");
-//                LEDR_Write(0);
-//                LEDG_Write(1);
-//                LEDB_Write(0);
+               // LEDR_Write(0);
+               // LEDG_Write(1);
+               // LEDB_Write(0);
             } else if (col==3) {
                 UART_1_PutString("B ");
-//                LEDR_Write(0);
-//                LEDG_Write(0);
-//                LEDB_Write(1);
+               // LEDR_Write(0);
+               // LEDG_Write(0);
+               // LEDB_Write(1);
             }
         }
         CyDelay(50);
@@ -1100,24 +1180,24 @@ void readWallPucks(void) {
             UART_1_PutString("\nColour: ");
             if (col==0) {
                 UART_1_PutString("None");
-//                LEDR_Write(0);
-//                LEDG_Write(0);
-//                LEDB_Write(0);
+               // LEDR_Write(0);
+               // LEDG_Write(0);
+               // LEDB_Write(0);
             } else if (col==1) {
                 UART_1_PutString("R ");
-//                LEDR_Write(1);
-//                LEDG_Write(0);
-//                LEDB_Write(0);
+               // LEDR_Write(1);
+               // LEDG_Write(0);
+               // LEDB_Write(0);
             } else if (col==2) {
                 UART_1_PutString("G ");
-//                LEDR_Write(0);
-//                LEDG_Write(1);
-//                LEDB_Write(0);
+               // LEDR_Write(0);
+               // LEDG_Write(1);
+               // LEDB_Write(0);
             } else if (col==3) {
                 UART_1_PutString("B ");
-//                LEDR_Write(0);
-//                LEDG_Write(0);
-//                LEDB_Write(1);
+               // LEDR_Write(0);
+               // LEDG_Write(0);
+               // LEDB_Write(1);
             }
         }
         
@@ -1147,31 +1227,58 @@ void readWallPucks(void) {
     }
     
     // turn 180 to get ready for next task
-    turnXdegrees(180,1);
+    turnXdegrees(185,1);
     CyDelay(500);
     
 }
 
 /* Navigate to pucks using ultrasonics and adjustments etc */
-void navToPucks(void) {
+void firstNavToPucks(void) {
     
     // drive to corner A
-    //driveXdist(600,1);
-    CyDelay(50);
+    driveXdist(600,1);
     adjust_dist_US(1,100,100);
+    CyDelay(10);
+    adjust_angle_US(adjspeed);
+    CyDelay(10);
+    adjust_distances(100,100);
     CyDelay(4000);
     
-    // rotate to drive backwards
-    turnXdegrees(90,0);
-    CyDelay(50);
-    for (int i=0;i<4;i++) {
-        adjust_angle_US(adjspeed);
+    // rotate to drive forwards
+    // must be forwards to detect if block is present using front US
+    turnXdegrees(90,1);
+
+    // drive forwards, checking US every 5cm
+    int i=0;
+    while (i<4 && !blockflag) {
+        updateUS();
+        CyDelayUs(100);
+        if (distance_m1<=200) { // if block in next 20cm
+            blockflag=1;
+        } else {
+            driveXdist(50,1);
+        }
         CyDelay(400);
+        i++;
     }
+
+    // check blockflag; if set, switch to other function
+    if (blockflag) return;
+    // else; continue on with navigation to pucks i guess?
+
+    // reach corner B
+    adjust_dist_US(1,250,100);
+    CyDelay(10);
+    adjust_angle_US(adjspeed);
+    CyDelay(10);
+    adjust_distances(250,100);
     
-    // drive backwards
-        
-    
+    // turn to face row of pucks; must be aligned
+    turnXdegrees(90,1);
+
+    // drive back into wall? SLOWLY (then restore bwdspeed to OG value)
+    uint8 tmp=bwdspeed; bwdspeed=60; driveXdist(100,0); bwdspeed=tmp;
+
 }
 
 /* Drive until middle ultrasonic detects puck then pick it up*/
@@ -1185,7 +1292,8 @@ void collectPuck(void) {
     PWM_1_WriteCompare1(lspeed);
     PWM_1_WriteCompare2(rspeed);
 
-        
+    liftClaw(20,1);
+
     // set directions
     A3_Write(0); // R
     A4_Write(1);
@@ -1197,13 +1305,8 @@ void collectPuck(void) {
     US_SIDEL_EN_Write(0);
     
     while(!dflag) {
-           
-        while(ECHO_M_Read()==0)
-            {
-            //UART_1_PutString("while\n");
-            updateUS();
-            }
-            //UART_1_PutString(".....\n");
+        
+        updateUS();
             
         CyDelay(10);
         
@@ -1212,15 +1315,11 @@ void collectPuck(void) {
             printNumUART((int)distance_mid);
         }
         
-        if(distance_mid<=70) {
+        if(distance_mid<=70) { // when puck is reached; adjust distance value as necessary
             dflag=1;
         }        
              
     }
-    
-    // enable sideleft US
-    US_M_EN_Write(0);
-    US_SIDEL_EN_Write(1);
     
     // stop wheels
     A1_Write(0);
@@ -1230,9 +1329,14 @@ void collectPuck(void) {
     PWM_1_WriteCompare1(0);
     PWM_1_WriteCompare2(0);
     CyDelay(500);
+
+    // re-enable sideleft US
+    US_M_EN_Write(0);
+    US_SIDEL_EN_Write(1);
     
     // open claw, drop then close
-    liftClaw(40,0);
+    moveServo(90);
+    liftClaw(20,0);
     CyDelay(100);
     moveServo(13);
     CyDelay(200);
@@ -1242,10 +1346,80 @@ void collectPuck(void) {
     beepXtimes(col);
     
     // lift
-    liftClaw(40,1);
-    
-    
-    
+    liftClaw(20,1);
+        
+}
+
+void navToConstruction(void) {}
+
+void stackPuck(void) {}
+
+void navToPucks(void) {
+    /* Uses puckcount, prow and pcol to align robot with the next puck to collect */
+    // e.g. when puckcount=0; then prow=0, pcol=0; i.e. retrieve rightmost col, top row puck.
+    //      when puckcount=1; then prow=1, pcol=0; i.e. retrieve rightmost col, second row puck.
+    //      etc.
+    //      
+    // basically puckcount used to calculate prow and pcol based on hardcoded rules,
+    // then together prow and pcol are used by this function to tell robot where to go next
+}
+
+void disposePuck(int col) {
+
+    driveXdist(50,0);
+    turnXdegrees(20*col,1);
+    liftClaw(20,0);
+    moveServo(90);
+    CyDelay(300);
+    liftClaw(20,1);
+    moveServo(0);
+    turnXdegrees(20*col,0);
+
+}
+
+/* Full task here */
+void allTasks(void) {
+
+    readWallPucks();
+    firstNavToPucks();
+
+    if (!blockflag) {
+        // if path isnt blocked take regular path
+        while (!alldone) {
+
+            collectPuck();
+            
+            int col=getColour(1);
+            beepXtimes(col);
+
+            if (col==SEQ[stackcount]) { // if colour matches, stack it then increment stackcount
+                navToConstruction();
+                stackPuck();
+                stackcount++;
+                if (stackcount<5) navToPucks();
+            } else { // else move it elsewhere and increment puckcount
+                disposePuck(col);
+                puckcount++;
+
+                // reposition to collect next puck
+            }
+
+            if (stackcount==5) alldone=1;
+
+        }
+
+    } else {
+        // secondary path
+        
+        // navToPucks2
+        
+        // collectPuck()
+        
+        // etc etc
+        
+    }
+
+
 }
 
 /* ===================================================================== */
@@ -1287,7 +1461,6 @@ int main(void)
     S0_Write(0); // 2% colour scaling
     S1_Write(1);
     moveServo(90); // open claw
-    CyDelay(200);
     
     // signal start
     flashXtimes(3);    
