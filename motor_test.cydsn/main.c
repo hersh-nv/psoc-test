@@ -1341,14 +1341,14 @@ void firstNavToPucks(void) {
     // reach corner B
     driveXdist(200,1);
     adjust_dist_US(1,250,100);
-    adjust_distances(130,50);
+    adjust_distances(120,50);
     adjust_angle_US(adjspeed);
     
     // turn to face row of pucks; must be aligned
-    turnXdegrees(90,1);
+    turnXdegrees(87,1);
 
     // drive back into wall? SLOWLY (then restore bwdspeed to OG value)
-    uint8 tmp=bwdspeed; bwdspeed=60; driveXdist(100,0); bwdspeed=tmp;
+    //uint8 tmp=bwdspeed; bwdspeed=60; driveXdist(100,0); bwdspeed=tmp;
 
 }
 
@@ -1357,13 +1357,16 @@ void collectPuck(void) {
     
     int dflag=0;
     uint8 lspeed, rspeed;
+    int curdist=0;
+    int ccount=0;
 
-    lspeed = 130;
-    rspeed = 130+3;
+    lspeed = 65+2;
+    rspeed = 65;
     PWM_1_WriteCompare1(lspeed);
     PWM_1_WriteCompare2(rspeed);
 
     liftClaw(40,1);
+    CyDelay(100);
 
     // set directions
     A3_Write(0); // R
@@ -1376,17 +1379,25 @@ void collectPuck(void) {
     US_SIDEL_EN_Write(0);
     
     while(!dflag) {
-        
+        ccount=0;
+        curdist=0;
+        while (ccount<5){
+  
         updateUS();
-            
+
+        curdist=curdist+distance_mid;
         CyDelay(10);
+        ccount++;
+        }
+        
+        curdist=curdist/5;
         
         if (!SILENT) {
             UART_1_PutString("\n");
-            printNumUART((int)distance_mid);
+            printNumUART(curdist);
         }
         
-        if(distance_mid<=70) { // when puck is reached; adjust distance value as necessary
+        if(curdist<=75) { // when puck is reached; adjust distance value as necessary
             dflag=1;
         }        
              
@@ -1421,7 +1432,34 @@ void collectPuck(void) {
         
 }
 
-void navToConstruction(void) {}
+void navToConstruction(void) {
+    
+    
+    
+    driveXdist(200,0);
+    CyDelay(200);
+    
+    liftClaw(30,0);
+    CyDelay(300);
+    
+    driveXdist(54,1);
+    CyDelay(200);
+    
+    turnXdegrees(90,1);
+    CyDelay(500);
+
+    driveXdist(400,1);
+    adjust_dist_US(1,100,100);
+    adjust_distances(100,50);
+    adjust_angle_US(adjspeed);
+    adjust_angle_US(adjspeed);
+    
+    
+    
+    
+    
+
+}
 
 void stackPuck(void) {}
 
@@ -1539,10 +1577,11 @@ int main(void)
     CyDelay(2000);
     
     // code here
-    liftClaw(30,1);
+    firstNavToPucks();
     collectPuck();
-    CyDelay(2000);
-    liftClaw(40,0);
+    navToConstruction();
+    
+    
     
 
     
@@ -1551,9 +1590,7 @@ int main(void)
     for(;;)
     {
         
-        //updateusxtimes(10);
-        //CyDelay(1000);
-        
+      
     }
     
 }
