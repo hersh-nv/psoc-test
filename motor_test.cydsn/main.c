@@ -932,29 +932,54 @@ void beepXtimes(int rep) {
     }
 }
 
-int updateusxtimes(int rep){
+int updateusxtimes_r(int rep){
     
     int ccount=0;
-    int cdist=0;
+    int cdist_r=0;
     
     while(ccount<rep){
   
         updateUS();
         CyDelay(5);
         
-        cdist=distance_m1+cdist;
+        cdist_r=distance_m1+cdist_r;
         ccount++;
         
         UART_1_PutString("\ncdist iteration:");
-        printNumUART(cdist);
+        printNumUART(cdist_r);
     }
     
     UART_1_PutString("\ncdist total:");
-    printNumUART(cdist);
+    printNumUART(cdist_r);
     UART_1_PutString("\n");
     
-    cdist=cdist/rep;
-    return cdist;
+    cdist_r=cdist_r/rep;
+    return cdist_r;
+}
+
+int updateusxtimes_l(int rep){
+    
+    int ccount=0;
+    int cdist_l=0;
+    
+    while(ccount<rep){
+  
+        updateUS();
+        CyDelay(5);
+        
+        cdist_l=distance_m2+cdist_l;
+        ccount++;
+        
+        UART_1_PutString("\ncdist iteration:");
+        printNumUART(cdist_l);
+    }
+    
+    UART_1_PutString("\ncdist total:");
+    printNumUART(cdist_l);
+    UART_1_PutString("\n");
+    
+    cdist_l=cdist_l/rep;
+    return cdist_l;
 }
 
 /* Prelim comp tasks */
@@ -1315,18 +1340,21 @@ void firstNavToPucks(void) {
 
     // drive forwards, checking US every 5cm
     int i=0;
-    int curdist=0;
+    int curdist_r=0;
+    int curdist_l=0;
     
     while (i<4 && !blockflag) {
         UART_1_PutString("\nloop entered");
         beepXtimes(1);
         CyDelay(1000);
-        curdist=updateusxtimes(10);
+        curdist_r=updateusxtimes_r(10);
+        curdist_l=updateusxtimes_l(10);
         CyDelayUs(100);
-        if (curdist<=130) { // if block in next 15cm
+        if ((curdist_r<=130)||(curdist_l<=130)) { // if block in next 15cm
             UART_1_PutString("\nblock detected");
             beepXtimes(2);
-            //blockflag=1; // disabled this because it kept detecting block for no reason
+            blockflag=1; // disabled this because it kept detecting block for no reason
+            i=4;
         } else {
             driveXdist(50,1);
         }
@@ -1335,18 +1363,32 @@ void firstNavToPucks(void) {
     }
 
     // check blockflag; if set, switch to other function
-    if (blockflag) return;
+    if (blockflag) {
+        beepXtimes(3);
+        driveXdist(100,0); //drive backwards
+        turnXdegrees(87,1); //might be the wrong direction
+        adjust_dist_US(1,250,100); //might need another straight here
+        adjust_distances(120,50);
+        adjust_angle_US(adjspeed);
+        turnXdegrees(87,0); //turn right towards right wall
+        driveXdist(200,1);
+        adjust_dist_US(1,250,100);
+        adjust_distances(110,50);
+        adjust_angle_US(adjspeed);
+        turnXdegrees(87,0);
+    }
     // else; continue on with navigation to pucks i guess?
 
+    if(!blockflag){
     // reach corner B
     driveXdist(200,1);
     adjust_dist_US(1,250,100);
-    adjust_distances(120,50);
+    adjust_distances(110,50);
     adjust_angle_US(adjspeed);
     
     // turn to face row of pucks; must be aligned
     turnXdegrees(87,1);
-
+    }
     // drive back into wall? SLOWLY (then restore bwdspeed to OG value)
     //uint8 tmp=bwdspeed; bwdspeed=60; driveXdist(100,0); bwdspeed=tmp;
 
@@ -1397,7 +1439,7 @@ void collectPuck(void) {
             printNumUART(curdist);
         }
         
-        if(curdist<=75) { // when puck is reached; adjust distance value as necessary
+        if(curdist<=85) { // when puck is reached; adjust distance value as necessary
             dflag=1;
         }        
              
@@ -1420,6 +1462,8 @@ void collectPuck(void) {
     moveServo(sopen);
     liftClaw(40,0);
     CyDelay(100);
+    driveXdist(18,1);
+    CyDelay(100);
     moveServo(sclose);
     CyDelay(200);
     
@@ -1435,14 +1479,14 @@ void collectPuck(void) {
 void navToConstruction(void) {
     
     
-    
-    driveXdist(200,0);
+    if(!blockflag){
+    driveXdist(200,0); //reverse into wall
     CyDelay(200);
     
     liftClaw(30,0);
     CyDelay(300);
     
-    driveXdist(54,1);
+    driveXdist(45,1);
     CyDelay(200);
     
     turnXdegrees(90,1);
@@ -1453,12 +1497,40 @@ void navToConstruction(void) {
     adjust_distances(100,50);
     adjust_angle_US(adjspeed);
     adjust_angle_US(adjspeed);
-    
-    
-    
-    
-    
-
+    }
+    else if(blockflag){
+        driveXdist(200,0); //reverse into wall
+        CyDelay(200);
+        
+        liftClaw(30,0);
+        CyDelay(300);
+        
+        driveXdist(50,1);
+        CyDelay(200);
+        
+        turnXdegrees(90,0);
+        CyDelay(500);
+        
+        driveXdist(500,1);
+        CyDelay(500);
+        
+        turnXdegrees(90,1);
+        CyDelay(500);
+        driveXdist(400,1);
+        adjust_dist_US(1,100,100);
+        adjust_distances(100,50);
+        adjust_angle_US(adjspeed);
+        adjust_angle_US(adjspeed);
+        
+        turnXdegrees(90,0);
+        CyDelay(500);
+        driveXdist(400,1);
+        adjust_dist_US(1,100,100);
+        adjust_distances(100,50);
+        adjust_angle_US(adjspeed);
+        adjust_angle_US(adjspeed);
+        
+    }
 }
 
 void stackPuck(void) {}
@@ -1578,9 +1650,13 @@ int main(void)
     
     // code here
     firstNavToPucks();
+    beepXtimes(3);
     collectPuck();
     navToConstruction();
-    
+    beepXtimes(4);
+    driveXdist(8,1);
+    CyDelay(100);
+    moveServo(sopen);
     
     
 
