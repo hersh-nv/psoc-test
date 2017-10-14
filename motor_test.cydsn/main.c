@@ -29,9 +29,10 @@ todo:
 
 /* Defines for puck readings; calibrate when in new environment / lighting */
 // sensor 1 : inside claw
-uint16 RED[3] = {5000, 5010, 7530};
-uint16 GRE[3] = {6750, 5870, 5870};
-uint16 BLU[3] = {7900, 7400, 4750};
+uint16 RED[3] = {5000, 5010, 8180};
+uint16 GRE[3] = {6750, 5870, 6800};
+uint16 BLU[3] = {7900, 7400, 5498};
+uint16 NON[3] = {5200, 5300, 4888};
 
 // sensor 2 : on wall
 uint16 RED2[3] = {3000, 3000, 6300};
@@ -126,6 +127,24 @@ void printNumUART(int32 num) {
     for (i=distLen; i>0; i--) {
         UART_1_PutChar(strHex[i-1]);
     }
+}
+
+/* findMin in array used by getColour(), ripped from
+http://www.programmingsimplified.com/c/source-code/c-program-find-minimum-element-in-array*/
+int findMin(uint16 a[], int n) {
+  int c, min, index;
+ 
+  min = a[0];
+  index = 0;
+ 
+  for (c = 1; c < n; c++) {
+    if (a[c] < min) {
+       index = c;
+       min = a[c];
+    }
+  }
+ 
+  return index;
 }
 
 /* ISR for colour sensor */
@@ -726,11 +745,12 @@ int getColour(int sensor) {
     // sensor = 1 for claw colour sensor, 2 for side sensor
     
     // initialise
-    uint16 rCount=10000;
-    uint16 gCount=10000;
-    uint16 bCount=10000;
+    uint16 rCount=20000;
+    uint16 gCount=20000;
+    uint16 bCount=20000;
     uint16 rCountTmp, gCountTmp, bCountTmp;
-    uint16 rDist, gDist, bDist;
+    uint16 rDist, gDist, bDist, nDist;
+    uint16 dists[4];
     int temp, min;
     int rep = 12;
     
@@ -750,7 +770,7 @@ int getColour(int sensor) {
     // cycle through colours
     S2_Write(0); S3_Write(0); // RED
         for (int i=0;i<rep;i++) {
-            CyDelay(2);
+            CyDelay(3);
            // rCountTmp = (overflowCountCOL * periodLen) + capturedCount;
             rCountTmp = capturedCount;
             rCount = (rCount < rCountTmp) ? rCount : rCountTmp;
@@ -759,7 +779,7 @@ int getColour(int sensor) {
     
     S2_Write(1); S3_Write(1); // GREEN
         for (int i=0;i<rep;i++) {
-            CyDelay(2);
+            CyDelay(3);
            // gCountTmp = (overflowCountCOL * periodLen) + capturedCount;
             gCountTmp = capturedCount;
             gCount = (gCount < gCountTmp) ? gCount : gCountTmp;
@@ -768,7 +788,7 @@ int getColour(int sensor) {
         
     S2_Write(0); S3_Write(1); // BLUE
         for (int i=0;i<rep;i++) {
-            CyDelay(2);
+            CyDelay(3);
            // bCountTmp = (overflowCountCOL * periodLen) + capturedCount;
             bCountTmp = capturedCount;
             bCount = (bCount < bCountTmp) ? bCount : bCountTmp;
@@ -794,15 +814,19 @@ int getColour(int sensor) {
     
     // find L1 distance to each puck location
     if (sensor==1) {
-        rDist = abs(RED[0]-rCount) + abs(RED[1]-gCount) + abs(RED[2]-bCount);
+        rDist = abs(RED[2]-bCount);// + abs(RED[0]-rCount) + abs(RED[1]-gCount);
             UART_1_PutString("\nDist: R");
             printNumUART(rDist);
-        gDist = abs(GRE[0]-rCount) + abs(GRE[1]-gCount) + abs(GRE[2]-bCount);
+        gDist = abs(GRE[2]-bCount);// + abs(GRE[0]-rCount) + abs(GRE[1]-gCount);
             UART_1_PutString(" G");
             printNumUART(gDist);
-        bDist = abs(BLU[0]-rCount) + abs(BLU[1]-gCount) + abs(BLU[2]-bCount);
+        bDist = abs(BLU[2]-bCount);// + abs(BLU[0]-rCount) + abs(BLU[1]-gCount);
             UART_1_PutString(" B");
             printNumUART(bDist);
+        nDist = abs(NON[2]-bCount);// + abs(NON[0]-rCount) + abs(NON[1]-gCount);
+            UART_1_PutString(" N");
+            printNumUART(nDist);
+        dists[0]=nDist; dists[1]=rDist; dists[2]=gDist, dists[3]=bDist;
     } else if (sensor==2) {
         rDist = abs(RED2[0]-rCount) + abs(RED2[1]-gCount) + abs(RED2[2]-bCount);
             UART_1_PutString("\nDist: R");
@@ -813,30 +837,35 @@ int getColour(int sensor) {
         bDist = abs(BLU2[0]-rCount) + abs(BLU2[1]-gCount) + abs(BLU2[2]-bCount);
             UART_1_PutString(" B");
             printNumUART(bDist);
+        dists[0]=rDist+1; dists[1]=rDist; dists[2]=gDist, dists[3]=bDist;
     }
     
-    // which is lowest i guess?
-    temp = (rDist < gDist) ? rDist : gDist;
-    mindist = (bDist < temp) ? bDist : temp;
-    min = (bDist < temp) ? 3 : 2;
-    if (min==2) {
-        min = (rDist < gDist) ? 1 : 2;
-    }
+//    // which is lowest i guess?
+//    temp = (rDist < gDist) ? rDist : gDist;
+//    mindist = (bDist < temp) ? bDist : temp;
+//    min = (bDist < temp) ? 3 : 2;
+//    if (min==2) {
+//        min = (rDist < gDist) ? 1 : 2;
+//    }
+    
+    min=findMin(dists, 4);
     
     if (!SILENT) {
         UART_1_PutString("\n");
-        printNumUART(mindist);
+        printNumUART(dists[min]);
        // UART_1_PutString("\n Colour: ");
        // char cols[4]="0RGB";
        // char col=cols[min];
        // UART_1_PutString(&col); // not sure if this col printing works
     }
     
-    if (mindist<nonethres) {
-        return min;
-    } else {
-        return 0;
-    }
+//    if (mindist<nonethres) {
+//        return min;
+//    } else {
+//        return 0;
+//    }
+    
+    return min;
 }
 
 /* Moves servo to specified angle */
@@ -1787,7 +1816,8 @@ int main(void)
     CyDelay(2000);
     
     //** CODE HERE **//
-    
+    resetClaw();
+    moveServo(sclose);
     task4(2);
     
 //    collectPuck();
