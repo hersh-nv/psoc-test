@@ -1788,8 +1788,8 @@ int main(void)
     
     //** CODE HERE **//
     
-    firstNavToPucks();
-    beepXtimes(3);
+    task4(2);
+    
 //    collectPuck();
 //    navToConstruction();
 //    beepXtimes(4);
