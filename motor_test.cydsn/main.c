@@ -84,8 +84,8 @@ uint8 pcol=0u;
 int stackcount=0; // count of how many pucks have been stacked; max of 5
 
 // servo angles
-uint8 sopen=100;
-uint8 sclose=23;
+int16 sopen=90;
+int16 sclose=-85;
 
 // flag
 int alldone=0; // only set when all tasks have been completed; tells robot to exit stack loop
@@ -551,7 +551,7 @@ void adjust_distances(uint16 dist, uint8 speed){
         UART_1_PutString("  dirR  ");
         printNumUART(dirR);
     }
-    lspeed = speed;
+    lspeed = speed+2;
     rspeed = speed;
     PWM_1_WriteCompare1(lspeed);
     PWM_1_WriteCompare2(rspeed);
@@ -902,6 +902,93 @@ void liftClaw(int16 dist, int dir) {
     
 }
 
+/* 'Reset' claw to ground position using middle ultrasonic */
+// IMPORTANT: never use resetClaw while there's a puck in front at
+// claw distance; this'll pull the claw up indefinitely
+void resetClaw(void) {
+    
+    int done=0;
+    int16 dist;
+    int thres=100;
+    
+    // enable middle u/s
+    US_SIDEL_EN_Write(0);
+    US_M_EN_Write(1);
+    
+    
+    // get initial reading
+    dist=0;
+    for (int runavg=0; runavg<4; runavg++) {
+        updateUS();
+        CyDelay(5);
+        dist=dist+distance_mid;
+    }
+    dist=dist/4;
+    
+    UART_1_PutString("\ninitial dist ");
+    printNumUART(distance_mid);
+    
+    // if less than threshold, lift claw out of the way?
+    if (dist<thres) {
+        
+        UART_1_PutString("\nlifting");
+        
+        PWM_2_WriteCompare(pllspeed);
+        A5_Write(0);
+        A6_Write(1);
+        
+        while(!done) {
+        
+            dist=0;
+            for (int runavg=0; runavg<4; runavg++) {
+                updateUS();
+                CyDelay(5);
+                dist=dist+distance_mid;
+            }
+            dist=dist/4;
+            
+            if (dist>thres) {
+                CyDelay(1000); // wait a bit to get it fully out of the way
+                A5_Write(0);
+                A6_Write(0);
+                done=1;
+            }
+        }
+        
+        CyDelay(20);        
+    }
+    
+    // then drop claw
+    PWM_2_WriteCompare(60);
+    A5_Write(1);
+    A6_Write(0);
+    
+    done=0;
+    UART_1_PutString("\ndropping");
+    while(!done) {
+        
+        
+        
+        dist=0;
+        for (int runavg=0; runavg<4; runavg++) {
+            updateUS();
+            CyDelay(5);
+            dist=dist+distance_mid;
+        }
+        dist=dist/4;
+        
+        if (dist<thres) {
+            A5_Write(0);
+            A6_Write(0);
+            done=1;
+        }
+    }
+
+    // drop another 25mm to get to ground position
+    liftClaw(25,0);
+    
+}
+
 /* Flashes the PSoC LED (pin 2[1]) X number of times */
 void flashXtimes(int rep) {
     
@@ -980,6 +1067,26 @@ int updateusxtimes_l(int rep){
     
     cdist_l=cdist_l/rep;
     return cdist_l;
+}
+
+/* Positions the robot in x/y space in a corner */
+void checkCorner(int dist1, int dist2, int dir) {
+    // dist1 = distance to wall that the robot is facing
+    // dist2 = distance to adjacent wall of corner
+    // dir = direction to turn to face dist2 wall; 1=cw, 0=ccw;
+    
+    turnXdegrees(90,dir);
+    adjust_distances(dist2,50);
+    adjust_distances(dist2,40);
+
+    
+    turnXdegrees(90,!dir);
+    adjust_distances(dist1,50);
+    adjust_distances(dist1,40);
+
+    
+    CyDelay(10);
+    
 }
 
 /* Prelim comp tasks */
@@ -1368,13 +1475,13 @@ void firstNavToPucks(void) {
         driveXdist(100,0); //drive backwards
         turnXdegrees(87,1); //might be the wrong direction
         adjust_dist_US(1,250,100); //might need another straight here
-        adjust_distances(120,50);
         adjust_angle_US(adjspeed);
+        adjust_distances(120,50);
         turnXdegrees(87,0); //turn right towards right wall
         driveXdist(200,1);
         adjust_dist_US(1,250,100);
-        adjust_distances(110,50);
         adjust_angle_US(adjspeed);
+        adjust_distances(110,50);
         turnXdegrees(87,0);
     }
     // else; continue on with navigation to pucks i guess?
@@ -1387,7 +1494,7 @@ void firstNavToPucks(void) {
     adjust_angle_US(adjspeed);
     
     // turn to face row of pucks; must be aligned
-    turnXdegrees(87,1);
+    turnXdegrees(89,1);
     }
     // drive back into wall? SLOWLY (then restore bwdspeed to OG value)
     //uint8 tmp=bwdspeed; bwdspeed=60; driveXdist(100,0); bwdspeed=tmp;
@@ -1406,7 +1513,8 @@ void collectPuck(void) {
     rspeed = 65;
     PWM_1_WriteCompare1(lspeed);
     PWM_1_WriteCompare2(rspeed);
-
+    
+    resetClaw();
     liftClaw(40,1);
     CyDelay(100);
 
@@ -1424,12 +1532,11 @@ void collectPuck(void) {
         ccount=0;
         curdist=0;
         while (ccount<5){
-  
-        updateUS();
-
-        curdist=curdist+distance_mid;
-        CyDelay(10);
-        ccount++;
+            updateUS();
+            CyDelay(5);
+            curdist=curdist+distance_mid;
+            CyDelay(10);
+            ccount++;
         }
         
         curdist=curdist/5;
@@ -1458,18 +1565,17 @@ void collectPuck(void) {
     US_M_EN_Write(0);
     US_SIDEL_EN_Write(1);
     
-    // open claw, drop then close
+    // open claw, drop, drive forward to puck then close
     moveServo(sopen);
     liftClaw(40,0);
-    CyDelay(100);
     driveXdist(18,1);
-    CyDelay(100);
     moveServo(sclose);
     CyDelay(200);
     
     // determine colour
     int col = getColour(1);
     beepXtimes(col);
+    CyDelay(400);
     
     // lift
     liftClaw(40,1);
@@ -1533,7 +1639,34 @@ void navToConstruction(void) {
     }
 }
 
-void stackPuck(void) {}
+void stackPuck(void) {
+    
+    // lift claw to correct height based on number of 
+    // currently stacked pucks
+    //resetClaw();                // go back to ground then
+    
+    int heights[5]={0,25,45,60,80};
+//    adjust_distances(150,60);
+//    adjust_distances(150,60);
+    
+    checkCorner(150,30,1);
+    
+    
+    //liftClaw(23*stackcount,1);  // lift up to top of stack
+    liftClaw(heights[stackcount],1);
+    
+    CyDelay(100);
+    uint8 temp=fwdspeed; fwdspeed=75; driveXdist(100,1); fwdspeed=temp;
+    
+    // gently open
+    moveServo(sopen);
+    CyDelay(1000);
+    
+    // move back out
+    driveXdist(100,0);
+    //resetClaw();
+
+}
 
 void navToPucks(void) {
     /* Uses puckcount, prow and pcol to align robot with the next puck to collect */
@@ -1545,7 +1678,7 @@ void navToPucks(void) {
     // then together prow and pcol are used by this function to tell robot where to go next
 }
 
-void disposePuck(int col) {
+void storePuck(int col) {
 
     driveXdist(50,0);
     turnXdegrees(20*col,1);
@@ -1572,20 +1705,25 @@ void allTasks(void) {
             
             int col=getColour(1);
             beepXtimes(col);
-
+        
+            navToConstruction();
+            
             if (col==SEQ[stackcount]) { // if colour matches, stack it then increment stackcount
-                navToConstruction();
                 stackPuck();
                 stackcount++;
-                if (stackcount<5) navToPucks();
+                puckcount++;
             } else { // else move it elsewhere and increment puckcount
-                disposePuck(col);
+                storePuck(col);
                 puckcount++;
 
                 // reposition to collect next puck
             }
 
-            if (stackcount==5) alldone=1;
+            if (stackcount==5) {
+                alldone=1;
+            } else {
+                navToPucks();
+            }
 
         }
 
@@ -1648,25 +1786,39 @@ int main(void)
     soundPiezo(200);
     CyDelay(2000);
     
-    // code here
+    //** CODE HERE **//
+    
     firstNavToPucks();
     beepXtimes(3);
-    collectPuck();
-    navToConstruction();
-    beepXtimes(4);
-    driveXdist(8,1);
-    CyDelay(100);
-    moveServo(sopen);
+//    collectPuck();
+//    navToConstruction();
+//    beepXtimes(4);
+//    stackPuck();
+//    
+    
+//    resetClaw();
+//    
+//    for (int i=0;i<5;i++) {
+//        moveServo(sopen);
+//        CyDelay(5000);
+//        
+//        moveServo(sclose);
+//        CyDelay(2000);
+//        
+//        stackPuck();
+//        stackcount++;
+//        
+//        resetClaw();
+//    }
     
     
-
     
-    
+    //checkCorner(100,100,1);
     
     for(;;)
     {
         
-      
+        
     }
     
 }
