@@ -8,6 +8,7 @@ todo:
 
 #include "project.h"
 #include "stdlib.h"
+#include "math.h"
 
 /* Defines for TRUE and FALSE */
 #ifndef TRUE
@@ -24,15 +25,16 @@ todo:
 // defines for unit-conversion coefficients
 #define DIST_COEFF 21
 #define ROTATE_COEFF 39
-#define PULLEY_DIST_COEFF 50 // TO BE TESTED
+#define PULLEY_DIST_COEFF 48 // TO BE TESTED
 
 
 /* Defines for puck readings; calibrate when in new environment / lighting */
 // sensor 1 : inside claw
-uint16 RED[3] = {5000, 5010, 8180};
-uint16 GRE[3] = {6750, 5870, 6800};
-uint16 BLU[3] = {7900, 7400, 5498};
-uint16 NON[3] = {5200, 5300, 4888};
+uint16 RED[4] = {5000, 5010, 8045, 5560}; // R/N (B sensor) = 1.7
+uint16 GRE[4] = {6750, 6770, 6860, 7540}; // G/N (B sensor) = 1.44
+uint16 BLU[4] = {7900, 8650, 5650, 7100}; // B/N (B sensor) = 1.19
+uint16 NON[4] = {4820, 5300, 4723, 4810};
+float NONf[4] = {4820, 5300, 4723, 4810};
 
 // sensor 2 : on wall
 uint16 RED2[3] = {3000, 3000, 6300};
@@ -83,9 +85,13 @@ uint8 pcol=0u;
 
 // stacking
 int stackcount=0; // count of how many pucks have been stacked; max of 5
+int heights[5]={0,24,40,56,71}; // made this global so stackPuck() doesnt have to redefine it each time
+
+// storage count [r,g,b]
+int storage[3]={0,0,0};
 
 // servo angles
-int16 sopen=90;
+int16 sopen=45;
 int16 sclose=-85;
 
 // flag
@@ -131,7 +137,7 @@ void printNumUART(int32 num) {
 
 /* findMin in array used by getColour(), ripped from
 http://www.programmingsimplified.com/c/source-code/c-program-find-minimum-element-in-array*/
-int findMin(uint16 a[], int n) {
+int findMin(float a[], int n) {
   int c, min, index;
  
   min = a[0];
@@ -262,6 +268,36 @@ CY_ISR(Timer_ISR_HandlerM){
     distance_mid=(65535-uscount3)/5.8;
     
     
+}
+
+/* Flashes the PSoC LED (pin 2[1]) X number of times */
+void flashXtimes(int rep) {
+    
+    for (int i=0;i<rep;i++) {
+        LED1_Write(1);
+        CyDelay(100);
+        LED1_Write(0);
+        CyDelay(100);
+    }
+    
+}
+
+/* Sound the piezo for X milliseconds */
+void soundPiezo(int msec) {
+    
+    PIEZO_Write(1);
+    CyDelay(msec);
+    PIEZO_Write(0);
+    
+}
+
+/* Beep the piezo X times */
+void beepXtimes(int rep) {
+    
+    for (int i=0; i<rep; i++) {
+        soundPiezo(100);
+        CyDelay(100);
+    }
 }
 
 /* Reads the quadrature decoder connected to the shaft encoder and returns the distance as a int32
@@ -429,7 +465,7 @@ void turnXdegrees(int16 Xdeg, int dir) {
     // poll SEs every 50ms, stop when both wheels have rotated enough
     while ((!Ldone) || (!Rdone)) {
 
-        CyDelay(10);
+        //CyDelay(10);
 
         // get relative distance from both wheels
         if (!Ldone) {
@@ -748,7 +784,8 @@ int getColour(int sensor) {
     uint16 rCount=20000;
     uint16 gCount=20000;
     uint16 bCount=20000;
-    uint16 rCountTmp, gCountTmp, bCountTmp;
+    uint16 nCount=20000;
+    uint16 rCountTmp, gCountTmp, bCountTmp, nCountTmp;
     uint16 rDist, gDist, bDist, nDist;
     uint16 dists[4];
     int temp, min;
@@ -796,7 +833,14 @@ int getColour(int sensor) {
         overflowCountCOL = 0u;
         
     S2_Write(0); S3_Write(0);
-    
+        for (int i=0;i<rep;i++) {
+            CyDelay(3);
+           // bCountTmp = (overflowCountCOL * periodLen) + capturedCount;
+            nCountTmp = capturedCount;
+            nCount = (nCount < nCountTmp) ? nCount : nCountTmp;
+        }
+        overflowCountCOL = 0u;
+        
     // disable output
     COL1EN_Write(0);
     COL2EN_Write(0);
@@ -809,6 +853,8 @@ int getColour(int sensor) {
         printNumUART(gCount);
         UART_1_PutString(" B");
         printNumUART(bCount);
+        UART_1_PutString(" N");
+        printNumUART(nCount);
     }
     
     
@@ -840,30 +886,153 @@ int getColour(int sensor) {
         dists[0]=rDist+1; dists[1]=rDist; dists[2]=gDist, dists[3]=bDist;
     }
     
-//    // which is lowest i guess?
-//    temp = (rDist < gDist) ? rDist : gDist;
-//    mindist = (bDist < temp) ? bDist : temp;
-//    min = (bDist < temp) ? 3 : 2;
-//    if (min==2) {
-//        min = (rDist < gDist) ? 1 : 2;
-//    }
+    min=findMin(dists, 4);
+    
+    if (!SILENT) {
+        UART_1_PutString("\n");
+        printNumUART(dists[min]);
+        UART_1_PutString("\n Colour: ");
+        if (min==0) {
+            UART_1_PutString("None");
+        } else if (min==1) {
+            UART_1_PutString("R ");
+        } else if (min==2) {
+            UART_1_PutString("G ");
+        } else if (min==3) {
+            UART_1_PutString("B ");
+        }
+    }
+    
+    return min;
+}
+
+/* Rewrote colour sensor algorithm in a way that should be robust to ambient light
+    Just make sure calibrateSensor() is used in a new environment over no puck
+    calibrateSensor() is only needed/used for getColourv2
+    also, getColourv2 is only needed/possible for front sensor; side can still use v1*/
+void calibrateSensor(void) {
+    
+    float bCount=20000;
+    uint16 bCountTmp;
+    int rep=12;
+    
+    COL2EN_Write(0);
+    COL1EN_Write(1);
+    
+    S2_Write(0); S3_Write(1); // BLUE
+        for (int i=0;i<rep;i++) {
+            CyDelay(5);
+            bCountTmp = capturedCount;
+            bCount = (float) (bCount < bCountTmp) ? bCount : bCountTmp;
+        }
+        overflowCountCOL = 0u;
+        
+    NONf[2]=bCount;
+    
+    UART_1_PutString("\n\nSensor calibration value: ");
+    printNumUART(bCount);
+    
+    // four fast beeps indicate colour calibration
+    for (int i=0;i<4;i++) {
+        soundPiezo(50);
+        CyDelay(50);
+    }
+    
+}
+int getColourv2(int sensor) {
+    /* INPUTS */
+    // sensor = 1 for claw colour sensor, 2 for side sensor
+    
+    // initialise
+    float bCount=20000;
+    uint16 bCountTmp;
+    float rDist, gDist, bDist, nDist;
+    float dists[4];
+    int temp, min;
+    int rep = 12;
+    float ratio;
+    
+    uint16 nonethres; // largest size of mindist before sensor decides 'none' colour
+   
+    // enable output
+    if (sensor==1) {
+        COL2EN_Write(0);
+        COL1EN_Write(1);
+        nonethres=3500;
+    } else if (sensor==2) {
+        COL1EN_Write(0);
+        COL2EN_Write(1);
+        nonethres=20000;
+    }
+    
+    
+    S2_Write(0); S3_Write(1); // BLUE
+        for (int i=0;i<rep;i++) {
+            CyDelay(5);
+            bCountTmp = capturedCount;
+            bCount = (float) (bCount < bCountTmp) ? bCount : bCountTmp;
+        }
+        overflowCountCOL = 0u;
+        
+    // disable output
+    COL1EN_Write(0);
+    COL2EN_Write(0);
+    
+    // print measures
+    if (!SILENT) {
+        UART_1_PutString("\n\nSens: B");
+        printNumUART(bCount);
+    }
+    
+    // calculate bCount/bCount[NON] ratio
+    ratio = (float) (bCount)/(NONf[2]);
+    UART_1_PutString("\nRatio ");
+    printNumUART(ratio*100);
+    
+    // find ratio's closest match
+    if (sensor==1) {
+        rDist = 100.0*fabs(1.7-ratio);
+            UART_1_PutString("\nDist: R");
+            printNumUART(rDist);
+        gDist = 100.0*fabs(1.44-ratio);
+            UART_1_PutString(" G");
+            printNumUART(gDist);
+        bDist = 100.0*fabs(1.19-ratio);
+            UART_1_PutString(" B");
+            printNumUART(bDist);
+        nDist = 100.0*fabs(1-ratio);
+            UART_1_PutString(" N");
+            printNumUART(nDist);
+        dists[0]=nDist; dists[1]=rDist; dists[2]=gDist, dists[3]=bDist;
+//    } else if (sensor==2) {
+//        rDist = abs(RED2[0]-rCount) + abs(RED2[1]-gCount) + abs(RED2[2]-bCount);
+//            UART_1_PutString("\nDist: R");
+//            printNumUART(rDist);
+//        gDist = abs(GRE2[0]-rCount) + abs(GRE2[1]-gCount) + abs(GRE2[2]-bCount);
+//            UART_1_PutString(" G");
+//            printNumUART(gDist);
+//        bDist = abs(BLU2[0]-rCount) + abs(BLU2[1]-gCount) + abs(BLU2[2]-bCount);
+//            UART_1_PutString(" B");
+//            printNumUART(bDist);
+//        dists[0]=rDist+1; dists[1]=rDist; dists[2]=gDist, dists[3]=bDist;
+    }
     
     min=findMin(dists, 4);
     
     if (!SILENT) {
         UART_1_PutString("\n");
         printNumUART(dists[min]);
-       // UART_1_PutString("\n Colour: ");
-       // char cols[4]="0RGB";
-       // char col=cols[min];
-       // UART_1_PutString(&col); // not sure if this col printing works
+        UART_1_PutString("\n Colour: ");
+        if (min==0) {
+            UART_1_PutString("None");
+        } else if (min==1) {
+            UART_1_PutString("R ");
+        } else if (min==2) {
+            UART_1_PutString("G ");
+        } else if (min==3) {
+            UART_1_PutString("B ");
+        }
     }
-    
-//    if (mindist<nonethres) {
-//        return min;
-//    } else {
-//        return 0;
-//    }
     
     return min;
 }
@@ -911,12 +1080,12 @@ void liftClaw(int16 dist, int dir) {
     // poll SEs every 20ms, when both shaft encoders read X distance, stop
     while (!done) {
 
-        CyDelay(5); // the smaller this value, the more often the SEs are polled and hence the more accurate the distance
+//        CyDelay(5); // the smaller this value, the more often the SEs are polled and hence the more accurate the distance
         
         // get relative pulley travel distance
         pdist = (getDistance(2,psdist)); 
         
-        if (!SILENT) {
+        if (!DRIVESILENT) {
             UART_1_PutString("\nPdist = ");
             printNumUART(pdist);
         }
@@ -928,6 +1097,8 @@ void liftClaw(int16 dist, int dir) {
             done=1;
         }
     } 
+    
+    CyDelay(10);
     
 }
 
@@ -977,7 +1148,7 @@ void resetClaw(void) {
             dist=dist/4;
             
             if (dist>thres) {
-                CyDelay(1000); // wait a bit to get it fully out of the way
+                CyDelay(500); // wait a bit to get it fully out of the way
                 A5_Write(0);
                 A6_Write(0);
                 done=1;
@@ -1014,38 +1185,8 @@ void resetClaw(void) {
     }
 
     // drop another 25mm to get to ground position
-    liftClaw(25,0);
+    liftClaw(20,0);
     
-}
-
-/* Flashes the PSoC LED (pin 2[1]) X number of times */
-void flashXtimes(int rep) {
-    
-    for (int i=0;i<rep;i++) {
-        LED1_Write(1);
-        CyDelay(100);
-        LED1_Write(0);
-        CyDelay(100);
-    }
-    
-}
-
-/* Sound the piezo for X milliseconds */
-void soundPiezo(int msec) {
-    
-    PIEZO_Write(1);
-    CyDelay(msec);
-    PIEZO_Write(0);
-    
-}
-
-/* Beep the piezo X times */
-void beepXtimes(int rep) {
-    
-    for (int i=0; i<rep; i++) {
-        soundPiezo(100);
-        CyDelay(100);
-    }
 }
 
 int updateusxtimes_r(int rep){
@@ -1105,13 +1246,13 @@ void checkCorner(int dist1, int dist2, int dir) {
     // dir = direction to turn to face dist2 wall; 1=cw, 0=ccw;
     
     turnXdegrees(90,dir);
+    adjust_distances(dist2,60);
     adjust_distances(dist2,50);
-    adjust_distances(dist2,40);
 
     
     turnXdegrees(90,!dir);
+    adjust_distances(dist1,60);
     adjust_distances(dist1,50);
-    adjust_distances(dist1,40);
 
     
     CyDelay(10);
@@ -1530,8 +1671,9 @@ void firstNavToPucks(void) {
 
 }
 
-/* Drive until middle ultrasonic detects puck then pick it up*/
-void collectPuck(void) {
+/* Drive until middle ultrasonic detects puck then pick it up
+   Returns the colour of the puck [1/2/3]=[r/g/b] as int */
+int collectPuck(void) {
     
     int dflag=0;
     uint8 lspeed, rspeed;
@@ -1575,7 +1717,7 @@ void collectPuck(void) {
             printNumUART(curdist);
         }
         
-        if(curdist<=85) { // when puck is reached; adjust distance value as necessary
+        if(curdist<=105) { // when puck is reached; adjust distance value as necessary
             dflag=1;
         }        
              
@@ -1606,8 +1748,10 @@ void collectPuck(void) {
     beepXtimes(col);
     CyDelay(400);
     
-    // lift
-    liftClaw(40,1);
+    // lift a little bit so puck doesn't drag
+    liftClaw(10,1);
+    
+    return col;
         
 }
 
@@ -1616,24 +1760,23 @@ void navToConstruction(void) {
     
     if(!blockflag){
     driveXdist(200,0); //reverse into wall
-    CyDelay(200);
     
-    liftClaw(30,0);
-    CyDelay(300);
-    
-    driveXdist(45,1);
-    CyDelay(200);
-    
+//    liftClaw(30,0);
+//    CyDelay(300);
+//    
+//    driveXdist(45,1);
+//    CyDelay(200);
+//    
     turnXdegrees(90,1);
     CyDelay(500);
 
-    driveXdist(400,1);
-    adjust_dist_US(1,100,100);
-    adjust_distances(100,50);
-    adjust_angle_US(adjspeed);
-    adjust_angle_US(adjspeed);
-    }
-    else if(blockflag){
+    driveXdist(500,1);
+//    adjust_dist_US(1,100,100);
+//    adjust_angle_US(adjspeed);
+//    adjust_angle_US(adjspeed);
+//    adjust_distances(100,50);
+    
+    } else {
         driveXdist(200,0); //reverse into wall
         CyDelay(200);
         
@@ -1666,6 +1809,10 @@ void navToConstruction(void) {
         adjust_angle_US(adjspeed);
         
     }
+    
+    checkCorner(150,30,1);
+    resetClaw();
+    
 }
 
 void stackPuck(void) {
@@ -1674,11 +1821,10 @@ void stackPuck(void) {
     // currently stacked pucks
     //resetClaw();                // go back to ground then
     
-    int heights[5]={0,25,45,60,80};
 //    adjust_distances(150,60);
 //    adjust_distances(150,60);
     
-    checkCorner(150,30,1);
+//    checkCorner(150,30,1); // this command is at the end of navToConstruction now
     
     
     //liftClaw(23*stackcount,1);  // lift up to top of stack
@@ -1687,13 +1833,13 @@ void stackPuck(void) {
     CyDelay(100);
     uint8 temp=fwdspeed; fwdspeed=75; driveXdist(100,1); fwdspeed=temp;
     
-    // gently open
+    // open
     moveServo(sopen);
     CyDelay(1000);
     
     // move back out
     driveXdist(100,0);
-    //resetClaw();
+    resetClaw();
 
 }
 
@@ -1705,38 +1851,85 @@ void navToPucks(void) {
     //      
     // basically puckcount used to calculate prow and pcol based on hardcoded rules,
     // then together prow and pcol are used by this function to tell robot where to go next
+    
+    // calculate puckrow (and puckcol?)
+    prow=puckcount%3; // collect from the first three rows
+    
+    turnXdegrees(180,1);
+    driveXdist(500,1);
+    beepXtimes(1);
+    adjust_dist_US(1,250,100);
+    beepXtimes(2);
+    checkCorner(110-50*prow,60,0);
+    
+    turnXdegrees(90,1);
+    
 }
 
 void storePuck(int col) {
 
-    driveXdist(50,0);
-    turnXdegrees(20*col,1);
-    liftClaw(20,0);
-    moveServo(90);
-    CyDelay(300);
-    liftClaw(20,1);
-    moveServo(0);
-    turnXdegrees(20*col,0);
+    turnXdegrees(30+col*30,0);
+    
+    liftClaw(heights[storage[col-1]],1);
+    driveXdist(140,1);
 
+    moveServo(sopen);
+    storage[col-1]++;
+    CyDelay(100);
+    
+    driveXdist(140,0);
+    resetClaw();
+    turnXdegrees(30+col*30,1);
+    
+//    driveXdist(50,0);
+//    turnXdegrees(20*col,1);
+//    liftClaw(20,0);
+//    moveServo(90);
+//    CyDelay(300);
+//    liftClaw(20,1);
+//    moveServo(0);
+//    turnXdegrees(20*col,0);
+
+}
+
+// retrieve puck from storage
+void unstorePuck(int col) {
+    
+    turnXdegrees(30+col*30,0);
+    moveServo(sopen);
+    CyDelay(100);
+    
+    liftClaw(heights[storage[col-1]],1);
+    driveXdist(140,1);
+    moveServo(sclose);
+    CyDelay(400);
+    liftClaw(6,1);
+    
+    driveXdist(140,0);
+    resetClaw();
+    turnXdegrees(30+col*30,1);
+    
+    storage[col-1]--;
 }
 
 /* Full task here */
 void allTasks(void) {
 
+    int col;
+    
     readWallPucks();
     firstNavToPucks();
+    col=collectPuck();
 
     if (!blockflag) {
+        
         // if path isnt blocked take regular path
+        navToConstruction();
+        
+        // stack pucks, then retrieve more either from array or storage;
+        // this loop continues for the next four pucks
         while (!alldone) {
 
-            collectPuck();
-            
-            int col=getColour(1);
-            beepXtimes(col);
-        
-            navToConstruction();
-            
             if (col==SEQ[stackcount]) { // if colour matches, stack it then increment stackcount
                 stackPuck();
                 stackcount++;
@@ -1744,16 +1937,17 @@ void allTasks(void) {
             } else { // else move it elsewhere and increment puckcount
                 storePuck(col);
                 puckcount++;
-
-                // reposition to collect next puck
             }
 
-            if (stackcount==5) {
+            if (stackcount==5) { // if finished, exit loop
                 alldone=1;
+            } else if (storage[SEQ[stackcount]-1]>0) { // if next colour is already stored, retrieve it
+                unstorePuck(col);
             } else {
                 navToPucks();
+                col=collectPuck();
+                navToConstruction();
             }
-
         }
 
     } else {
@@ -1772,8 +1966,7 @@ void allTasks(void) {
 
 /* ===================================================================== */
 
-int main(void)
-{   
+int main(void) {   
     
     CyGlobalIntEnable; /* Enable global interrupts. */
     
@@ -1815,16 +2008,28 @@ int main(void)
     soundPiezo(200);
     CyDelay(2000);
     
-    //** CODE HERE **//
-    resetClaw();
-    moveServo(sclose);
-    task4(2);
+    //** CODE HERE **/
+//    resetClaw(); CyDelay(2000);
+//    moveServo(sclose); CyDelay(500);
+//    liftClaw(heights[4],1);
     
-//    collectPuck();
-//    navToConstruction();
-//    beepXtimes(4);
-//    stackPuck();
-//    
+//    resetClaw(); CyDelay(2000);
+//    for (int i=0;i<6;i++) {
+//        moveServo(sclose); CyDelay(200);
+//        col=getColour(1);
+//        beepXtimes(col);
+//        
+//        checkCorner(150,80,1);
+//        
+//        CyDelay(1000);
+//        
+//        storePuck(col);
+//        
+//        moveServo(sopen);
+//        CyDelay(4000);
+//    }
+    
+    
     
 //    resetClaw();
 //    
@@ -1840,14 +2045,21 @@ int main(void)
 //        
 //        resetClaw();
 //    }
-    
-    
-    
-    //checkCorner(100,100,1);
+    moveServo(sclose); CyDelay(500);
+    calibrateSensor();
+    moveServo(sopen); CyDelay(4000);
     
     for(;;)
     {
+        moveServo(sclose); CyDelay(500);
         
+        col=getColourv2(1);
+        beepXtimes(col);
+        
+        CyDelay(500);
+        
+        moveServo(sopen);
+        CyDelay(4000);
         
     }
     
