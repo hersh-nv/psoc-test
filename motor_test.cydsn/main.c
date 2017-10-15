@@ -92,7 +92,7 @@ int storage[3]={0,0,0};
 
 // servo angles
 int16 sopen=45;
-int16 sclose=-85;
+int16 sclose=-81;
 
 // flag
 int alldone=0; // only set when all tasks have been completed; tells robot to exit stack loop
@@ -774,6 +774,23 @@ void adjust_angle_US(uint8 speed){
     
 };
 
+/* Moves servo to specified angle */
+void moveServo(int16 angle) {
+    /* INPUTS
+    angle = value from -90 to 90 (degrees)
+    */
+    
+    uint16 duty;
+    
+    duty = 4500 + 16*angle; // range from 3k to 6k duty cycle
+                            // pwm period = 60k, 20ms so this corresponds 
+                            // 1ms to 2ms range
+    PWM_SERVO_WriteCompare(duty);
+    
+    UART_1_PutString("\nduty  ");
+    printNumUART(duty);
+}
+
 /* Polls colour sensor several times to get a reliable colour reading, and returns a integer value
 corresponding with the closest colour reading. Outputs 0 if no colour is strongly detected */
 int getColour(int sensor) {
@@ -919,6 +936,8 @@ void calibrateSensor(void) {
     COL2EN_Write(0);
     COL1EN_Write(1);
     
+    moveServo(sclose); CyDelay(500);
+    
     S2_Write(0); S3_Write(1); // BLUE
         for (int i=0;i<rep;i++) {
             CyDelay(5);
@@ -997,7 +1016,7 @@ int getColourv2(int sensor) {
         gDist = 100.0*fabs(1.44-ratio);
             UART_1_PutString(" G");
             printNumUART(gDist);
-        bDist = 100.0*fabs(1.19-ratio);
+        bDist = 100.0*fabs(1.10-ratio);
             UART_1_PutString(" B");
             printNumUART(bDist);
         nDist = 100.0*fabs(1-ratio);
@@ -1035,23 +1054,6 @@ int getColourv2(int sensor) {
     }
     
     return min;
-}
-
-/* Moves servo to specified angle */
-void moveServo(int16 angle) {
-    /* INPUTS
-    angle = value from -90 to 90 (degrees)
-    */
-    
-    uint16 duty;
-    
-    duty = 4500 + 16*angle; // range from 3k to 6k duty cycle
-                            // pwm period = 60k, 20ms so this corresponds 
-                            // 1ms to 2ms range
-    PWM_SERVO_WriteCompare(duty);
-    
-    UART_1_PutString("\nduty  ");
-    printNumUART(duty);
 }
 
 /* Lift or drop claw using pulley, in dist in mm */
@@ -1574,7 +1576,9 @@ void readWallPucks(void) {
         SEQ[4-i]=col; // reads top->bottom so fill SEQ backwards 
         
         // drive to next colour
-        driveXdist(56,1);
+        if (i<4) {
+            driveXdist(56,1);
+        }
         
         // wait
         CyDelay(1000);
@@ -1595,8 +1599,109 @@ void readWallPucks(void) {
     // turn 180 to get ready for next task
     turnXdegrees(30,1);
     driveXdist(150,0);
-    turnXdegrees(150,1);
+    turnXdegrees(30,0);
+//    turnXdegrees(150,1);
+//    CyDelay(500);
+    
+    // go to side wall and get ready to drive back while checking for block
+    
+    driveXdist(200,1);
+    adjust_distances(20,120);
+    adjust_distances(20,50);
+    
+    
+    
+}
+
+/* Drive backward along arena checking for puck; sets blockflag if necessary */
+void checkForBlock(void) {
+
+    driveXdist(400,0); // drive first half without checking
+    beepXtimes(1);     // signal that the blockcheck is about to start
     CyDelay(500);
+    
+    // then implement driveXdist(300,0) with added side-left US check
+    // first enable sideUS
+    US_M_EN_Write(0);
+    US_SIDEL_EN_Write(1);
+    
+    int32 Xdist=300;
+    uint8 lspeed, rspeed;
+    int32 ldist = 0;
+    int32 rdist = 0;
+    int32 lsdist,rsdist;
+    //int32 deltDist;
+    
+    int32 XdistSE = Xdist*DIST_COEFF; // Xdist converted to QuadDec counter value
+    if (!SILENT) {
+        UART_1_PutString("\nMoving ");
+        printNumUART(Xdist);
+        UART_1_PutString(" cm = ");
+        printNumUART(XdistSE);
+        UART_1_PutString(" QuadDec count");
+    }
+    
+    int Ldone=0;
+    int Rdone=0;
+    
+    // start shaft encoders
+    lsdist = (getDistance(1,0)); // get left starting dist
+    rsdist = (getDistance(0,0)); // get right starting dist
+    
+    // set speed
+    lspeed = bwdspeed;
+    rspeed = bwdspeed;
+    PWM_1_WriteCompare1(lspeed);
+    PWM_1_WriteCompare2(rspeed);
+    
+    // set directions
+    A3_Write(1); // R
+    A4_Write(0);
+    // CyDelay(12); // COMPENSATION DELAY; ADJUST AS NECESSARY
+    A1_Write(1); // L
+    A2_Write(0);
+
+    
+    // poll SEs every 20ms, when both shaft encoders read X distance, stop
+    while ((!Ldone)||(!Rdone)) {
+        
+        // get relative distance from both wheels
+        ldist = (getDistance(1,lsdist)); //left
+        rdist = (getDistance(0,rsdist)); //right
+        
+        // get side-left US reading
+        updateUS();
+        CyDelay(5);
+        if (distance_mid<150) {     // if block detected in next 20cm then set blockflag?
+            LED1_Write(1);
+            PIEZO_Write(1);
+            blockflag=1;
+        } else {
+            LED1_Write(0);
+            PIEZO_Write(0);
+        }
+        
+        if (!DRIVESILENT) {
+            UART_1_PutString("\nLdist = ");
+            printNumUART(ldist);
+            UART_1_PutString("  Rdist = ");
+            printNumUART(rdist);
+        }
+        
+        /* When either wheel reaches target distance, stop it */
+        if (abs(ldist)>=XdistSE) {
+            A1_Write(0);
+            A2_Write(0);
+            Ldone=1;
+        }
+        if (abs(rdist)>=XdistSE) {
+            A3_Write(0);
+            A4_Write(0);
+            Rdone=1;
+        }
+    }
+
+    CyDelay(10);
     
 }
 
@@ -1604,7 +1709,10 @@ void readWallPucks(void) {
 void firstNavToPucks(void) {
     
     // drive to corner A
-    driveXdist(400,1);
+//    driveXdist(400,1);
+    checkForBlock();
+    turnXdegrees(180,0);
+    
     adjust_dist_US(1,100,100);
     adjust_distances(100,50);
     adjust_angle_US(adjspeed);
@@ -1749,7 +1857,7 @@ int collectPuck(void) {
     CyDelay(400);
     
     // lift a little bit so puck doesn't drag
-    liftClaw(10,1);
+    liftClaw(5,1);
     
     return col;
         
@@ -1759,7 +1867,7 @@ void navToConstruction(void) {
     
     
     if(!blockflag){
-    driveXdist(200,0); //reverse into wall
+    driveXdist(200+60*pcol,0); //reverse into wall
     
 //    liftClaw(30,0);
 //    CyDelay(300);
@@ -1767,10 +1875,17 @@ void navToConstruction(void) {
 //    driveXdist(45,1);
 //    CyDelay(200);
 //    
-    turnXdegrees(90,1);
+    
+    if (prow<2) {
+        turnXdegrees(90,1);
+    } else {
+        turnXdegrees(90,0);
+        driveXdist(100,0);
+        turnXdegrees(180,1);
+    }
     CyDelay(500);
 
-    driveXdist(500,1);
+    driveXdist(500+60*prow,1);
 //    adjust_dist_US(1,100,100);
 //    adjust_angle_US(adjspeed);
 //    adjust_angle_US(adjspeed);
@@ -1819,15 +1934,6 @@ void stackPuck(void) {
     
     // lift claw to correct height based on number of 
     // currently stacked pucks
-    //resetClaw();                // go back to ground then
-    
-//    adjust_distances(150,60);
-//    adjust_distances(150,60);
-    
-//    checkCorner(150,30,1); // this command is at the end of navToConstruction now
-    
-    
-    //liftClaw(23*stackcount,1);  // lift up to top of stack
     liftClaw(heights[stackcount],1);
     
     CyDelay(100);
@@ -1854,6 +1960,7 @@ void navToPucks(void) {
     
     // calculate puckrow (and puckcol?)
     prow=puckcount%3; // collect from the first three rows
+    pcol=puckcount/3;
     
     turnXdegrees(180,1);
     driveXdist(500,1);
@@ -1895,7 +2002,7 @@ void storePuck(int col) {
 // retrieve puck from storage
 void unstorePuck(int col) {
     
-    turnXdegrees(30+col*30,0);
+    turnXdegrees(33+col*30,0);
     moveServo(sopen);
     CyDelay(100);
     
@@ -1907,7 +2014,9 @@ void unstorePuck(int col) {
     
     driveXdist(140,0);
     resetClaw();
-    turnXdegrees(30+col*30,1);
+    turnXdegrees(33+col*30,1);
+    
+    checkCorner(150,80,1);
     
     storage[col-1]--;
 }
@@ -2009,24 +2118,20 @@ int main(void) {
     CyDelay(2000);
     
     //** CODE HERE **/
-//    resetClaw(); CyDelay(2000);
-//    moveServo(sclose); CyDelay(500);
-//    liftClaw(heights[4],1);
     
-//    resetClaw(); CyDelay(2000);
+    resetClaw(); CyDelay(1000);
+    calibrateSensor();
+    checkCorner(150,80,1); CyDelay(500);
+    unstorePuck(1); stackPuck();
+    unstorePuck(2); stackPuck();
+    
 //    for (int i=0;i<6;i++) {
+//        moveServo(sopen); CyDelay(4000);
 //        moveServo(sclose); CyDelay(200);
-//        col=getColour(1);
+//        col=getColourv2(1);
 //        beepXtimes(col);
-//        
-//        checkCorner(150,80,1);
-//        
-//        CyDelay(1000);
-//        
+//        checkCorner(150,80,1); CyDelay(1000);
 //        storePuck(col);
-//        
-//        moveServo(sopen);
-//        CyDelay(4000);
 //    }
     
     
@@ -2045,21 +2150,22 @@ int main(void) {
 //        
 //        resetClaw();
 //    }
-    moveServo(sclose); CyDelay(500);
-    calibrateSensor();
-    moveServo(sopen); CyDelay(4000);
+    
+    
+//    calibrateSensor();
+//    moveServo(sopen); CyDelay(4000);
     
     for(;;)
     {
-        moveServo(sclose); CyDelay(500);
-        
-        col=getColourv2(1);
-        beepXtimes(col);
-        
-        CyDelay(500);
-        
-        moveServo(sopen);
-        CyDelay(4000);
+//        moveServo(sclose); CyDelay(500);
+//        
+//        col=getColourv2(1);
+//        beepXtimes(col);
+//        
+//        CyDelay(500);
+//        
+//        moveServo(sopen);
+//        CyDelay(4000);
         
     }
     
