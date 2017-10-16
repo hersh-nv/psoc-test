@@ -972,7 +972,7 @@ int getColourv2(int sensor) {
     float ratio;
     
     uint16 nonethres; // largest size of mindist before sensor decides 'none' colour
-   
+    
     // enable output
     if (sensor==1) {
         COL2EN_Write(0);
@@ -1010,10 +1010,10 @@ int getColourv2(int sensor) {
     
     // find ratio's closest match
     if (sensor==1) {
-        rDist = 100.0*fabs(1.7-ratio);
+        rDist = 100.0*fabs(1.45-ratio);
             UART_1_PutString("\nDist: R");
             printNumUART(rDist);
-        gDist = 100.0*fabs(1.44-ratio);
+        gDist = 100.0*fabs(1.31-ratio);
             UART_1_PutString(" G");
             printNumUART(gDist);
         bDist = 100.0*fabs(1.10-ratio);
@@ -1372,7 +1372,7 @@ void task3() {
     driveXdist(33,1);
     
     flashXtimes(3);
-}
+}  
 void task3r() {
     
     
@@ -1474,13 +1474,17 @@ void task4(int sensor) {
     
     flashXtimes(4);
     
-    S0_Write(0); // 2% scaling?
-    S1_Write(1);
+//    S0_Write(0); // 2% scaling?
+//    S1_Write(1);
     
     int col;
     
     for(;;) {   
-        col = getColour(sensor);
+        if (sensor==1) {
+            col = getColourv2(1);
+        } else {
+            col = getColour(2);
+        }
         if (!SILENT) {
             UART_1_PutString("\nColour: ");
             if (col==0) {
@@ -1517,9 +1521,9 @@ void readWallPucks(void) {
     int col; //takes 'best out of 3'
     int cols[3];
         
-    /* SCALE HERE */
-    S0_Write(0); // 2% scaling?
-    S1_Write(1);
+//    /* SCALE HERE */
+//    S0_Write(0); // 2% scaling?
+//    S1_Write(1);
     
     // drive into starting position
     driveXdist(30,0);
@@ -1577,7 +1581,7 @@ void readWallPucks(void) {
         
         // drive to next colour
         if (i<4) {
-            driveXdist(56,1);
+            driveXdist(59,1);
         }
         
         // wait
@@ -1675,7 +1679,7 @@ void checkForBlock(void) {
         if (distance_mid<150) {     // if block detected in next 20cm then set blockflag?
             LED1_Write(1);
             PIEZO_Write(1);
-            blockflag=1;
+            //blockflag=1;
         } else {
             LED1_Write(0);
             PIEZO_Write(0);
@@ -1709,9 +1713,11 @@ void checkForBlock(void) {
 void firstNavToPucks(void) {
     
     // drive to corner A
-//    driveXdist(400,1);
-    checkForBlock();
+
+    //checkForBlock();
     turnXdegrees(180,0);
+
+    driveXdist(400,1);
     
     adjust_dist_US(1,100,100);
     adjust_distances(100,50);
@@ -1794,6 +1800,8 @@ int collectPuck(void) {
     PWM_1_WriteCompare2(rspeed);
     
     resetClaw();
+    moveServo(sclose);
+    calibrateSensor();
     liftClaw(40,1);
     CyDelay(100);
 
@@ -1949,7 +1957,7 @@ void stackPuck(void) {
 
 }
 
-void navToPucks(void) {
+void navToPucks(void)   {
     /* Uses puckcount, prow and pcol to align robot with the next puck to collect */
     // e.g. when puckcount=0; then prow=0, pcol=0; i.e. retrieve rightmost col, top row puck.
     //      when puckcount=1; then prow=1, pcol=0; i.e. retrieve rightmost col, second row puck.
@@ -2118,12 +2126,14 @@ int main(void) {
     CyDelay(2000);
     
     //** CODE HERE **/
+    resetClaw();
+    allTasks();
     
-    resetClaw(); CyDelay(1000);
-    calibrateSensor();
-    checkCorner(150,80,1); CyDelay(500);
-    unstorePuck(1); stackPuck();
-    unstorePuck(2); stackPuck();
+//    resetClaw(); CyDelay(1000);
+//    calibrateSensor();
+//    checkCorner(150,80,1); CyDelay(500);
+//    unstorePuck(1); stackPuck();
+//    unstorePuck(2); stackPuck();
     
 //    for (int i=0;i<6;i++) {
 //        moveServo(sopen); CyDelay(4000);
@@ -2151,12 +2161,12 @@ int main(void) {
 //        resetClaw();
 //    }
     
-    
+//    resetClaw();
 //    calibrateSensor();
 //    moveServo(sopen); CyDelay(4000);
-    
-    for(;;)
-    {
+//    
+//    for(;;)
+//    {
 //        moveServo(sclose); CyDelay(500);
 //        
 //        col=getColourv2(1);
@@ -2166,9 +2176,9 @@ int main(void) {
 //        
 //        moveServo(sopen);
 //        CyDelay(4000);
-        
-    }
-    
+//        
+//    }
+//    
 }
 
 /* [] END OF FILE */
