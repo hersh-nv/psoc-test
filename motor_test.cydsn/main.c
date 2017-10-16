@@ -1248,7 +1248,6 @@ void checkCorner(int dist1, int dist2, int dir) {
     // dist1 = distance to wall that the robot is facing
     // dist2 = distance to adjacent wall of corner
     // dir = direction to turn to face dist2 wall; 1=cw, 0=ccw;
-    
     turnXdegrees(90,dir);
     adjust_distances(dist2,60);
     adjust_distances(dist2,45);
@@ -1724,7 +1723,7 @@ void firstNavToPucks(void) {
     driveXdist(150,1);
     turnXdegrees(210,0);
 //
-//    driveXdist(400,1);
+    driveXdist(250,1);
 //    
     adjust_dist_US(1,100,100);
     adjust_distances(100,50);
@@ -1734,7 +1733,7 @@ void firstNavToPucks(void) {
     
     // rotate to drive forwards
     // must be forwards to detect if block is present using front US
-    turnXdegrees(90,1);
+    turnXdegrees(88,1);
 
     // drive forwards, checking US every 5cm
     int i=0;
@@ -1780,11 +1779,11 @@ void firstNavToPucks(void) {
     if(!blockflag){
         // reach corner B
         driveXdist(200,1);
-        checkCorner(113-53*prow,60,0);
-        checkCorner(113-53*prow,60,0);
+        checkCorner(115-53*prow,60,0);
+        checkCorner(115-53*prow,60,0);
         
         // turn to face row of pucks; must be aligned
-        turnXdegrees(88,1);
+        turnXdegrees(87,1);
     }
     // drive back into wall? SLOWLY (then restore bwdspeed to OG value)
     //uint8 tmp=bwdspeed; bwdspeed=60; driveXdist(100,0); bwdspeed=tmp;
@@ -1800,15 +1799,15 @@ int collectPuck(void) {
     int curdist=0;
     int ccount=0;
 
-    lspeed = 65+2;
-    rspeed = 65+1;
+    lspeed = 70+2;
+    rspeed = 70;
     PWM_1_WriteCompare1(lspeed);
     PWM_1_WriteCompare2(rspeed);
     
     resetClaw();
     moveServo(sclose);
     calibrateSensor();
-    liftClaw(40,1);
+    liftClaw(55,1);
     CyDelay(100);
 
     // set directions
@@ -1843,7 +1842,7 @@ int collectPuck(void) {
             printNumUART(curdist);
         }
         
-        if(curdist<=125) { // when puck is reached; adjust distance value as necessary
+        if(curdist<=130) { // when puck is reached; adjust distance value as necessary
             dflag=1;
         }        
              
@@ -1864,8 +1863,8 @@ int collectPuck(void) {
     
     // open claw, drop, drive forward to puck then close
     moveServo(sopen);
-    liftClaw(40,0);
-    driveXdist(34,1);
+    liftClaw(55,0);
+    driveXdist(30,1);
     moveServo(sclose);
     CyDelay(200);
     
@@ -1886,6 +1885,7 @@ void navToConstruction(void) {
     
     if(!blockflag){
     driveXdist(150+60*pcol,0); //reverse into wall
+    CyDelay(500);
     
 //    liftClaw(30,0);
 //    CyDelay(300);
@@ -1944,6 +1944,9 @@ void navToConstruction(void) {
     }
     
     checkCorner(130,50,1);
+    CyDelay(500);
+    checkCorner(130,50,1);
+    
     resetClaw();
     
 }
@@ -2051,7 +2054,7 @@ void allTasks(void) {
     if (!blockflag) {
         
         // if path isnt blocked take regular path
-//        navToConstruction();
+        
         
         // stack pucks, then retrieve more either from array or storage;
         // this loop continues for the next four pucks
@@ -2155,13 +2158,14 @@ int main(void) {
     CyDelay(2000);
     
     //** CODE HERE **//
-    resetClaw();
-    collectPuck();
-    
+    //collectPuck();
+    //checkCorner(150,150,1);
+   
+    //driveXdist(20,1);
 //    resetClaw();
 //    calibrateSensor();
 //    CyDelay(1000);
-//    allTasks();
+    allTasks();
 //    task4(1);
 
     
