@@ -56,9 +56,9 @@ int16 overflowCountL = 0u; // NB can go negative for underflow (when moving back
 int16 overflowCountR = 0u;
 
 // driving speeds
-uint8 fwdspeed = 150;
-uint8 bwdspeed = 180;
-uint8 trnspeed = 100;
+uint8 fwdspeed = 170;
+uint8 bwdspeed = 200;
+uint8 trnspeed = 120;
 uint8 adjspeed = 36;
 uint8 pllspeed = 160;
 
@@ -71,7 +71,7 @@ uint16 uscount3=0;
 float distance_mid=0;
 
 // for storing colour sequence
-int8 SEQ[5];
+int SEQ[5]={3,2,1,3,2};
 uint16 mindist = 0u;
 uint16 periodLen = 0u;   // length of counter period
 
@@ -92,7 +92,7 @@ int storage[3]={0,0,0};
 
 // servo angles
 int16 sopen=45;
-int16 sclose=-81;
+int16 sclose=-84;
 
 // flag
 int alldone=0; // only set when all tasks have been completed; tells robot to exit stack loop
@@ -355,10 +355,10 @@ void driveXdist(int32 Xdist, int dir) {
     
     // set speed
     if (dir) {
-        lspeed = fwdspeed;
+        lspeed = fwdspeed+2;
         rspeed = fwdspeed;
     } else {
-        lspeed = bwdspeed;
+        lspeed = bwdspeed+2;
         rspeed = bwdspeed;
     }
     PWM_1_WriteCompare1(lspeed);
@@ -389,11 +389,13 @@ void driveXdist(int32 Xdist, int dir) {
         }
         
         // some kind of closed feedback here; turned off for now because it's unreliable....
-       // deltDist = ldist-rdist;
-       // lspeed = lspeed - (deltDist>>3); // adjust speed by difference/4, but...
-       // rspeed = rspeed + (deltDist>>3);
-       // PWM_1_WriteCompare1(lspeed); // ..turned this feature off because it seems to drive straight anyway
-       // PWM_1_WriteCompare2(rspeed);
+//        if ((ldist-rdist)>10) {
+//            lspeed--;
+//        } else if ((rdist-ldist)>10) {
+//            lspeed++;
+//        }
+//        PWM_1_WriteCompare1(lspeed); 
+//      // ..turned this feature off because it seems to drive straight anyway
         
         /* When either wheel reaches target distance, stop it */
         if (abs(ldist)>=XdistSE) {
@@ -1010,10 +1012,10 @@ int getColourv2(int sensor) {
     
     // find ratio's closest match
     if (sensor==1) {
-        rDist = 100.0*fabs(1.45-ratio);
+        rDist = 100.0*fabs(1.68-ratio);
             UART_1_PutString("\nDist: R");
             printNumUART(rDist);
-        gDist = 100.0*fabs(1.31-ratio);
+        gDist = 100.0*fabs(1.42-ratio);
             UART_1_PutString(" G");
             printNumUART(gDist);
         bDist = 100.0*fabs(1.10-ratio);
@@ -1187,7 +1189,7 @@ void resetClaw(void) {
     }
 
     // drop another 25mm to get to ground position
-    liftClaw(20,0);
+    liftClaw(23,0);
     
 }
 
@@ -1547,6 +1549,9 @@ void readWallPucks(void) {
             col=cols[1];
         }
         
+        // sometimes it reads no colour; set to blue as default i guess
+        if (col==0) {col=2;}
+        
         // print colour to UART
         if (!SILENT) {
             UART_1_PutString("\nColour: ");
@@ -1811,6 +1816,10 @@ int collectPuck(void) {
     A1_Write(0); // L
     A2_Write(1);
     
+    beepXtimes(prow);
+    CyDelay(800);
+    beepXtimes(pcol);
+    
     // enable middle US
     US_M_EN_Write(1);
     US_SIDEL_EN_Write(0);
@@ -1860,7 +1869,7 @@ int collectPuck(void) {
     CyDelay(200);
     
     // determine colour
-    int col = getColour(1);
+    int col = getColourv2(1);
     beepXtimes(col);
     CyDelay(400);
     
@@ -1875,7 +1884,7 @@ void navToConstruction(void) {
     
     
     if(!blockflag){
-    driveXdist(200+60*pcol,0); //reverse into wall
+    driveXdist(150+60*pcol,0); //reverse into wall
     
 //    liftClaw(30,0);
 //    CyDelay(300);
@@ -1893,7 +1902,7 @@ void navToConstruction(void) {
     }
     CyDelay(500);
 
-    driveXdist(500+60*prow,1);
+    driveXdist(650+60*prow,1);
 //    adjust_dist_US(1,100,100);
 //    adjust_angle_US(adjspeed);
 //    adjust_angle_US(adjspeed);
@@ -1933,7 +1942,7 @@ void navToConstruction(void) {
         
     }
     
-    checkCorner(150,30,1);
+    checkCorner(130,30,1);
     resetClaw();
     
 }
@@ -1945,11 +1954,12 @@ void stackPuck(void) {
     liftClaw(heights[stackcount],1);
     
     CyDelay(100);
-    uint8 temp=fwdspeed; fwdspeed=75; driveXdist(100,1); fwdspeed=temp;
+    uint8 temp=fwdspeed; fwdspeed=90; driveXdist(100,1); fwdspeed=temp;
+    CyDelay(500);
     
     // open
     moveServo(sopen);
-    CyDelay(1000);
+    CyDelay(500);
     
     // move back out
     driveXdist(100,0);
@@ -2014,7 +2024,7 @@ void unstorePuck(int col) {
     moveServo(sopen);
     CyDelay(100);
     
-    liftClaw(heights[storage[col-1]],1);
+    liftClaw(heights[storage[col-1]-1],1);
     driveXdist(140,1);
     moveServo(sclose);
     CyDelay(400);
@@ -2024,8 +2034,6 @@ void unstorePuck(int col) {
     resetClaw();
     turnXdegrees(33+col*30,1);
     
-    checkCorner(150,80,1);
-    
     storage[col-1]--;
 }
 
@@ -2033,38 +2041,61 @@ void unstorePuck(int col) {
 void allTasks(void) {
 
     int col;
+    int exit=0;
     
-    readWallPucks();
-    firstNavToPucks();
-    col=collectPuck();
+    //readWallPucks();
+    //firstNavToPucks();
+//    col=collectPuck();
+//    puckcount++;
 
     if (!blockflag) {
         
         // if path isnt blocked take regular path
-        navToConstruction();
+//        navToConstruction();
         
         // stack pucks, then retrieve more either from array or storage;
         // this loop continues for the next four pucks
         while (!alldone) {
-
-            if (col==SEQ[stackcount]) { // if colour matches, stack it then increment stackcount
-                stackPuck();
-                stackcount++;
-                puckcount++;
-            } else { // else move it elsewhere and increment puckcount
-                storePuck(col);
-                puckcount++;
+            
+//            resetClaw();
+            
+//                navToPucks();
+//                col=collectPuck();
+//                puckcount++;
+//                navToConstruction();
+            
+            moveServo(sopen); CyDelay(3000);
+            moveServo(sclose); CyDelay(500);
+            col=getColourv2(1);
+            beepXtimes(col);
+            checkCorner(130,45,1);
+            
+            
+            while (!exit) {
+                
+                if (col==SEQ[stackcount]) { // if colour matches, stack it then increment stackcount
+                    stackPuck();
+                    stackcount++;
+                    CyDelay(400);
+                } else { // else move it elsewhere and increment puckcount
+                    storePuck(col);
+                }
+                
+                if (storage[SEQ[stackcount]-1]>0) { // if next colour is already stored, retrieve it
+                    unstorePuck(SEQ[stackcount]);
+                    checkCorner(130,45,1);
+                    col=SEQ[stackcount];
+                } else {
+                    exit=1;
+                }
             }
+            exit=0;
 
             if (stackcount==5) { // if finished, exit loop
                 alldone=1;
-            } else if (storage[SEQ[stackcount]-1]>0) { // if next colour is already stored, retrieve it
-                unstorePuck(col);
-            } else {
-                navToPucks();
-                col=collectPuck();
-                navToConstruction();
             }
+            
+            
         }
 
     } else {
@@ -2125,9 +2156,13 @@ int main(void) {
     soundPiezo(200);
     CyDelay(2000);
     
-    //** CODE HERE **/
+    //** CODE HERE **//
     resetClaw();
+    calibrateSensor();
+    CyDelay(1000);
     allTasks();
+
+    
     
 //    resetClaw(); CyDelay(1000);
 //    calibrateSensor();
@@ -2178,7 +2213,7 @@ int main(void) {
 //        CyDelay(4000);
 //        
 //    }
-//    
+    
 }
 
 /* [] END OF FILE */
