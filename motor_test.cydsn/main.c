@@ -37,9 +37,9 @@ uint16 NON[4] = {4820, 5300, 4723, 4810};
 float NONf[4] = {4820, 5300, 4723, 4810};
 
 // sensor 2 : on wall
-uint16 RED2[3] = {3000, 3000, 6300};
-uint16 GRE2[3] = {4800, 4500, 4400};
-uint16 BLU2[3] = {5800, 5800, 3500};
+uint16 RED2[3] = {1940, 6800, 7040};
+uint16 GRE2[3] = {3700, 2300, 4700};
+uint16 BLU2[3] = {4000, 4100, 3270};
 
 // uint16 redc=250;
 // uint16 greenc=60;
@@ -806,7 +806,7 @@ int getColour(int sensor) {
     uint16 nCount=20000;
     uint16 rCountTmp, gCountTmp, bCountTmp, nCountTmp;
     uint16 rDist, gDist, bDist, nDist;
-    uint16 dists[4];
+    float dists[4];
     int temp, min;
     int rep = 12;
     
@@ -893,16 +893,16 @@ int getColour(int sensor) {
             printNumUART(nDist);
         dists[0]=nDist; dists[1]=rDist; dists[2]=gDist, dists[3]=bDist;
     } else if (sensor==2) {
-        rDist = abs(RED2[0]-rCount) + abs(RED2[1]-gCount) + abs(RED2[2]-bCount);
+        rDist = abs(RED2[2]-bCount); // + abs(RED2[0]-rCount) + abs(RED2[1]-gCount);
             UART_1_PutString("\nDist: R");
             printNumUART(rDist);
-        gDist = abs(GRE2[0]-rCount) + abs(GRE2[1]-gCount) + abs(GRE2[2]-bCount);
+        gDist = abs(GRE2[2]-bCount);// + abs(GRE2[0]-rCount) + abs(GRE2[1]-gCount);
             UART_1_PutString(" G");
             printNumUART(gDist);
-        bDist = abs(BLU2[0]-rCount) + abs(BLU2[1]-gCount) + abs(BLU2[2]-bCount);
+        bDist = abs(BLU2[2]-bCount);// + abs(BLU2[0]-rCount) + abs(BLU2[1]-gCount);
             UART_1_PutString(" B");
             printNumUART(bDist);
-        dists[0]=rDist+1; dists[1]=rDist; dists[2]=gDist, dists[3]=bDist;
+        dists[0]=(float) rDist+1; dists[1]=(float)rDist; dists[2]=(float)gDist, dists[3]=(float)bDist;
     }
     
     min=findMin(dists, 4);
@@ -1251,12 +1251,12 @@ void checkCorner(int dist1, int dist2, int dir) {
     
     turnXdegrees(90,dir);
     adjust_distances(dist2,60);
-    adjust_distances(dist2,50);
+    adjust_distances(dist2,45);
 
     
     turnXdegrees(90,!dir);
     adjust_distances(dist1,60);
-    adjust_distances(dist1,50);
+    adjust_distances(dist1,45);
 
     
     CyDelay(10);
@@ -1590,7 +1590,7 @@ void readWallPucks(void) {
         }
         
         // wait
-        CyDelay(1000);
+        CyDelay(2000);
         
         
         
@@ -1605,9 +1605,16 @@ void readWallPucks(void) {
         UART_1_PutString("  ");
     }
     
-    // turn 180 to get ready for next task
+    
+}
+
+/* Drive backward along arena checking for puck; sets blockflag if necessary */
+void checkForBlock(void) {
+    
+    // move away from wall
+    beepXtimes(2);
     turnXdegrees(30,1);
-    driveXdist(150,0);
+    driveXdist(350,0);
     turnXdegrees(30,0);
 //    turnXdegrees(150,1);
 //    CyDelay(500);
@@ -1617,13 +1624,6 @@ void readWallPucks(void) {
     driveXdist(200,1);
     adjust_distances(20,120);
     adjust_distances(20,50);
-    
-    
-    
-}
-
-/* Drive backward along arena checking for puck; sets blockflag if necessary */
-void checkForBlock(void) {
 
     driveXdist(400,0); // drive first half without checking
     beepXtimes(1);     // signal that the blockcheck is about to start
@@ -1681,7 +1681,7 @@ void checkForBlock(void) {
         // get side-left US reading
         updateUS();
         CyDelay(5);
-        if (distance_mid<150) {     // if block detected in next 20cm then set blockflag?
+        if (distance_mid<90) {     // if block detected in next 20cm then set blockflag?
             LED1_Write(1);
             PIEZO_Write(1);
             //blockflag=1;
@@ -1719,11 +1719,13 @@ void firstNavToPucks(void) {
     
     // drive to corner A
 
-    //checkForBlock();
-    turnXdegrees(180,0);
-
-    driveXdist(400,1);
-    
+    checkForBlock();
+    turnXdegrees(30,1);
+    driveXdist(150,1);
+    turnXdegrees(210,0);
+//
+//    driveXdist(400,1);
+//    
     adjust_dist_US(1,100,100);
     adjust_distances(100,50);
     adjust_angle_US(adjspeed);
@@ -1776,14 +1778,13 @@ void firstNavToPucks(void) {
     // else; continue on with navigation to pucks i guess?
 
     if(!blockflag){
-    // reach corner B
-    driveXdist(200,1);
-    adjust_dist_US(1,250,100);
-    adjust_distances(110,50);
-    adjust_angle_US(adjspeed);
-    
-    // turn to face row of pucks; must be aligned
-    turnXdegrees(89,1);
+        // reach corner B
+        driveXdist(200,1);
+        checkCorner(113-53*prow,60,0);
+        checkCorner(113-53*prow,60,0);
+        
+        // turn to face row of pucks; must be aligned
+        turnXdegrees(88,1);
     }
     // drive back into wall? SLOWLY (then restore bwdspeed to OG value)
     //uint8 tmp=bwdspeed; bwdspeed=60; driveXdist(100,0); bwdspeed=tmp;
@@ -1800,7 +1801,7 @@ int collectPuck(void) {
     int ccount=0;
 
     lspeed = 65+2;
-    rspeed = 65;
+    rspeed = 65+1;
     PWM_1_WriteCompare1(lspeed);
     PWM_1_WriteCompare2(rspeed);
     
@@ -1842,7 +1843,7 @@ int collectPuck(void) {
             printNumUART(curdist);
         }
         
-        if(curdist<=105) { // when puck is reached; adjust distance value as necessary
+        if(curdist<=125) { // when puck is reached; adjust distance value as necessary
             dflag=1;
         }        
              
@@ -1864,7 +1865,7 @@ int collectPuck(void) {
     // open claw, drop, drive forward to puck then close
     moveServo(sopen);
     liftClaw(40,0);
-    driveXdist(18,1);
+    driveXdist(34,1);
     moveServo(sclose);
     CyDelay(200);
     
@@ -1902,7 +1903,7 @@ void navToConstruction(void) {
     }
     CyDelay(500);
 
-    driveXdist(650+60*prow,1);
+    driveXdist(450+60*prow,1);
 //    adjust_dist_US(1,100,100);
 //    adjust_angle_US(adjspeed);
 //    adjust_angle_US(adjspeed);
@@ -1942,7 +1943,7 @@ void navToConstruction(void) {
         
     }
     
-    checkCorner(130,30,1);
+    checkCorner(130,50,1);
     resetClaw();
     
 }
@@ -1985,9 +1986,10 @@ void navToPucks(void)   {
     beepXtimes(1);
     adjust_dist_US(1,250,100);
     beepXtimes(2);
-    checkCorner(110-50*prow,60,0);
+    checkCorner(113-53*prow,60,0);
+    checkCorner(113-53*prow,60,0);
     
-    turnXdegrees(90,1);
+    turnXdegrees(88,1);
     
 }
 
@@ -2043,10 +2045,8 @@ void allTasks(void) {
     int col;
     int exit=0;
     
-    //readWallPucks();
-    //firstNavToPucks();
-//    col=collectPuck();
-//    puckcount++;
+    readWallPucks();
+    firstNavToPucks();
 
     if (!blockflag) {
         
@@ -2057,19 +2057,17 @@ void allTasks(void) {
         // this loop continues for the next four pucks
         while (!alldone) {
             
-//            resetClaw();
-            
-//                navToPucks();
-//                col=collectPuck();
-//                puckcount++;
-//                navToConstruction();
-            
-            moveServo(sopen); CyDelay(3000);
-            moveServo(sclose); CyDelay(500);
-            col=getColourv2(1);
-            beepXtimes(col);
-            checkCorner(130,45,1);
-            
+            col=collectPuck();
+            puckcount++;
+            navToConstruction();
+        
+//          /* Comment above block and uncomment this block to test un/storage */
+//            moveServo(sopen); CyDelay(3000);
+//            moveServo(sclose); CyDelay(500);
+//            col=getColourv2(1);
+//            beepXtimes(col);
+//            checkCorner(130,45,1);
+//          /* ***************************************** */
             
             while (!exit) {
                 
@@ -2083,7 +2081,7 @@ void allTasks(void) {
                 
                 if (storage[SEQ[stackcount]-1]>0) { // if next colour is already stored, retrieve it
                     unstorePuck(SEQ[stackcount]);
-                    checkCorner(130,45,1);
+                    checkCorner(130,50,1);
                     col=SEQ[stackcount];
                 } else {
                     exit=1;
@@ -2093,9 +2091,9 @@ void allTasks(void) {
 
             if (stackcount==5) { // if finished, exit loop
                 alldone=1;
+            } else {
+                navToPucks();
             }
-            
-            
         }
 
     } else {
@@ -2158,9 +2156,13 @@ int main(void) {
     
     //** CODE HERE **//
     resetClaw();
-    calibrateSensor();
-    CyDelay(1000);
-    allTasks();
+    collectPuck();
+    
+//    resetClaw();
+//    calibrateSensor();
+//    CyDelay(1000);
+//    allTasks();
+//    task4(1);
 
     
     
