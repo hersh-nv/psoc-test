@@ -18,8 +18,8 @@ todo:
     #define FALSE 0
 #endif
 
-#define SILENT TRUE // if set, suppress general UART output
-#define DRIVESILENT TRUE // if set, suppress driving UART
+#define SILENT FALSE // if set, suppress general UART output
+#define DRIVESILENT FALSE // if set, suppress driving UART
 
 
 // defines for unit-conversion coefficients
@@ -335,10 +335,10 @@ void driveXdist(int32 Xdist, int dir) {
     speed (out of 255 max)
     */
 
-    uint8 lspeed, rspeed;
+    uint8 lspeed=0, rspeed=0;
     int32 ldist = 0;
     int32 rdist = 0;
-    int32 lsdist,rsdist;
+    int32 lsdist=0, rsdist=0;
     //int32 deltDist;
     
     int32 XdistSE = Xdist*DIST_COEFF; // Xdist converted to QuadDec counter value
@@ -379,7 +379,7 @@ void driveXdist(int32 Xdist, int dir) {
     // poll SEs every 20ms, when both shaft encoders read X distance, stop
     while ((!Ldone)||(!Rdone)) {
 
-        CyDelay(1); // the smaller this value, the more often the SEs are polled and hence the more accurate the distance
+        CyDelay(10); // the smaller this value, the more often the SEs are polled and hence the more accurate the distance
         
         // get relative distance from both wheels
         ldist = (getDistance(1,lsdist)); //left
@@ -414,7 +414,7 @@ void driveXdist(int32 Xdist, int dir) {
         }
     }
 
-    CyDelay(10);
+    CyDelay(100);
 }
 
 /* Turns X degrees CW/CCW, polls shaft encoders every 10 ms until X degrees is reached.
@@ -471,7 +471,7 @@ void turnXdegrees(int16 Xdeg, int dir) {
     // poll SEs every 50ms, stop when both wheels have rotated enough
     while ((!Ldone) || (!Rdone)) {
 
-        //CyDelay(10);
+        CyDelay(10);
 
         // get relative distance from both wheels
         if (!Ldone) {
@@ -500,7 +500,7 @@ void turnXdegrees(int16 Xdeg, int dir) {
             Rdone=1;
         }
     }
-    CyDelay(10);
+    CyDelay(100);
 }
 
 /* Write to all ultrasonic TRIG pins, which should update all their distance values through respective ISRs. */
@@ -1197,7 +1197,7 @@ void resetClaw(void) {
     }
 
     // drop another 25mm to get to ground position
-    liftClaw(23,0);
+    liftClaw(15,0);
     
 }
 
@@ -1291,19 +1291,19 @@ void checkCorner(int dist1, int dist2, int dir) {
     
     while(checkflag==0){
     
-    
-    adjust_distances(dist2,46);
-    
-    doublecheck=updateusxtimes_r(20)-105;
-    
-    UART_1_PutString("\n\n val\n");
-    printNumUART(doublecheck);
-    
-    doublecheck=(doublecheck-dist2)*(doublecheck-dist2);
-    UART_1_PutString("\n\n Error\n");
-    printNumUART(doublecheck);
-    
-    if (doublecheck<=5){checkflag=1;}
+        
+        adjust_distances(dist2,46);
+        
+        doublecheck=updateusxtimes_r(20)-105;
+        
+        UART_1_PutString("\n\n val\n");
+        printNumUART(doublecheck);
+        
+        doublecheck=(doublecheck-dist2)*(doublecheck-dist2);
+        UART_1_PutString("\n\n Error\n");
+        printNumUART(doublecheck);
+        
+        if (doublecheck<=5){checkflag=1;}
     }
         
     
@@ -1315,229 +1315,25 @@ void checkCorner(int dist1, int dist2, int dir) {
     
     while(checkflag==0){
 
-    adjust_distances(dist1,46);
+        adjust_distances(dist1,46);
 
-    doublecheck=updateusxtimes_r(20)-105;
-    
-    UART_1_PutString("\n\n val\n");
-    printNumUART(doublecheck);
-    
-    doublecheck=(doublecheck-dist1)*(doublecheck-dist1);
-    UART_1_PutString("\n\n Error\n");
-    printNumUART(doublecheck);
-    
-    if (doublecheck<=5){checkflag=1;}
-    
+        doublecheck=updateusxtimes_r(20)-105;
+        
+        UART_1_PutString("\n\n val\n");
+        printNumUART(doublecheck);
+        
+        doublecheck=(doublecheck-dist1)*(doublecheck-dist1);
+        UART_1_PutString("\n\n Error\n");
+        printNumUART(doublecheck);
+        
+        if (doublecheck<=5){checkflag=1;}
+        
     }
     CyDelay(10);
     
 }
 
 /* Prelim comp tasks */
-void task1() {
-    // Prelim Task 1
-    flashXtimes(1);
-    
-    driveXdist(60,1); // units = cm
-    CyDelay(300);
-    
-    driveXdist(60,0); //units = cm
-    
-    flashXtimes(1);
-}
-void task2() {
-    // Prelim Task 2
-    flashXtimes(2);
-    
-    driveXdist(60,1); CyDelay(200);
-    turnXdegrees(180,1); CyDelay(200);
-    adjust_angle_US(adjspeed); CyDelay(200);
-    adjust_angle_US(adjspeed); CyDelay(200);
-    adjust_angle_US(adjspeed); CyDelay(200);
-    
-    //driveXdist(50+15,1);
-    
-    adjust_dist_US(1,30,fwdspeed);CyDelay(200);
-    
-    adjust_angle_US(adjspeed); CyDelay(200);
-    adjust_angle_US(adjspeed); CyDelay(200);
-    adjust_angle_US(adjspeed); CyDelay(200);
-    
-    adjust_dist_US(1,2,fwdspeed);
-    
-    flashXtimes(2);
-}
-void task3() {
-    // Prelim Task 3
-    flashXtimes(3);
-    //straight
-    driveXdist(20,1);
-    CyDelay(100);
-    
-    //right
-    turnXdegrees(90,1);
-    CyDelay(100);
-    //stright
-    driveXdist(50,1);
-    CyDelay(100);
-    
-    //adjust
-    adjust_angle_US(adjspeed);
-    CyDelay(100);
-    adjust_angle_US(adjspeed);
-    CyDelay(100);
-    
-    //left
-    turnXdegrees(90,0);
-    CyDelay(100);
-    //stright
-    driveXdist(75,1);
-    CyDelay(100);
-    
-    //adjust
-    adjust_angle_US(adjspeed);
-    CyDelay(100);
-    adjust_angle_US(adjspeed);
-    CyDelay(100);
-    
-    //left
-    turnXdegrees(90,0);
-    CyDelay(100);
-    //stright
-    driveXdist(90,1);
-    CyDelay(100);
-    
-    //adjust
-    adjust_angle_US(adjspeed);
-    CyDelay(100);
-    adjust_angle_US(adjspeed);
-    CyDelay(100);
-    
-    //left 
-    turnXdegrees(90,0);
-    CyDelay(100);
-    //straight
-    driveXdist(75,1);
-    CyDelay(100);
-    
-    //adjust
-    adjust_angle_US(adjspeed);
-    CyDelay(100);
-    adjust_angle_US(adjspeed);
-    CyDelay(100);
-    
-    //left
-    turnXdegrees(90,0);
-    CyDelay(100);
-    //straight
-    driveXdist(43,1);
-    CyDelay(100);
-    
-    //right
-    turnXdegrees(90,1);
-    CyDelay(100);
-    adjust_angle_US(adjspeed);
-    CyDelay(100);
-    adjust_angle_US(adjspeed); //second adjustment
-    CyDelay(100);
-    //straight
-    driveXdist(33,1);
-    
-    flashXtimes(3);
-}  
-void task3r() {
-    
-    
-    
-    //straight
-    driveXdist(60,1);
-    CyDelay(200);
-    
-    //right
-    turnXdegrees(90,1);
-    CyDelay(200);
-    
-    //straight
-    driveXdist(200,1);
-    CyDelay(200);
-    adjust_dist_US(1,5,fwdspeed);
-    CyDelay(200);
-    adjust_angle_US(adjspeed);
-    CyDelay(2000);
-    
-
-    //left1
-    turnXdegrees(90,0);
-    CyDelay(200);
-    
-    //straight
-    driveXdist(450,1);
-    CyDelay(200);
-    adjust_dist_US(1,8,fwdspeed);
-    CyDelay(200);
-    adjust_angle_US(adjspeed);
-    CyDelay(2000);
-    
-    
-    //left2
-    turnXdegrees(90,0);
-    CyDelay(200);
-    
-    //backup here
-    driveXdist(60,0);
-    CyDelay(200);
-    
-     //straight
-    driveXdist(150,1);
-    CyDelay(200);
-    
-    //closeservo
-    moveServo(0);
-    CyDelay(200);
-    
-    liftClaw(10,1);
-    CyDelay(20000);
-    
-    //reverse
-    driveXdist(350,0);
-    CyDelay(200);
-    
-    //going straight before turn
-    driveXdist(150,1);
-    CyDelay(200);
-    
-    //first return left
-    turnXdegrees(90,0);
-    CyDelay(200);
-    
-    //turn right for homebase
-    turnXdegrees(90,1);
-    CyDelay(200);
-    
-    //go straight to consturction zone
-    driveXdist(400,1);
-    CyDelay(200);
-    
-    //turn left to drop into consturctionzone
-    turnXdegrees(90,1);
-    CyDelay(200);
-    
-    adjust_angle_US(adjspeed);
-    CyDelay(200);
-    adjust_angle_US(adjspeed);
-    CyDelay(200);
-    adjust_angle_US(adjspeed);
-    CyDelay(200);
-    
-    //lower claw
-    liftClaw(5,0);
-    CyDelay(200);
-    
-    //openclaw
-    moveServo(50);
-    CyDelay(200);
-
-}
 void task4(int sensor) {
     // Prelim Task 4
     // NOTE: this enters an infinite loop by design; make an exit flag if you want to do something after Task 4
@@ -1855,7 +1651,8 @@ void firstNavToPucks(void) {
 //        adjust_dist_US(1,250,100);
 //        adjust_angle_US(adjspeed);
 //        adjust_distances(110,50);
-        checkCorner(122-rows[prow2],60,0);
+        checkCorner(122-rows[2-prow2],60,0);
+        checkCorner(122-rows[2-prow2],60,0);
         turnXdegrees(87,0);
     }
     // else; continue on with navigation to pucks i guess?
@@ -1863,7 +1660,7 @@ void firstNavToPucks(void) {
     if(!blockflag){
         // reach corner B
         driveXdist(200,1);
-        checkCorner(115-rows[2-prow],60,0); // third row first then two then one
+        checkCorner(115-rows[prow],60,0); // third row first then two then one
         turnXdegrees(88,1);
     }
     // drive back into wall? SLOWLY (then restore bwdspeed to OG value)
@@ -2107,7 +1904,7 @@ void navToConstruction(void) {
     
     checkCorner(130,50,1);
     CyDelay(500);
-//    checkCorner(130,50,1);
+    checkCorner(130,50,1);
     
     resetClaw();
     
@@ -2174,8 +1971,8 @@ void navToPucks(void)   {
         driveXdist(500,1);
         beepXtimes(1);
         adjust_dist_US(1,120,0);
-        checkCorner(122-52*rows[prow],60,1);
-        checkCorner(122-52*rows[prow],60,1);
+        checkCorner(122-rows[2-prow],60,1);
+        checkCorner(122-rows[2-prow],60,1);
         turnXdegrees(87,0);
     }
 }
@@ -2254,6 +2051,8 @@ void allTasks(void) {
 
     
     resetClaw();
+    
+//    liftClaw(10,1);
 //    readWallPucks();
 //    
 //    beepXtimes(2);
@@ -2386,7 +2185,7 @@ int main(void) {
     
     //** CODE HERE **//
     allTasks();
-    
+//    resetClaw();
     
 //    turnXdegrees(30,1);
 //    for (;;) {
