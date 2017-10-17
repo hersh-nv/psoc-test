@@ -81,8 +81,10 @@ int blockflag=0;
 // puck array
 uint8 puckcount=0u; // count of how many pucks in arena have been fetched / checked; max of 25?
 uint8 prow=0u; // puckrow; this and puckcol are used to program location of next puck to retrieve
+uint8 prow2=0u;
 uint8 pcol=0u;
 uint8 rows[3]={0,52,106};
+//uint8 rows2[2]={0,52};
 
 // stacking
 int stackcount=0; // count of how many pucks have been stacked; max of 5
@@ -93,7 +95,7 @@ int storage[3]={0,0,0};
 
 // servo angles
 int16 sopen=75;
-int16 sopen2=70;
+int16 sopen2=9;
 int16 sclose=-84;
 
 // flag
@@ -1169,7 +1171,7 @@ void resetClaw(void) {
     }
     
     // then drop claw
-    PWM_2_WriteCompare(60);
+    PWM_2_WriteCompare(37);
     A5_Write(1);
     A6_Write(0);
     
@@ -1650,7 +1652,7 @@ void readWallPucks(void) {
         beepXtimes(col);
         
         // store colour
-        SEQ[4-i]=col; // reads top->bottom so fill SEQ backwards 
+//        SEQ[4-i]=col; // reads top->bottom so fill SEQ backwards 
         
         // drive to next colour
         if (i<4) {
@@ -1789,13 +1791,16 @@ void firstNavToPucks(void) {
     
     // drive to corner A
 
-    checkForBlock();
-    turnXdegrees(30,1);
-    driveXdist(150,1);
-    turnXdegrees(210,0);
-//
-    driveXdist(250,1);
+//    checkForBlock();
+//    turnXdegrees(30,1);
+//    driveXdist(150,1);
+//    turnXdegrees(210,0);
+//    driveXdist(250,1);
 //    
+    
+    /* if no checkForBlock()*/
+    
+    
     adjust_dist_US(1,100,100);
     adjust_distances(100,50);
     adjust_angle_US(adjspeed);
@@ -1805,6 +1810,7 @@ void firstNavToPucks(void) {
     // rotate to drive forwards
     // must be forwards to detect if block is present using front US
     turnXdegrees(88,1);
+    
 
     // drive forwards, checking US every 5cm
     int i=0;
@@ -1813,18 +1819,24 @@ void firstNavToPucks(void) {
     
     while (i<8 && !blockflag) {
         UART_1_PutString("\nloop entered");
-        beepXtimes(1);
+        
         CyDelay(400);
+        turnXdegrees(15,1);
+        
         curdist_r=updateusxtimes_r(10);
         curdist_l=updateusxtimes_l(10);
         CyDelayUs(100);
-        if ((curdist_r<=130)||(curdist_l<=130)) { // if block in next 15cm
+        turnXdegrees(15,0);
+        
+        if ((curdist_r<=200)||(curdist_l<=200)) { // if block in next 15cm
             UART_1_PutString("\nblock detected");
             beepXtimes(2);
             blockflag=1; // disabled this because it kept detecting block for no reason
         } else {
+            beepXtimes(1);
             driveXdist(25,1);
         }
+        
         CyDelay(400);
         i++;
     }
@@ -1843,7 +1855,7 @@ void firstNavToPucks(void) {
 //        adjust_dist_US(1,250,100);
 //        adjust_angle_US(adjspeed);
 //        adjust_distances(110,50);
-        checkCorner(115-53*prow,60,1);
+        checkCorner(122-rows[prow2],60,0);
         turnXdegrees(87,0);
     }
     // else; continue on with navigation to pucks i guess?
@@ -1851,7 +1863,7 @@ void firstNavToPucks(void) {
     if(!blockflag){
         // reach corner B
         driveXdist(200,1);
-        checkCorner(115-52*prow,60,0);
+        checkCorner(115-rows[2-prow],60,0); // third row first then two then one
         turnXdegrees(88,1);
     }
     // drive back into wall? SLOWLY (then restore bwdspeed to OG value)
@@ -1867,90 +1879,176 @@ int collectPuck(void) {
     uint8 lspeed, rspeed;
     int curdist=0;
     int ccount=0;
+    
+    if (!blockflag) {
 
-    lspeed = 70+2;
-    rspeed = 70;
-    PWM_1_WriteCompare1(lspeed);
-    PWM_1_WriteCompare2(rspeed);
-    
-    resetClaw();
-    moveServo(sclose);
-    calibrateSensor();
-    liftClaw(55,1);
-    CyDelay(100);
+        lspeed = 70+1;
+        rspeed = 70;
+        PWM_1_WriteCompare1(lspeed);
+        PWM_1_WriteCompare2(rspeed);
+        
+        resetClaw();
+        moveServo(sclose);
+        calibrateSensor();
+        liftClaw(55,1);
+        CyDelay(100);
 
-    // set directions
-    A3_Write(0); // R
-    A4_Write(1);
-    A1_Write(0); // L
-    A2_Write(1);
-    
-    beepXtimes(prow);
-    CyDelay(800);
-    beepXtimes(pcol);
-    
-//    driveXdist(60,0);
-    
-    // enable middle US
-    US_M_EN_Write(1);
-    US_SIDEL_EN_Write(0);
-    
-    while(!dflag) {
-        ccount=0;
-        curdist=0;
-        while (ccount<5){
-            updateUS();
-            CyDelay(5);
-            curdist=curdist+distance_mid;
-            CyDelay(10);
-            ccount++;
+        // set directions
+        A3_Write(0); // R
+        A4_Write(1);
+        A1_Write(0); // L
+        A2_Write(1);
+        
+        beepXtimes(prow);
+        CyDelay(800);
+        beepXtimes(pcol);
+        
+    //    driveXdist(60,0);
+        
+        // enable middle US
+        US_M_EN_Write(1);
+        US_SIDEL_EN_Write(0);
+        
+        while(!dflag) {
+            ccount=0;
+            curdist=0;
+            while (ccount<5){
+                updateUS();
+                CyDelay(5);
+                curdist=curdist+distance_mid;
+                CyDelay(10);
+                ccount++;
+            }
+            
+            curdist=curdist/5;
+            
+            if (!SILENT) {
+                UART_1_PutString("\n");
+                printNumUART(curdist);
+            }
+            
+            if(curdist<=130) { // when puck is reached; adjust distance value as necessary
+                dflag=1;
+            }        
+                 
         }
         
-        curdist=curdist/5;
+        // stop wheels
+        A1_Write(0);
+        A2_Write(0);
+        A3_Write(0);
+        A4_Write(0);            
+        PWM_1_WriteCompare1(0);
+        PWM_1_WriteCompare2(0);
+        CyDelay(700);
         
-        if (!SILENT) {
-            UART_1_PutString("\n");
-            printNumUART(curdist);
-        }
+        curdist=updateusxtimes_m(20);
+
+        // re-enable sideleft US
+        US_M_EN_Write(0);
+        US_SIDEL_EN_Write(1);
         
-        if(curdist<=130) { // when puck is reached; adjust distance value as necessary
-            dflag=1;
-        }        
-             
+        // open claw, drop, drive forward to puck then close
+        moveServo(sopen);
+        liftClaw(55,0);
+        driveXdist(curdist-70,1);
+        moveServo(sclose);
+        CyDelay(200);
+        
+        // determine colour
+        int col = getColourv2(1);
+        beepXtimes(col);
+        CyDelay(400);
+        
+        // lift a little bit so puck doesn't drag
+        //liftClaw(5,1);
+        
+        return col;
     }
-    
-    // stop wheels
-    A1_Write(0);
-    A2_Write(0);
-    A3_Write(0);
-    A4_Write(0);            
-    PWM_1_WriteCompare1(0);
-    PWM_1_WriteCompare2(0);
-    CyDelay(700);
-    
-    curdist=updateusxtimes_m(20);
-
-    // re-enable sideleft US
-    US_M_EN_Write(0);
-    US_SIDEL_EN_Write(1);
-    
-    // open claw, drop, drive forward to puck then close
-    moveServo(sopen);
-    liftClaw(55,0);
-    driveXdist(curdist-70,1);
-    moveServo(sclose);
-    CyDelay(200);
-    
-    // determine colour
-    int col = getColourv2(1);
-    beepXtimes(col);
-    CyDelay(400);
-    
-    // lift a little bit so puck doesn't drag
-    //liftClaw(5,1);
-    
-    return col;
+    else {
+        lspeed = 70+1;
+        rspeed = 70;
+        PWM_1_WriteCompare1(lspeed);
+        PWM_1_WriteCompare2(rspeed);
         
+        resetClaw();
+        moveServo(sclose);
+        calibrateSensor();
+        liftClaw(55,1);
+        CyDelay(100);
+
+        // set directions
+        A3_Write(0); // R
+        A4_Write(1);
+        A1_Write(0); // L
+        A2_Write(1);
+        
+        beepXtimes(prow);
+        CyDelay(800);
+        beepXtimes(pcol);
+        
+    //    driveXdist(60,0);
+        
+        // enable middle US
+        US_M_EN_Write(1);
+        US_SIDEL_EN_Write(0);
+        
+        while(!dflag) {
+            ccount=0;
+            curdist=0;
+            while (ccount<5){
+                updateUS();
+                CyDelay(5);
+                curdist=curdist+distance_mid;
+                CyDelay(10);
+                ccount++;
+            }
+            
+            curdist=curdist/5;
+            
+            if (!SILENT) {
+                UART_1_PutString("\n");
+                printNumUART(curdist);
+            }
+            
+            if(curdist<=150) { // when puck is reached; adjust distance value as necessary
+                dflag=1;
+            }        
+                 
+        }
+        
+        // stop wheels
+        A1_Write(0);
+        A2_Write(0);
+        A3_Write(0);
+        A4_Write(0);            
+        PWM_1_WriteCompare1(0);
+        PWM_1_WriteCompare2(0);
+        CyDelay(700);
+        
+        curdist=updateusxtimes_m(20);
+
+        // re-enable sideleft US
+        US_M_EN_Write(0);
+        US_SIDEL_EN_Write(1);
+        
+        // open claw, drop, drive forward to puck then close
+        moveServo(sopen2);
+        liftClaw(55,0);
+        driveXdist(curdist-70,1);
+        moveServo(sclose);
+        CyDelay(200);
+        
+        // determine colour
+        int col = getColourv2(1);
+        beepXtimes(col);
+        CyDelay(400);
+        
+        // lift a little bit so puck doesn't drag
+        //liftClaw(5,1);
+        
+        return col;
+    }         
 }
 
 void navToConstruction(void) {
@@ -2046,19 +2144,25 @@ void navToPucks(void)   {
     // then together prow and pcol are used by this function to tell robot where to go next
     
     // calculate puckrow (and puckcol?)
-    prow=puckcount%3; // collect from the first three rows
-    pcol=puckcount/3;
+    
     
     if (!blockflag) {
-    
+        
+        prow=puckcount%3; // collect from the first three rows
+        pcol=puckcount/3;
+        
         turnXdegrees(180,1);
         driveXdist(500,1);
         beepXtimes(1);
         adjust_dist_US(1,250,100);
         beepXtimes(2);
-        checkCorner(115-52*prow,60,0);
-        turnXdegrees(88,1);
+        checkCorner(115-rows[prow],60,0);
+        checkCorner(115-rows[prow],60,0);
+        turnXdegrees(87,1);
     } else {
+        
+        prow=puckcount%2; // collect from the first three rows
+        pcol=puckcount/2;
         
         turnXdegrees(89,0);
         driveXdist(500,1);
@@ -2070,14 +2174,17 @@ void navToPucks(void)   {
         driveXdist(500,1);
         beepXtimes(1);
         adjust_dist_US(1,120,0);
-        checkCorner(115-52*prow,60,1);
-        
+        checkCorner(122-52*rows[prow],60,1);
+        checkCorner(122-52*rows[prow],60,1);
+        turnXdegrees(87,0);
     }
 }
 
 void storePuck(int col) {
 
     if (col!=0) {
+        
+        
         turnXdegrees(30+col*30,0);
         
         liftClaw(heights[storage[col-1]],1);
@@ -2115,18 +2222,48 @@ void unstorePuck(int col) {
     storage[col-1]--;
 }
 
+void disposePuck() {
+    
+    moveServo(sopen); CyDelay(500);
+    
+    if (!blockflag) {
+        prow=puckcount%3; // collect from the first three rows
+        pcol=puckcount/3;
+        
+        driveXdist(150+55*pcol,0);
+        turnXdegrees(90,0);
+        checkCorner(115-rows[prow],60,0);
+        turnXdegrees(87,1);
+    } else {
+        prow=puckcount%2; // collect from the first three rows
+        pcol=puckcount/2;
+        
+        driveXdist(150+55*pcol,0);
+        turnXdegrees(90,1);
+        checkCorner(122-52*rows[prow],60,1);
+        turnXdegrees(87,0);
+    }
+}
+
 /* Full task here */
 void allTasks(void) {
 
     int col;
     int exit=0;
+    int gotocon=0; // flag for going to construction
 
     
     resetClaw();
-    readWallPucks();
+//    readWallPucks();
+//    
+//    beepXtimes(2);
+//    turnXdegrees(30,1);
+//    driveXdist(250,0);
+//    turnXdegrees(210,0);
+    
     firstNavToPucks();
 
-    if (!blockflag) {
+//    if (!blockflag) {
         
         // if path isnt blocked take regular path
         
@@ -2135,9 +2272,23 @@ void allTasks(void) {
         // this loop continues for the next four pucks
         while (!alldone) {
             
-            col=collectPuck();
-            puckcount++;
-            navToConstruction();
+            while (!gotocon) {
+                gotocon=0;
+                col=collectPuck();
+                puckcount++;
+                for (int i=stackcount;i<5;i++) {
+                    if (col==SEQ[i]) {
+                        gotocon=1;
+                    }
+                }
+                if (gotocon) {
+                    navToConstruction();
+                } else {
+                    disposePuck();
+                }
+            }
+            gotocon=0;
+            
         
 //          /* Comment above block and uncomment this block to test un/storage */
 //            moveServo(sopen); CyDelay(3000);
@@ -2175,7 +2326,7 @@ void allTasks(void) {
             }
         }
 
-    } else {
+//    } else {
         // secondary path
         
         // navToPucks2
@@ -2184,7 +2335,7 @@ void allTasks(void) {
         
         // etc etc
         
-    }
+//    }
 
 
 }
@@ -2226,7 +2377,7 @@ int main(void) {
     // some hardware initialisations 
     S0_Write(0); // 2% colour scaling
     S1_Write(1);
-    moveServo(80); // open claw
+    moveServo(sclose); // open claw
     
     // signal start
     flashXtimes(3);    
@@ -2234,31 +2385,37 @@ int main(void) {
     CyDelay(2000);
     
     //** CODE HERE **//
-    resetClaw();
-   
-    
-    for (;;) {
-        checkCorner(115-rows[prow],60,0);
-        turnXdegrees(88,1);
-        CyDelay(2000);
-        col=collectPuck();
-        puckcount++;
-        prow=puckcount%3;
-        
-        CyDelay(2000);
-        moveServo(sopen);
-        CyDelay(6000);
-        moveServo(sclose);
-        CyDelay(2000);
-
-    }
- 
+    allTasks();
     
     
+//    turnXdegrees(30,1);
+//    for (;;) {
+//        driveXdist(100,1);
+//        driveXdist(100,0);
+//        turnXdegrees(60,0);
+//        driveXdist(100,1);
+//        driveXdist(100,0);
+//        turnXdegrees(60,1);
+//    }
     
-    
-    
-    // allTasks();
+//   
+//    resetClaw();
+//    for (;;) {
+//        checkCorner(110-rows[2-prow],60,1);
+//        turnXdegrees(87,0);
+//        CyDelay(2000);
+//        col=collectPuck();
+//        puckcount++;
+//        prow=puckcount%3;
+//        
+//        CyDelay(2000);
+//        moveServo(sopen);
+//        CyDelay(6000);
+//        moveServo(sclose);
+//        CyDelay(2000);
+//
+//    }
+// 
         
     
 //    resetClaw(); CyDelay(1000);
