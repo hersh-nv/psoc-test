@@ -18,7 +18,7 @@ todo:
     #define FALSE 0
 #endif
 
-#define SILENT FALSE // if set, suppress general UART output
+#define SILENT TRUE // if set, suppress general UART output
 #define DRIVESILENT TRUE // if set, suppress driving UART
 
 
@@ -305,7 +305,7 @@ void beepXtimes(int rep) {
 int32 getDistance(int side, int32 startdist) {
     
     int32 distance;
-    int16 SE_COUNT = 0u;
+    int32 SE_COUNT = 0u;
     if (side==0) {
         SE_COUNT = SER_QUAD_GetCounter();
         distance = overflowCountR * 0x7fff + SE_COUNT;
@@ -580,18 +580,22 @@ void adjust_distances(uint16 dist, uint8 speed){
     uint8 frontdist=105;
 
     // calc average us distances
-    float distR=0;
+    float distR=0;  //run sum zero
     float distL=0;
-    for (int runavg=0;runavg<10;runavg++){
+    
+    //run for 7 iterations summing as you go
+    for (int runavg=0;runavg<7;runavg++){
         updateUS();
         CyDelay(5);
         distR=distR+distance_m1;
-        UART_1_PutString("\nd_M1 ");
-        printNumUART(distance_m1);
+       // UART_1_PutString("\nd_M1 ");
+        //printNumUART(distance_m1);
         distL=distL+distance_m2;
     }
-    distR=distR/10;
-    distL=distL/10;
+    
+    //divide by sum
+    distR=distR/7;
+    distL=distL/7;
     if (!SILENT) {
         UART_1_PutString("\nL  ");
         printNumUART(distL);
@@ -621,18 +625,18 @@ void adjust_distances(uint16 dist, uint8 speed){
            
         distR=0;
         distL=0;
-        for (int runavg=0;runavg<2;runavg++){
+        for (int runavg=0;runavg<5;runavg++){
             updateUS();
             CyDelay(4);
             distR=distR+distance_m1;
             distL=distL+distance_m2;
-            UART_1_PutString("\nM1  ");
-            printNumUART(distance_m1);
-            UART_1_PutString(" M2  ");
-            printNumUART(distance_m2);
+            //UART_1_PutString("\nM1  ");
+            //printNumUART(distance_m1);
+            //UART_1_PutString(" M2  ");
+           // printNumUART(distance_m2);
         }
-        distR=distR/2;
-        distL=distL/2;
+        distR=distR/5;
+        distL=distL/5;
         
         if (!SILENT) {
             UART_1_PutString("\nloopL  ");
@@ -1218,6 +1222,31 @@ int updateusxtimes_r(int rep){
     return cdist_r;
 }
 
+int updateusxtimes_m(int rep){
+    
+    int ccount=0;
+    int cdist_m=0;
+    
+    while(ccount<rep){
+  
+        updateUS();
+        CyDelay(5);
+        
+        cdist_m=distance_mid+cdist_m;
+        ccount++;
+        
+        UART_1_PutString("\ncdist iteration:");
+        printNumUART(cdist_m);
+    }
+    
+    UART_1_PutString("\ncdist total:");
+    printNumUART(cdist_m);
+    UART_1_PutString("\n");
+    
+    cdist_m=cdist_m/rep;
+    return cdist_m;
+}
+
 int updateusxtimes_l(int rep){
     
     int ccount=0;
@@ -1248,16 +1277,54 @@ void checkCorner(int dist1, int dist2, int dir) {
     // dist1 = distance to wall that the robot is facing
     // dist2 = distance to adjacent wall of corner
     // dir = direction to turn to face dist2 wall; 1=cw, 0=ccw;
+    
+    int doublecheck=0;
+    int checkflag=0;
+    
     turnXdegrees(90,dir);
-    adjust_distances(dist2,60);
-    adjust_distances(dist2,45);
-
+    
+    adjust_distances(dist2,85);
+    
+    while(checkflag==0){
+    
+    
+    adjust_distances(dist2,46);
+    
+    doublecheck=updateusxtimes_r(20)-105;
+    
+    UART_1_PutString("\n\n val\n");
+    printNumUART(doublecheck);
+    
+    doublecheck=(doublecheck-dist2)*(doublecheck-dist2);
+    UART_1_PutString("\n\n Error\n");
+    printNumUART(doublecheck);
+    
+    if (doublecheck<=5){checkflag=1;}
+    }
+        
     
     turnXdegrees(90,!dir);
-    adjust_distances(dist1,60);
-    adjust_distances(dist1,45);
-
     
+    checkflag=0;
+    
+    adjust_distances(dist1,85);
+    
+    while(checkflag==0){
+
+    adjust_distances(dist1,46);
+
+    doublecheck=updateusxtimes_r(20)-105;
+    
+    UART_1_PutString("\n\n val\n");
+    printNumUART(doublecheck);
+    
+    doublecheck=(doublecheck-dist1)*(doublecheck-dist1);
+    UART_1_PutString("\n\n Error\n");
+    printNumUART(doublecheck);
+    
+    if (doublecheck<=5){checkflag=1;}
+    
+    }
     CyDelay(10);
     
 }
@@ -1589,7 +1656,7 @@ void readWallPucks(void) {
         }
         
         // wait
-        CyDelay(2000);
+        CyDelay(700);
         
         
         
@@ -1624,7 +1691,7 @@ void checkForBlock(void) {
     adjust_distances(20,120);
     adjust_distances(20,50);
 
-    driveXdist(400,0); // drive first half without checking
+    driveXdist(450,0); // drive first half without checking
     beepXtimes(1);     // signal that the blockcheck is about to start
     CyDelay(500);
     
@@ -1709,8 +1776,10 @@ void checkForBlock(void) {
         }
     }
 
-    CyDelay(10);
-    
+    CyDelay(1000);
+    if (blockflag) {
+        beepXtimes(2);
+    } else {beepXtimes(1);}
 }
 
 /* Navigate to pucks using ultrasonics and adjustments etc */
@@ -1779,8 +1848,8 @@ void firstNavToPucks(void) {
     if(!blockflag){
         // reach corner B
         driveXdist(200,1);
-        checkCorner(115-53*prow,60,0);
-        checkCorner(115-53*prow,60,0);
+        checkCorner(120-53*prow,60,0);
+        checkCorner(120-53*prow,60,0);
         
         // turn to face row of pucks; must be aligned
         turnXdegrees(87,1);
@@ -1874,7 +1943,7 @@ int collectPuck(void) {
     CyDelay(400);
     
     // lift a little bit so puck doesn't drag
-    liftClaw(5,1);
+    //liftClaw(5,1);
     
     return col;
         
@@ -1903,7 +1972,7 @@ void navToConstruction(void) {
     }
     CyDelay(500);
 
-    driveXdist(450+60*prow,1);
+    driveXdist(480+60*prow,1);
 //    adjust_dist_US(1,100,100);
 //    adjust_angle_US(adjspeed);
 //    adjust_angle_US(adjspeed);
@@ -1935,11 +2004,9 @@ void navToConstruction(void) {
         
         turnXdegrees(90,0);
         CyDelay(500);
-        driveXdist(400,1);
-        adjust_dist_US(1,100,100);
-        adjust_distances(100,50);
-        adjust_angle_US(adjspeed);
-        adjust_angle_US(adjspeed);
+        
+        
+        
         
     }
     
@@ -1998,27 +2065,20 @@ void navToPucks(void)   {
 
 void storePuck(int col) {
 
-    turnXdegrees(30+col*30,0);
-    
-    liftClaw(heights[storage[col-1]],1);
-    driveXdist(140,1);
+    if (col!=0) {
+        turnXdegrees(30+col*30,0);
+        
+        liftClaw(heights[storage[col-1]],1);
+        driveXdist(160,1);
 
-    moveServo(sopen);
-    storage[col-1]++;
-    CyDelay(100);
-    
-    driveXdist(140,0);
-    resetClaw();
-    turnXdegrees(30+col*30,1);
-    
-//    driveXdist(50,0);
-//    turnXdegrees(20*col,1);
-//    liftClaw(20,0);
-//    moveServo(90);
-//    CyDelay(300);
-//    liftClaw(20,1);
-//    moveServo(0);
-//    turnXdegrees(20*col,0);
+        moveServo(sopen);
+        storage[col-1]++;
+        CyDelay(100);
+        
+        driveXdist(160,0);
+        resetClaw();
+        turnXdegrees(30+col*30,1);
+    }
 
 }
 
@@ -2030,12 +2090,12 @@ void unstorePuck(int col) {
     CyDelay(100);
     
     liftClaw(heights[storage[col-1]-1],1);
-    driveXdist(140,1);
+    driveXdist(160,1);
     moveServo(sclose);
     CyDelay(400);
     liftClaw(6,1);
     
-    driveXdist(140,0);
+    driveXdist(160,0);
     resetClaw();
     turnXdegrees(33+col*30,1);
     
@@ -2047,7 +2107,9 @@ void allTasks(void) {
 
     int col;
     int exit=0;
+
     
+    resetClaw();
     readWallPucks();
     firstNavToPucks();
 
@@ -2084,6 +2146,7 @@ void allTasks(void) {
                 
                 if (storage[SEQ[stackcount]-1]>0) { // if next colour is already stored, retrieve it
                     unstorePuck(SEQ[stackcount]);
+                    checkCorner(130,50,1);
                     checkCorner(130,50,1);
                     col=SEQ[stackcount];
                 } else {
@@ -2158,21 +2221,15 @@ int main(void) {
     CyDelay(2000);
     
     //** CODE HERE **//
-    //collectPuck();
-    //checkCorner(150,150,1);
-   
-    //driveXdist(20,1);
-//    resetClaw();
-//    calibrateSensor();
-//    CyDelay(1000);
-    allTasks();
-//    task4(1);
+    resetClaw();
+    //allTasks();
+    
 
     
     
 //    resetClaw(); CyDelay(1000);
 //    calibrateSensor();
-//    checkCorner(150,80,1); CyDelay(500);
+    checkCorner(150,80,1); CyDelay(500);
 //    unstorePuck(1); stackPuck();
 //    unstorePuck(2); stackPuck();
     
@@ -2196,29 +2253,32 @@ int main(void) {
 //        moveServo(sclose);
 //        CyDelay(2000);
 //        
+//        checkCorner(130,50,1);
+//        checkCorner(130,50,1);
+//        
 //        stackPuck();
 //        stackcount++;
 //        
 //        resetClaw();
 //    }
-    
+//    
 //    resetClaw();
 //    calibrateSensor();
 //    moveServo(sopen); CyDelay(4000);
+//      
+//    US_SIDEL_EN_Write(1);
+//    US_M_EN_Write(0);
 //    
-//    for(;;)
-//    {
-//        moveServo(sclose); CyDelay(500);
+//    
+    for(;;)
+    {
+//        updateusxtimes_m(7);
+//        CyDelay(10);
 //        
-//        col=getColourv2(1);
-//        beepXtimes(col);
-//        
-//        CyDelay(500);
-//        
-//        moveServo(sopen);
-//        CyDelay(4000);
-//        
-//    }
+////                
+//        turnXdegrees(90,1);
+//        CyDelay(1000);
+    }
     
 }
 
